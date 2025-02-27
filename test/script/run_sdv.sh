@@ -34,7 +34,7 @@ show_help() {
     echo "  $0                      运行所有测试"
     echo "  $0 kem                  运行KEM测试套件"
     echo "  $0 kem sign             运行KEM和Sign测试套件"
-    echo "  $0 kem::kyber512        运行KEM测试套件中的kyber512测试用例"
+    echo "  $0 kem::scloudplus        运行KEM测试套件中的scloudplus测试用例"
 }
 
 # 解析命令行参数

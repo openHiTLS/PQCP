@@ -15,7 +15,6 @@
 
 #include "pqcp_provider.h"
 #include "pqcp_provider_impl.h"
-#include "pqcp_kem.h"
 #include "crypt_eal_implprovider.h"
 #include "crypt_types.h"
 #include "crypt_errno.h"

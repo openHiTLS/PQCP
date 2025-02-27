@@ -23,10 +23,10 @@
 /* 测试框架上下文 */
 typedef struct {
     PqcpTestSuite *suites;    /* 测试套件链表 */
-    int suiteCount;          /* 测试套件数量 */
+    int32_t suiteCount;          /* 测试套件数量 */
     const char *outputDir;   /* 输出目录 */
     FILE *logFile;           /* 日志文件 */
-    int verbose;              /* 详细模式 */
+    int32_t verbose;              /* 详细模式 */
 } PqcpTestContext;
 
 /* 全局测试上下文 */
@@ -35,7 +35,8 @@ static PqcpTestContext g_testCtx = {0};
 /**
  * 获取当前时间（毫秒）
  */
-double PQCP_TestGetTimeMs(void) {
+double PQCP_TestGetTimeMs(void)
+{
     struct timespec ts;
     
 #ifdef _WIN32
@@ -52,21 +53,24 @@ double PQCP_TestGetTimeMs(void) {
 /**
  * 设置输出目录
  */
-void PQCP_TestSetOutputDir(const char *dir) {
+void PQCP_TestSetOutputDir(const char *dir)
+{
     g_testCtx.outputDir = dir;
 }
 
 /**
  * 获取输出目录
  */
-const char *PQCP_TestGetOutputDir(void) {
+const char *PQCP_TestGetOutputDir(void)
+{
     return g_testCtx.outputDir;
 }
 
 /**
  * 写入日志
  */
-static void PQCP_TestLog(const char *format, ...) {
+static void PQCP_TestLog(const char *format, ...)
+{
     if (g_testCtx.logFile == NULL) {
         return;
     }
@@ -90,7 +94,8 @@ static void PQCP_TestLog(const char *format, ...) {
 /**
  * 初始化测试框架
  */
-int PQCP_TestInit(void) {
+int32_t PQCP_TestInit(void)
+{
     /* 清理现有上下文（如果有） */
     PQCP_TestCleanup();
     
@@ -127,7 +132,8 @@ int PQCP_TestInit(void) {
 /**
  * 清理测试框架
  */
-void PQCP_TestCleanup(void) {
+void PQCP_TestCleanup(void)
+{
     /* 关闭日志文件 */
     if (g_testCtx.logFile != NULL) {
         fclose(g_testCtx.logFile);
@@ -161,7 +167,8 @@ void PQCP_TestCleanup(void) {
 /**
  * 创建测试套件
  */
-PqcpTestSuite *PQCP_TestCreateSuite(const char *name, const char *description) {
+PqcpTestSuite *PQCP_TestCreateSuite(const char *name, const char *description)
+{
     if (name == NULL) {
         return NULL;
     }
@@ -197,7 +204,8 @@ PqcpTestSuite *PQCP_TestCreateSuite(const char *name, const char *description) {
 /**
  * 添加测试套件
  */
-int PQCP_TestAddSuite(PqcpTestSuite *suite) {
+int32_t PQCP_TestAddSuite(PqcpTestSuite *suite)
+{
     if (suite == NULL) {
         return -1;
     }
@@ -219,7 +227,8 @@ int PQCP_TestAddSuite(PqcpTestSuite *suite) {
 /**
  * 查找测试套件
  */
-PqcpTestSuite *PQCP_TestFindSuite(const char *name) {
+PqcpTestSuite *PQCP_TestFindSuite(const char *name)
+{
     if (name == NULL) {
         return NULL;
     }
@@ -238,7 +247,8 @@ PqcpTestSuite *PQCP_TestFindSuite(const char *name) {
 /**
  * 列出所有测试套件
  */
-void PQCP_TestListSuites(void) {
+void PQCP_TestListSuites(void)
+{
     printf("可用的测试套件:\n");
     
     PqcpTestSuite *suite = g_testCtx.suites;
@@ -255,8 +265,9 @@ void PQCP_TestListSuites(void) {
 /**
  * 添加测试用例
  */
-int PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description, 
-                      PqcpTestResult (*run)(void)) {
+int32_t PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description, 
+    PqcpTestResult (*run)(void))
+{
     if (suite == NULL || name == NULL || run == NULL) {
         return -1;
     }
@@ -305,7 +316,8 @@ int PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *descrip
 /**
  * 查找测试用例
  */
-PqcpTestCase *PQCP_TestFindCase(PqcpTestSuite *suite, const char *name) {
+PqcpTestCase *PQCP_TestFindCase(PqcpTestSuite *suite, const char *name)
+{
     if (suite == NULL || name == NULL) {
         return NULL;
     }
@@ -324,7 +336,8 @@ PqcpTestCase *PQCP_TestFindCase(PqcpTestSuite *suite, const char *name) {
 /**
  * 列出测试套件中的所有测试用例
  */
-void PQCP_TestListCases(PqcpTestSuite *suite) {
+void PQCP_TestListCases(PqcpTestSuite *suite)
+{
     if (suite == NULL) {
         return;
     }
@@ -345,7 +358,8 @@ void PQCP_TestListCases(PqcpTestSuite *suite) {
 /**
  * 运行单个测试用例
  */
-PqcpTestReport PQCP_TestRunCase(PqcpTestSuite *suite, PqcpTestCase *testCase, int verbose) {
+PqcpTestReport PQCP_TestRunCase(PqcpTestSuite *suite, PqcpTestCase *testCase, int32_t verbose)
+{
     PqcpTestReport report = {0};
     
     if (suite == NULL || testCase == NULL) {
@@ -400,7 +414,8 @@ PqcpTestReport PQCP_TestRunCase(PqcpTestSuite *suite, PqcpTestCase *testCase, in
 /**
  * 运行测试套件
  */
-PqcpTestReport PQCP_TestRunSuite(PqcpTestSuite *suite, int verbose) {
+PqcpTestReport PQCP_TestRunSuite(PqcpTestSuite *suite, int32_t verbose)
+{
     PqcpTestReport report = {0};
     
     if (suite == NULL) {
@@ -456,7 +471,8 @@ PqcpTestReport PQCP_TestRunSuite(PqcpTestSuite *suite, int verbose) {
 /**
  * 运行所有测试
  */
-PqcpTestReport PQCP_TestRunAll(int verbose) {
+PqcpTestReport PQCP_TestRunAll(int32_t verbose)
+{
     PqcpTestReport report = {0};
     
     /* 初始化报告 */
@@ -505,7 +521,8 @@ PqcpTestReport PQCP_TestRunAll(int verbose) {
 /**
  * 按名称运行测试套件
  */
-PqcpTestReport PQCP_TestRunSuiteByName(const char *suiteName, int verbose) {
+PqcpTestReport PQCP_TestRunSuiteByName(const char *suiteName, int32_t verbose)
+{
     PqcpTestReport report = {0};
     
     if (suiteName == NULL) {
@@ -528,7 +545,8 @@ PqcpTestReport PQCP_TestRunSuiteByName(const char *suiteName, int verbose) {
 /**
  * 按名称运行测试用例
  */
-PqcpTestReport PQCP_TestRunCaseByName(const char *suiteName, const char *caseName, int verbose) {
+PqcpTestReport PQCP_TestRunCaseByName(const char *suiteName, const char *caseName, int32_t verbose)
+{
     PqcpTestReport report = {0};
     
     if (suiteName == NULL || caseName == NULL) {
@@ -559,7 +577,8 @@ PqcpTestReport PQCP_TestRunCaseByName(const char *suiteName, const char *caseNam
 /**
  * 打印测试报告
  */
-void PQCP_TestPrintReport(const PqcpTestReport *report) {
+void PQCP_TestPrintReport(const PqcpTestReport *report)
+{
     if (report == NULL) {
         return;
     }
@@ -585,7 +604,8 @@ void PQCP_TestPrintReport(const PqcpTestReport *report) {
 /**
  * 保存测试报告到文件
  */
-int PQCP_TestSaveReport(const PqcpTestReport *report, const char *filename) {
+int32_t PQCP_TestSaveReport(const PqcpTestReport *report, const char *filename)
+{
     if (report == NULL || filename == NULL) {
         return -1;
     }

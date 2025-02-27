@@ -44,19 +44,22 @@ static int32_t g_numGroups = 0;
 static int32_t g_maxGroups = 0;
 
 /* 辅助函数 */
-static double GetTimeMs(void) {
+static double GetTimeMs(void)
+{
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
 }
 
-static void WriteCsvHeader(FILE *csvFile) {
+static void WriteCsvHeader(FILE *csvFile)
+{
     if (csvFile) {
         fprintf(csvFile, "Algorithm,Operation,AvgTime(ms),MinTime(ms),MaxTime(ms),Iterations,DataSize(bytes)\n");
     }
 }
 
-static void WriteCsvResult(FILE *csvFile, const PerfResult *result) {
+static void WriteCsvResult(FILE *csvFile, const PerfResult *result)
+{
     if (csvFile && result) {
         fprintf(csvFile, "%s,%s,%.4f,%.4f,%.4f,%u,%zu\n",
                 result->algorithm, result->operation,
@@ -65,7 +68,8 @@ static void WriteCsvResult(FILE *csvFile, const PerfResult *result) {
     }
 }
 
-static void PrintResult(const PerfResult *result, int32_t verbose) {
+static void PrintResult(const PerfResult *result, int32_t verbose)
+{
     printf("%-15s %-15s Avg: %.4f ms, Min: %.4f ms, Max: %.4f ms, Iterations: %u, Data: %zu bytes\n",
            result->algorithm, result->operation,
            result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
@@ -74,7 +78,8 @@ static void PrintResult(const PerfResult *result, int32_t verbose) {
 
 /* 添加测试组 */
 int32_t PQCP_AddPerfTestGroup(const char *name, const char *description, 
-                             int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile)) {
+                             int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile))
+{
     if (g_numGroups >= g_maxGroups) {
         int32_t newMax = g_maxGroups == 0 ? 8 : g_maxGroups * 2;
         PerfTestGroup *newGroups = realloc(g_testGroups, newMax * sizeof(PerfTestGroup));
@@ -92,7 +97,8 @@ int32_t PQCP_AddPerfTestGroup(const char *name, const char *description,
 }
 
 /* 列出所有测试组 */
-void PQCP_ListPerfTestGroups(void) {
+void PQCP_ListPerfTestGroups(void)
+{
     printf("可用的性能测试组:\n");
     for (int32_t i = 0; i < g_numGroups; i++) {
         printf("  %-20s - %s\n", g_testGroups[i].name, g_testGroups[i].description);
@@ -100,7 +106,8 @@ void PQCP_ListPerfTestGroups(void) {
 }
 
 /* 运行指定的测试组 */
-int32_t PQCP_RunPerfTestGroup(const char *name, int32_t iterations, int32_t verbose, FILE *csvFile) {
+int32_t PQCP_RunPerfTestGroup(const char *name, int32_t iterations, int32_t verbose, FILE *csvFile)
+{
     for (int32_t i = 0; i < g_numGroups; i++) {
         if (strcmp(g_testGroups[i].name, name) == 0) {
             printf("运行性能测试组: %s (%s)\n", name, g_testGroups[i].description);
@@ -134,10 +141,11 @@ int32_t PQCP_RunAllPerfTests(int32_t iterations, int32_t verbose, const char *cs
 
 /* 示例测试组实现 */
 
-/* Kyber性能测试 */
-static int32_t run_kyber_perf_test(int32_t iterations, int32_t verbose, FILE *csvFile) {
+/* Scloudplus性能测试 */
+static int32_t RunScloudplusPerfTest(int32_t iterations, int32_t verbose, FILE *csvFile)
+{
     PerfResult results[3][3] = {0};
-    const char *variants[] = {"Kyber-512", "Kyber-768", "Kyber-1024"};
+    const char *variants[] = {"Scloudplus-512", "Scloudplus-768", "Scloudplus-1024"};
     const char *operations[] = {"KeyGen", "Encaps", "Decaps"};
     
     /* 设置默认迭代次数 */
@@ -157,9 +165,9 @@ static int32_t run_kyber_perf_test(int32_t iterations, int32_t verbose, FILE *cs
             
             /* 根据变体设置数据大小（示例值） */
             switch (v) {
-                case 0: results[v][op].dataSize = 1632; break;  /* Kyber-512 */
-                case 1: results[v][op].dataSize = 2400; break;  /* Kyber-768 */
-                case 2: results[v][op].dataSize = 3168; break;  /* Kyber-1024 */
+                case 0: results[v][op].dataSize = 1632; break;  /* Scloudplus-512 */
+                case 1: results[v][op].dataSize = 2400; break;  /* Scloudplus-768 */
+                case 2: results[v][op].dataSize = 3168; break;  /* Scloudplus-1024 */
             }
             
             if (verbose) {
@@ -170,7 +178,7 @@ static int32_t run_kyber_perf_test(int32_t iterations, int32_t verbose, FILE *cs
             for (int32_t i = 0; i < iterations; i++) {
                 start = GetTimeMs();
                 
-                /* 这里应该调用实际的Kyber函数 */
+                /* 这里应该调用实际的Scloudplus函数 */
                 /* 目前只是模拟延迟 */
                 struct timespec ts;
                 ts.tv_sec = 0;
@@ -199,10 +207,11 @@ static int32_t run_kyber_perf_test(int32_t iterations, int32_t verbose, FILE *cs
     return 0;
 }
 
-/* Dilithium性能测试 */
-static int32_t run_dilithium_perf_test(int32_t iterations, int32_t verbose, FILE *csvFile) {
+/* pqcdsa性能测试 */
+static int32_t RunPqcdsaPerfTest(int32_t iterations, int32_t verbose, FILE *csvFile)
+{
     PerfResult results[3][3] = {0};
-    const char *variants[] = {"Dilithium-2", "Dilithium-3", "Dilithium-5"};
+    const char *variants[] = {"pqcdsa-2", "pqcdsa-3", "pqcdsa-5"};
     const char *operations[] = {"KeyGen", "Sign", "Verify"};
     
     /* 设置默认迭代次数 */
@@ -222,9 +231,9 @@ static int32_t run_dilithium_perf_test(int32_t iterations, int32_t verbose, FILE
             
             /* 根据变体设置数据大小（示例值） */
             switch (v) {
-                case 0: results[v][op].dataSize = 2528; break;  /* Dilithium-2 */
-                case 1: results[v][op].dataSize = 3504; break;  /* Dilithium-3 */
-                case 2: results[v][op].dataSize = 4595; break;  /* Dilithium-5 */
+                case 0: results[v][op].dataSize = 2528; break;  /* pqcdsa-2 */
+                case 1: results[v][op].dataSize = 3504; break;  /* pqcdsa-3 */
+                case 2: results[v][op].dataSize = 4595; break;  /* pqcdsa-5 */
             }
             
             if (verbose) {
@@ -235,7 +244,7 @@ static int32_t run_dilithium_perf_test(int32_t iterations, int32_t verbose, FILE
             for (int32_t i = 0; i < iterations; i++) {
                 start = GetTimeMs();
                 
-                /* 这里应该调用实际的Dilithium函数 */
+                /* 这里应该调用实际的pqcdsa函数 */
                 /* 目前只是模拟延迟 */
                 struct timespec ts;
                 ts.tv_sec = 0;
@@ -265,13 +274,14 @@ static int32_t run_dilithium_perf_test(int32_t iterations, int32_t verbose, FILE
 }
 
 /* 初始化性能测试 */
-int32_t init_perf_tests(void) {
+int32_t InitPerfTests(void)
+{
     /* 添加测试组 */
-    if (PQCP_AddPerfTestGroup("kyber", "Kyber密钥封装机制性能测试", run_kyber_perf_test) != 0) {
+    if (PQCP_AddPerfTestGroup("Scloudplus", "Scloudplus密钥封装机制性能测试", RunScloudplusPerfTest) != 0) {
         return -1;
     }
     
-    if (PQCP_AddPerfTestGroup("dilithium", "Dilithium数字签名性能测试", run_dilithium_perf_test) != 0) {
+    if (PQCP_AddPerfTestGroup("pqcdsa", "pqcdsa数字签名性能测试", RunPqcdsaPerfTest) != 0) {
         return -1;
     }
     
@@ -279,7 +289,8 @@ int32_t init_perf_tests(void) {
 }
 
 /* 主函数 */
-int32_t main(int32_t argc, char *argv[]) {
+int32_t main(int32_t argc, char *argv[])
+{
     int32_t opt, optionIndex = 0;
     int32_t verbose = 0;
     int32_t listOnly = 0;
@@ -334,7 +345,7 @@ int32_t main(int32_t argc, char *argv[]) {
     }
     
     /* 初始化测试 */
-    if (init_perf_tests() != 0) {
+    if (InitPerfTests() != 0) {
         fprintf(stderr, "初始化性能测试失败\n");
         return 1;
     }

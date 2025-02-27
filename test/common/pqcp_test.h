@@ -20,7 +20,7 @@
 
 #ifndef PQCP_TEST_H
 #define PQCP_TEST_H
-
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,46 +46,46 @@ typedef struct PqcpTestSuite {
     char *name;               /* 测试套件名称 */
     char *description;        /* 测试套件描述 */
     PqcpTestCase *cases;      /* 测试用例链表 */
-    int caseCount;            /* 测试用例数量 */
+    int32_t caseCount;            /* 测试用例数量 */
     struct PqcpTestSuite *next; /* 链表中的下一个测试套件 */
 } PqcpTestSuite;
 
 /* 测试报告结构 */
 typedef struct {
-    int totalSuites;          /* 总测试套件数 */
-    int totalCases;           /* 总测试用例数 */
-    int successCount;         /* 成功的测试用例数 */
-    int failureCount;         /* 失败的测试用例数 */
-    int skipCount;            /* 跳过的测试用例数 */
-    int errorCount;           /* 错误的测试用例数 */
+    int32_t totalSuites;          /* 总测试套件数 */
+    int32_t totalCases;           /* 总测试用例数 */
+    int32_t successCount;         /* 成功的测试用例数 */
+    int32_t failureCount;         /* 失败的测试用例数 */
+    int32_t skipCount;            /* 跳过的测试用例数 */
+    int32_t errorCount;           /* 错误的测试用例数 */
     double totalTime;          /* 总执行时间（毫秒） */
 } PqcpTestReport;
 
 /* 测试框架初始化和清理 */
-int PQCP_TestInit(void);
+int32_t PQCP_TestInit(void);
 void PQCP_TestCleanup(void);
 
 /* 测试套件管理 */
 PqcpTestSuite* PQCP_TestCreateSuite(const char *name, const char *description);
-int PQCP_TestAddSuite(PqcpTestSuite *suite);
+int32_t PQCP_TestAddSuite(PqcpTestSuite *suite);
 PqcpTestSuite* PQCP_TestFindSuite(const char *name);
 void PQCP_TestListSuites(void);
 
 /* 测试用例管理 */
-int PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description, PqcpTestResult (*Run)(void));
+int32_t PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description, PqcpTestResult (*Run)(void));
 PqcpTestCase* PQCP_TestFindCase(PqcpTestSuite *suite, const char *name);
 void PQCP_TestListCases(PqcpTestSuite *suite);
 
 /* 测试执行 */
-PqcpTestReport PQCP_TestRunCase(PqcpTestSuite *suite, PqcpTestCase *testCase, int verbose);
-PqcpTestReport PQCP_TestRunSuite(PqcpTestSuite *suite, int verbose);
-PqcpTestReport PQCP_TestRunAll(int verbose);
-PqcpTestReport PQCP_TestRunSuiteByName(const char *suiteName, int verbose);
-PqcpTestReport PQCP_TestRunCaseByName(const char *suiteName, const char *caseName, int verbose);
+PqcpTestReport PQCP_TestRunCase(PqcpTestSuite *suite, PqcpTestCase *testCase, int32_t verbose);
+PqcpTestReport PQCP_TestRunSuite(PqcpTestSuite *suite, int32_t verbose);
+PqcpTestReport PQCP_TestRunAll(int32_t verbose);
+PqcpTestReport PQCP_TestRunSuiteByName(const char *suiteName, int32_t verbose);
+PqcpTestReport PQCP_TestRunCaseByName(const char *suiteName, const char *caseName, int32_t verbose);
 
 /* 测试报告 */
 void PQCP_TestPrintReport(const PqcpTestReport *report);
-int PQCP_TestSaveReport(const PqcpTestReport *report, const char *filename);
+int32_t PQCP_TestSaveReport(const PqcpTestReport *report, const char *filename);
 
 /* 辅助函数 */
 double PQCP_TestGetTimeMs(void);

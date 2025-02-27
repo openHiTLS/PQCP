@@ -29,7 +29,8 @@ const char *demo_message = "这是一条使用后量子密码算法保护的消�
 /**
  * 打印缓冲区内容（十六进制）
  */
-static void print_hex(const char *label, const unsigned char *data, size_t len) {
+static void PrintHex(const char *label, const unsigned char *data, size_t len)
+{
     printf("%s: ", label);
     for (size_t i = 0; i < len; i++) {
         printf("%02x", data[i]);
@@ -41,9 +42,10 @@ static void print_hex(const char *label, const unsigned char *data, size_t len) 
 }
 
 /**
- * Kyber密钥封装机制（KEM）演示
+ * scloud+密钥封装机制（KEM）演示
  */
-static int ScloudplusDemo(void) {
+static int32_t ScloudplusDemo(void)
+{
     printf("\n=== Scloud+密钥封装机制(KEM)演示 ===\n\n");
     uint8_t share1[32] = {0};
     uint8_t share2[32] = {0};
@@ -61,11 +63,12 @@ static int ScloudplusDemo(void) {
 /**
  * 主函数
  */
-int32_t main(void) {
+int32_t main(void)
+{
     printf("PQCP库Scloud+使用示例\n");
     printf("====================================\n");
     
-    int result = 0;
+    int32_t result = 0;
     
     /* 运行scloud+演示 */
     if (ScloudplusDemo() != 0) {

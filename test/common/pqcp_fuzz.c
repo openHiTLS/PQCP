@@ -30,7 +30,8 @@ const PqcpFuzzConfig PQCP_DEFAULT_FUZZ_CONFIG = {
 /**
  * 初始化模糊测试数据
  */
-int PQCP_FuzzInit(PqcpFuzzData *fuzzData, size_t size) {
+int32_t PQCP_FuzzInit(PqcpFuzzData *fuzzData, size_t size)
+{
     if (fuzzData == NULL || size == 0) {
         return -1;
     }
@@ -49,7 +50,8 @@ int PQCP_FuzzInit(PqcpFuzzData *fuzzData, size_t size) {
 /**
  * 释放模糊测试数据
  */
-void PQCP_FuzzFree(PqcpFuzzData *fuzzData) {
+void PQCP_FuzzFree(PqcpFuzzData *fuzzData)
+{
     if (fuzzData != NULL && fuzzData->data != NULL) {
         free(fuzzData->data);
         fuzzData->data = NULL;
@@ -60,7 +62,8 @@ void PQCP_FuzzFree(PqcpFuzzData *fuzzData) {
 /**
  * 生成随机模糊测试数据
  */
-int PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config) {
+int32_t PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config)
+{
     if (fuzzData == NULL) {
         return -1;
     }
@@ -98,7 +101,8 @@ int PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config) {
 /**
  * 变异模糊测试数据
  */
-int PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate) {
+int32_t PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate)
+{
     if (fuzzData == NULL || fuzzData->data == NULL || fuzzData->size == 0) {
         return -1;
     }
@@ -140,11 +144,9 @@ int PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate) {
 /**
  * 运行模糊测试
  */
-int PQCP_FuzzRun(
-    int (*testFunc)(const PqcpFuzzData *fuzzData, void *userData),
-    const PqcpFuzzConfig *config,
-    void *userData
-) {
+int32_t PQCP_FuzzRun(int32_t (*testFunc)(const PqcpFuzzData *fuzzData, void *userData),
+    const PqcpFuzzConfig *config, void *userData)
+{
     if (testFunc == NULL) {
         return -1;
     }
@@ -178,10 +180,10 @@ int PQCP_FuzzRun(
     }
     
     /* 运行模糊测试 */
-    int failures = 0;
+    int32_t failures = 0;
     for (uint32_t i = 0; i < cfg.iterations; i++) {
         /* 运行测试 */
-        int result = testFunc(&fuzzData, userData);
+        int32_t result = testFunc(&fuzzData, userData);
         
         if (result != 0) {
             printf("Fuzzing failed at iteration %u\n", i);
@@ -211,7 +213,8 @@ int PQCP_FuzzRun(
 /**
  * 从文件加载模糊测试数据
  */
-int PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath) {
+int32_t PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath)
+{
     if (fuzzData == NULL || filePath == NULL) {
         return -1;
     }
@@ -254,7 +257,8 @@ int PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath) {
 /**
  * 将模糊测试数据保存到文件
  */
-int PQCP_FuzzSaveToFile(const PqcpFuzzData *fuzzData, const char *filePath) {
+int32_t PQCP_FuzzSaveToFile(const PqcpFuzzData *fuzzData, const char *filePath)
+{
     if (fuzzData == NULL || fuzzData->data == NULL || filePath == NULL) {
         return -1;
     }

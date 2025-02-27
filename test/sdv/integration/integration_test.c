@@ -21,57 +21,23 @@
 
 /* 集成测试用例 */
 
-/* Kyber-Dilithium混合测试 */
-static PqcpTestResult TestKyber512Dilithium2Integration(void)
+/* kem-pqcdsa混合测试 */
+static PqcpTestResult TestKemDsaIntegration(void)
 {
-    /* 这里是Kyber-512和Dilithium-2集成测试的实现 */
+    /* 这里是kem和PQC-Dsa集成测试的实现 */
     /* 在实际实现中，应该调用PQCP库的相关函数进行完整的加密和签名流程 */
     
-    printf("执行Kyber-512和Dilithium-2集成测试...\n");
+    printf("执行KEM和PQC-DSA集成测试...\n");
     
     /* 模拟测试步骤 */
-    printf("  1. 生成Kyber-512密钥对\n");
-    printf("  2. 生成Dilithium-2密钥对\n");
-    printf("  3. 使用Kyber-512进行密钥封装\n");
-    printf("  4. 使用Dilithium-2对封装的密钥进行签名\n");
+    printf("  1. 生成kem密钥对\n");
+    printf("  2. 生成pqc-dsa密钥对\n");
+    printf("  3. 使用kem进行密钥封装\n");
+    printf("  4. 使用pqc-dsa对封装的密钥进行签名\n");
     printf("  5. 验证签名\n");
     printf("  6. 解封装密钥\n");
     
     /* 模拟测试通过 */
-    return PQCP_TEST_SUCCESS;
-}
-
-static PqcpTestResult TestKyber768Dilithium3Integration(void)
-{
-    /* 这里是Kyber-768和Dilithium-3集成测试的实现 */
-    
-    printf("执行Kyber-768和Dilithium-3集成测试...\n");
-    
-    /* 模拟测试步骤 */
-    printf("  1. 生成Kyber-768密钥对\n");
-    printf("  2. 生成Dilithium-3密钥对\n");
-    printf("  3. 使用Kyber-768进行密钥封装\n");
-    printf("  4. 使用Dilithium-3对封装的密钥进行签名\n");
-    printf("  5. 验证签名\n");
-    printf("  6. 解封装密钥\n");
-    
-    return PQCP_TEST_SUCCESS;
-}
-
-static PqcpTestResult TestKyber1024Dilithium5Integration(void)
-{
-    /* 这里是Kyber-1024和Dilithium-5集成测试的实现 */
-    
-    printf("执行Kyber-1024和Dilithium-5集成测试...\n");
-    
-    /* 模拟测试步骤 */
-    printf("  1. 生成Kyber-1024密钥对\n");
-    printf("  2. 生成Dilithium-5密钥对\n");
-    printf("  3. 使用Kyber-1024进行密钥封装\n");
-    printf("  4. 使用Dilithium-5对封装的密钥进行签名\n");
-    printf("  5. 验证签名\n");
-    printf("  6. 解封装密钥\n");
-    
     return PQCP_TEST_SUCCESS;
 }
 
@@ -120,11 +86,9 @@ int32_t PQCP_InitIntegrationTestSuite(void)
         return -1;
     }
     
-    /* 添加Kyber-Dilithium混合测试用例 */
-    PQCP_TestAddCase(suite, "kyber512_dilithium2", "Kyber-512和Dilithium-2集成测试", TestKyber512Dilithium2Integration);
-    PQCP_TestAddCase(suite, "kyber768_dilithium3", "Kyber-768和Dilithium-3集成测试", TestKyber768Dilithium3Integration);
-    PQCP_TestAddCase(suite, "kyber1024_dilithium5", "Kyber-1024和Dilithium-5集成测试", TestKyber1024Dilithium5Integration);
-    
+    /* 添加kem-pqcdsa混合测试用例 */
+    PQCP_TestAddCase(suite, "kem-pqcdsa", "kem和pqc-dsa集成测试", TestKemDsaIntegration);
+
     /* 添加其他集成测试用例 */
     PQCP_TestAddCase(suite, "secure_communication", "安全通信模拟测试", TestSecureCommunicationSimulation);
     PQCP_TestAddCase(suite, "error_handling", "错误处理测试", TestErrorHandling);

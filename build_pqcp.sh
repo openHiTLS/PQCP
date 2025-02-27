@@ -76,7 +76,7 @@ echo "检查依赖项..."
 if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
     echo "下载OpenHiTLS..."
     mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
-    git clone --depth 1 https://gitcode.com/openHiTLS/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
+    git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
 fi
 
 if [ ! -d "${PQCP_ROOT_DIR}/${SECURE_C_DIR}" ]; then

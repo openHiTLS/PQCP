@@ -39,7 +39,7 @@ typedef struct {
     uint64_t minIterations;  /* 最小迭代次数 */
     uint64_t maxIterations;  /* 最大迭代次数 */
     double minTime;          /* 最小测试时间（秒） */
-    int warmupIterations;     /* 预热迭代次数 */
+    int32_t warmupIterations;     /* 预热迭代次数 */
 } PqcpPerfConfig;
 
 /* 默认性能测试配置 */
@@ -58,10 +58,10 @@ extern const PqcpPerfConfig PQCP_DEFAULT_PERF_CONFIG;
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_PerfRun(
+int32_t PQCP_PerfRun(
     const char *name,
-    int (*setupFunc)(void **userData),
-    int (*testFunc)(void *userData),
+    int32_t (*setupFunc)(void **userData),
+    int32_t (*testFunc)(void *userData),
     void (*teardownFunc)(void *userData),
     const PqcpPerfConfig *config,
     void *userData,
@@ -84,7 +84,7 @@ void PQCP_PerfPrintResult(const PqcpPerfResult *result);
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_PerfWriteCSV(const PqcpPerfResult *result, const char *csvFile, int append);
+int32_t PQCP_PerfWriteCSV(const PqcpPerfResult *result, const char *csvFile, int32_t append);
 
 /**
  * 获取高精度时间戳（纳秒）

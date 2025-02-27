@@ -32,7 +32,8 @@ static struct option g_longOptions[] = {
 };
 
 /* 显示帮助信息 */
-static void ShowHelp(const char *programName) {
+static void ShowHelp(const char *programName)
+{
     printf("PQCP SDV测试程序\n");
     printf("用法: %s [选项]\n", programName);
     printf("选项:\n");
@@ -50,7 +51,8 @@ extern int32_t PQCP_InitKemTestSuite(void);
 extern int32_t PQCP_InitSignTestSuite(void);
 extern int32_t PQCP_InitIntegrationTestSuite(void);
 
-int32_t main(int32_t argc, char *argv[]) {
+int32_t main(int32_t argc, char *argv[])
+{
     int32_t opt;
     int32_t optionIndex = 0;
     int32_t verbose = 0;

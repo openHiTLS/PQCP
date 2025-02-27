@@ -43,8 +43,8 @@ CRYPT_EAL_ProviderLoad(libCtx, BSL_SAL_LIB_FMT_SO, "pqcp", NULL, NULL);
 
 ## Supported Algorithms
 
-- KEM: Kyber
-- Digital Signatures: Dilithium
+- KEM: Scloud+
+- Digital Signatures: 
 
 ## License
 

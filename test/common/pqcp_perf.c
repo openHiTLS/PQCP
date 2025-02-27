@@ -29,7 +29,8 @@ const PqcpPerfConfig PQCP_DEFAULT_PERF_CONFIG = {
 /**
  * 获取高精度时间戳（纳秒）
  */
-uint64_t PQCP_PerfGetTimeNs(void) {
+uint64_t PQCP_PerfGetTimeNs(void)
+{
     struct timespec ts;
     
 #ifdef _WIN32
@@ -46,15 +47,9 @@ uint64_t PQCP_PerfGetTimeNs(void) {
 /**
  * 运行性能测试
  */
-int PQCP_PerfRun(
-    const char *name,
-    int (*setupFunc)(void **userData),
-    int (*testFunc)(void *userData),
-    void (*teardownFunc)(void *userData),
-    const PqcpPerfConfig *config,
-    void *userData,
-    PqcpPerfResult *result
-) {
+int32_t PQCP_PerfRun(const char *name, int32_t (*setupFunc)(void **userData), int32_t (*testFunc)(void *userData),
+    void (*teardownFunc)(void *userData), const PqcpPerfConfig *config, void *userData, PqcpPerfResult *result)
+{
     if (testFunc == NULL || result == NULL) {
         return -1;
     }
@@ -68,14 +63,14 @@ int PQCP_PerfRun(
     
     /* 调用setup函数（如果提供） */
     if (setupFunc != NULL) {
-        int ret = setupFunc(&userData);
+        int32_t ret = setupFunc(&userData);
         if (ret != 0) {
             return ret;
         }
     }
     
     /* 预热运行 */
-    for (int i = 0; i < cfg.warmupIterations; i++) {
+    for (int32_t i = 0; i < cfg.warmupIterations; i++) {
         testFunc(userData);
     }
     
@@ -125,7 +120,8 @@ int PQCP_PerfRun(
 /**
  * 打印性能测试结果
  */
-void PQCP_PerfPrintResult(const PqcpPerfResult *result) {
+void PQCP_PerfPrintResult(const PqcpPerfResult *result)
+{
     if (result == NULL) {
         return;
     }
@@ -140,7 +136,8 @@ void PQCP_PerfPrintResult(const PqcpPerfResult *result) {
 /**
  * 将性能测试结果写入CSV文件
  */
-int PQCP_PerfWriteCSV(const PqcpPerfResult *result, const char *csvFile, int append) {
+int32_t PQCP_PerfWriteCSV(const PqcpPerfResult *result, const char *csvFile, int32_t append)
+{
     if (result == NULL || csvFile == NULL) {
         return -1;
     }

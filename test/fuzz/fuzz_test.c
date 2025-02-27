@@ -133,23 +133,23 @@ void CleanupFuzzTests(void)
 
 /* 示例模糊测试目标实现 */
 
-/* Kyber密钥封装模糊测试 */
-static int32_t FuzzKyberKem(int32_t iterations, uint32_t seed, int32_t verbose, FILE *logFile)
+/* Scloudplus密钥封装模糊测试 */
+static int32_t FuzzScloudplusKem(int32_t iterations, uint32_t seed, int32_t verbose, FILE *logFile)
 {
     /* 初始化随机数生成器 */
     InitRandom(seed);
     
-    /* 模拟Kyber参数 */
-    const int32_t kyber_variants[] = {512, 768, 1024};
-    const char *variant_names[] = {"Kyber-512", "Kyber-768", "Kyber-1024"};
+    /* 模拟Scloudplus参数 */
+    const int32_t Scloudplus_variants[] = {512, 768, 1024};
+    const char *variant_names[] = {"Scloudplus-1", "Scloudplus-3", "Scloudplus-5"};
     
     /* 记录测试开始 */
     if (logFile) {
-        fprintf(logFile, "=== 开始Kyber KEM模糊测试 ===\n");
+        fprintf(logFile, "=== 开始Scloudplus KEM模糊测试 ===\n");
         fprintf(logFile, "种子: %u, 迭代次数: %d\n", seed, iterations);
     }
     
-    /* 对每个Kyber变体执行测试 */
+    /* 对每个Scloudplus变体执行测试 */
     for (int32_t v = 0; v < 3; v++) {
         int32_t failures = 0;
         
@@ -164,8 +164,8 @@ static int32_t FuzzKyberKem(int32_t iterations, uint32_t seed, int32_t verbose, 
         /* 执行测试迭代 */
         for (int32_t i = 0; i < iterations; i++) {
             /* 生成随机公钥和私钥 */
-            size_t pk_size = kyber_variants[v] / 4;  /* 模拟公钥大小 */
-            size_t sk_size = kyber_variants[v] / 2;  /* 模拟私钥大小 */
+            size_t pk_size = Scloudplus_variants[v] / 4;  /* 模拟公钥大小 */
+            size_t sk_size = Scloudplus_variants[v] / 2;  /* 模拟私钥大小 */
             unsigned char *pk = malloc(pk_size);
             unsigned char *sk = malloc(sk_size);
             
@@ -181,7 +181,7 @@ static int32_t FuzzKyberKem(int32_t iterations, uint32_t seed, int32_t verbose, 
             GenerateRandomBuffer(sk, sk_size);
             
             /* 生成随机密文和共享密钥 */
-            size_t ct_size = kyber_variants[v] / 3;  /* 模拟密文大小 */
+            size_t ct_size = Scloudplus_variants[v] / 3;  /* 模拟密文大小 */
             size_t ss_size = 32;  /* 共享密钥大小通常是32字节 */
             unsigned char *ct = malloc(ct_size);
             unsigned char *ss_enc = malloc(ss_size);
@@ -213,7 +213,7 @@ static int32_t FuzzKyberKem(int32_t iterations, uint32_t seed, int32_t verbose, 
             /* 模拟解封装操作 */
             int32_t decaps_result = 0;  /* 0表示成功，非0表示失败 */
             
-            /* 这里应该调用实际的Kyber解封装函数 */
+            /* 这里应该调用实际的Scloudplus解封装函数 */
             /* 目前只是模拟一个随机结果 */
             if (rand() % 100 < 95) {  /* 95%的成功率 */
                 /* 模拟成功解封装 */
@@ -266,29 +266,29 @@ static int32_t FuzzKyberKem(int32_t iterations, uint32_t seed, int32_t verbose, 
     
     /* 记录测试结束 */
     if (logFile) {
-        fprintf(logFile, "\n=== Kyber KEM模糊测试完成 ===\n");
+        fprintf(logFile, "\n=== Scloudplus KEM模糊测试完成 ===\n");
     }
     
     return 0;
 }
 
-/* Dilithium签名模糊测试 */
-static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verbose, FILE *logFile)
+/* pqcdsa签名模糊测试 */
+static int32_t FuzzPqcdsaSign(int32_t iterations, uint32_t seed, int32_t verbose, FILE *logFile)
 {
     /* 初始化随机数生成器 */
     InitRandom(seed);
     
-    /* 模拟Dilithium参数 */
-    const int32_t dilithium_variants[] = {2, 3, 5};
-    const char *variant_names[] = {"Dilithium-2", "Dilithium-3", "Dilithium-5"};
+    /* 模拟pqcdsa参数 */
+    const int32_t pqcdsa_variants[] = {2, 3, 5};
+    const char *variant_names[] = {"pqcdsa-2", "pqcdsa-3", "pqcdsa-5"};
     
     /* 记录测试开始 */
     if (logFile) {
-        fprintf(logFile, "=== 开始Dilithium签名模糊测试 ===\n");
+        fprintf(logFile, "=== 开始pqcdsa签名模糊测试 ===\n");
         fprintf(logFile, "种子: %u, 迭代次数: %d\n", seed, iterations);
     }
     
-    /* 对每个Dilithium变体执行测试 */
+    /* 对每个pqcdsa变体执行测试 */
     for (int32_t v = 0; v < 3; v++) {
         int32_t failures = 0;
         
@@ -303,8 +303,8 @@ static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verb
         /* 执行测试迭代 */
         for (int32_t i = 0; i < iterations; i++) {
             /* 生成随机公钥和私钥 */
-            size_t pk_size = 1312 * dilithium_variants[v];  /* 模拟公钥大小 */
-            size_t sk_size = 2560 * dilithium_variants[v];  /* 模拟私钥大小 */
+            size_t pk_size = 1312 * pqcdsa_variants[v];  /* 模拟公钥大小 */
+            size_t sk_size = 2560 * pqcdsa_variants[v];  /* 模拟私钥大小 */
             unsigned char *pk = malloc(pk_size);
             unsigned char *sk = malloc(sk_size);
             
@@ -334,7 +334,7 @@ static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verb
             GenerateRandomBuffer(msg, msg_size);
             
             /* 生成随机签名 */
-            size_t sig_size = 2000 * dilithium_variants[v];  /* 模拟签名大小 */
+            size_t sig_size = 2000 * pqcdsa_variants[v];  /* 模拟签名大小 */
             unsigned char *sig = malloc(sig_size);
             
             if (!sig) {
@@ -360,7 +360,7 @@ static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verb
             /* 模拟验证操作 */
             int32_t verify_result = 0;  /* 0表示成功，非0表示失败 */
             
-            /* 这里应该调用实际的Dilithium验证函数 */
+            /* 这里应该调用实际的pqcdsa验证函数 */
             /* 目前只是模拟一个随机结果 */
             if (rand() % 100 < 90) {  /* 90%的成功率 */
                 /* 模拟成功验证 */
@@ -403,7 +403,7 @@ static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verb
     
     /* 记录测试结束 */
     if (logFile) {
-        fprintf(logFile, "\n=== Dilithium签名模糊测试完成 ===\n");
+        fprintf(logFile, "\n=== pqcdsa签名模糊测试完成 ===\n");
     }
     
     return 0;
@@ -413,11 +413,11 @@ static int32_t FuzzDilithiumSign(int32_t iterations, uint32_t seed, int32_t verb
 int32_t PQCP_InitFuzzTests(void)
 {
     /* 添加测试目标 */
-    if (AddFuzzTarget("kyber_kem", "Kyber密钥封装机制模糊测试", FuzzKyberKem) != 0) {
+    if (AddFuzzTarget("Scloudplus_kem", "Scloudplus密钥封装机制模糊测试", FuzzScloudplusKem) != 0) {
         return -1;
     }
     
-    if (AddFuzzTarget("dilithium_sign", "Dilithium数字签名模糊测试", FuzzDilithiumSign) != 0) {
+    if (AddFuzzTarget("pqcdsa_sign", "pqcdsa数字签名模糊测试", FuzzPqcdsaSign) != 0) {
         return -1;
     }
     

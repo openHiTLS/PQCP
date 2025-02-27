@@ -59,7 +59,7 @@ int32_t PQCP_InitSignTestSuite(void)
         return -1;
     }
     
-    /* 添加Dilithium-2测试用例 */
+    /* 添加pqc-dsa测试用例 */
     PQCP_TestAddCase(suite, "dsa_keygen", "DSA密钥生成测试", TestDsaKeygen);
     PQCP_TestAddCase(suite, "dsa_sign", "DSA签名测试", TestDsaSign);
     PQCP_TestAddCase(suite, "dsa_verify", "DSA验证测试", TestDsaVerify);

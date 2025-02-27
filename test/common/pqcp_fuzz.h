@@ -34,7 +34,7 @@ extern const PqcpFuzzConfig PQCP_DEFAULT_FUZZ_CONFIG;
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzInit(PqcpFuzzData *fuzzData, size_t size);
+int32_t PQCP_FuzzInit(PqcpFuzzData *fuzzData, size_t size);
 
 /**
  * 释放模糊测试数据
@@ -51,7 +51,7 @@ void PQCP_FuzzFree(PqcpFuzzData *fuzzData);
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config);
+int32_t PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config);
 
 /**
  * 变异模糊测试数据
@@ -61,7 +61,7 @@ int PQCP_FuzzGenerate(PqcpFuzzData *fuzzData, const PqcpFuzzConfig *config);
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate);
+int32_t PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate);
 
 /**
  * 运行模糊测试
@@ -72,8 +72,8 @@ int PQCP_FuzzMutate(PqcpFuzzData *fuzzData, float mutationRate);
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzRun(
-    int (*testFunc)(const PqcpFuzzData *fuzzData, void *userData),
+int32_t PQCP_FuzzRun(
+    int32_t (*testFunc)(const PqcpFuzzData *fuzzData, void *userData),
     const PqcpFuzzConfig *config,
     void *userData
 );
@@ -86,7 +86,7 @@ int PQCP_FuzzRun(
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath);
+int32_t PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath);
 
 /**
  * 将模糊测试数据保存到文件
@@ -96,6 +96,6 @@ int PQCP_FuzzLoadFromFile(PqcpFuzzData *fuzzData, const char *filePath);
  * 
  * @return 0表示成功，其他值表示失败
  */
-int PQCP_FuzzSaveToFile(const PqcpFuzzData *fuzzData, const char *filePath);
+int32_t PQCP_FuzzSaveToFile(const PqcpFuzzData *fuzzData, const char *filePath);
 
 #endif /* PQCP_FUZZ_H */ 
