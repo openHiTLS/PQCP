@@ -45,7 +45,7 @@ endif()
 # 设置依赖库搜索路径
 set(PQCP_DEPENDENCY_DIRS 
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/build
-    ${CMAKE_SOURCE_DIR}/../platform/Secure_C/lib
+    ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/lib
     ${CMAKE_SOURCE_DIR}/../build
     CACHE STRING "PQCP dependency library paths")
 

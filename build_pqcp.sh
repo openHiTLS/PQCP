@@ -23,7 +23,7 @@ OPTIONS=""
 BUILD_TYPE="Release"
 ENABLE_ASAN="OFF"
 OPENHITLS_DIR="platform/openhitls"
-SECURE_C_DIR="platform/Secure_C"
+SECURE_C_DIR="platform/openhitls/platform/Secure_C"
 
 # 解析参数
 while [[ $# -gt 0 ]]; do
@@ -77,12 +77,6 @@ if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
     echo "下载OpenHiTLS..."
     mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
     git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
-fi
-
-if [ ! -d "${PQCP_ROOT_DIR}/${SECURE_C_DIR}" ]; then
-    echo "下载Secure_C..."
-    mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
-    git clone --depth 1 https://gitee.com/openeuler/libboundscheck.git "${PQCP_ROOT_DIR}/${SECURE_C_DIR}"
 fi
 
 build_depend_code
