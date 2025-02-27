@@ -56,7 +56,7 @@ jobs:
 
     - name: Build
       working-directory: ${{ github.workspace }}/build
-      run: ls -l && make -j$(nproc)
+      run: make -j$(nproc)
 
     #-  name: Test
      #w orking-directory: ${{ github.workspace }}/build
