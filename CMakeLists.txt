@@ -57,13 +57,13 @@ target_include_directories(pqcp_provider
         ${OPENHITLS_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/bsl
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/Secure_C/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/include
 )
 
 # 新增：目标链接目录
 target_link_directories(pqcp_provider PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/build
-    ${CMAKE_CURRENT_SOURCE_DIR}/platform/Secure_C/lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/lib
 )
 
 message(STATUS "hitls_crypto: ${HITLS_CRYPTO_LIB}")
