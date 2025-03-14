@@ -1,5 +1,5 @@
 /*
-* This file is part of the openHiTLS project.
+ * This file is part of the openHiTLS project.
  *
  * openHiTLS is licensed under the Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -34,16 +34,14 @@ static inline Complex ComplexMul(const Complex a, const Complex b)
 {
     return (Complex){
         a.real * b.real - a.imag * b.imag,
-        a.real * b.imag + a.imag * b.real
-    };
+        a.real * b.imag + a.imag * b.real};
 }
 
 static inline Complex ComplexDivPhi(const Complex a)
 {
     return (Complex){
         (a.real + a.imag) >> 1,
-        (a.imag - a.real) >> 1
-    };
+        (a.imag - a.real) >> 1};
 }
 
 static inline int32_t Round(const int32_t in, const uint8_t logq, const uint8_t tau)
@@ -71,36 +69,36 @@ static inline int32_t Round(const int32_t in, const uint8_t logq, const uint8_t 
     return q * mod;
 }
 
-static inline uint32_t u16Tou32(const uint16_t* ptr)
+static inline uint32_t u16Tou32(const uint16_t *ptr)
 {
     return ((uint32_t)ptr[0]) | ((uint32_t)ptr[1] << 16);
 }
 
-static inline uint32_t u8Tou24(const uint8_t* ptr)
+static inline uint32_t u8Tou24(const uint8_t *ptr)
 {
     return ((uint32_t)ptr[0] << 0) | ((uint32_t)ptr[1] << 8) |
-        ((uint32_t)ptr[2] << 16);
+           ((uint32_t)ptr[2] << 16);
 }
 
-static inline uint32_t u8Tou32(const uint8_t* ptr)
+static inline uint32_t u8Tou32(const uint8_t *ptr)
 {
     return ((uint32_t)ptr[0]) | ((uint32_t)ptr[1] << 8) |
-        ((uint32_t)ptr[2] << 16) | ((uint32_t)ptr[3] << 24);
+           ((uint32_t)ptr[2] << 16) | ((uint32_t)ptr[3] << 24);
 }
 
-static inline uint64_t u8Tou56(const uint8_t* ptr)
+static inline uint64_t u8Tou56(const uint8_t *ptr)
 {
     return ((uint64_t)ptr[0] << 0) | ((uint64_t)ptr[1] << 8) |
-        ((uint64_t)ptr[2] << 16) | ((uint64_t)ptr[3] << 24) |
-        ((uint64_t)ptr[4] << 32) | ((uint64_t)ptr[5] << 40) |
-        ((uint64_t)ptr[6] << 48);
+           ((uint64_t)ptr[2] << 16) | ((uint64_t)ptr[3] << 24) |
+           ((uint64_t)ptr[4] << 32) | ((uint64_t)ptr[5] << 40) |
+           ((uint64_t)ptr[6] << 48);
 }
 
-static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* para, uint16_t* out,
-                         int* outLen)
+static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *para, uint16_t *out,
+                         int *outLen)
 {
-    uint8_t* ptrIn = in;
-    uint16_t* ptrOut = out;
+    uint8_t *ptrIn = in;
+    uint16_t *ptrOut = out;
     *outLen = 0;
     if (para->ss == 16)
     {
@@ -110,7 +108,7 @@ static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
 
         for (int i = 0; i < inLen; i = i + 7)
         {
-            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF;
+            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF;//28 bits for 3 values in [0,599] i1 =[y]n, i2 = [(y-i1)/n]n, i3 = [(y-i1-i2*n)/n^2]n。  
             if (tmp < n3)
             {
                 *ptrOut = tmp % n1;
@@ -136,14 +134,14 @@ static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
         uint16_t tmp[8] = {0};
         for (int i = 0; i < inLen; i = i + 11)
         {
-            tmp[0] = *(uint16_t*)ptrIn & 0x7FF;
-            tmp[1] = (*(uint16_t*)(ptrIn + 1) >> 3) & 0x7FF;
-            tmp[2] = (*(uint32_t*)(ptrIn + 2) >> 6) & 0x7FF;
-            tmp[3] = (*(uint16_t*)(ptrIn + 4) >> 1) & 0x7FF;
-            tmp[4] = (*(uint16_t*)(ptrIn + 5) >> 4) & 0x7FF;
-            tmp[5] = (*(uint32_t*)(ptrIn + 6) >> 7) & 0x7FF;
-            tmp[6] = (*(uint16_t*)(ptrIn + 8) >> 2) & 0x7FF;
-            tmp[7] = (*(uint16_t*)(ptrIn + 9) >> 5) & 0x7FF;
+            tmp[0] = *(uint16_t *)ptrIn & 0x7FF;//normal reject sample
+            tmp[1] = (*(uint16_t *)(ptrIn + 1) >> 3) & 0x7FF;
+            tmp[2] = (*(uint32_t *)(ptrIn + 2) >> 6) & 0x7FF;
+            tmp[3] = (*(uint16_t *)(ptrIn + 4) >> 1) & 0x7FF;
+            tmp[4] = (*(uint16_t *)(ptrIn + 5) >> 4) & 0x7FF;
+            tmp[5] = (*(uint32_t *)(ptrIn + 6) >> 7) & 0x7FF;
+            tmp[6] = (*(uint16_t *)(ptrIn + 8) >> 2) & 0x7FF;
+            tmp[7] = (*(uint16_t *)(ptrIn + 9) >> 5) & 0x7FF;
             for (int j = 0; j < 8; j++)
             {
                 if (tmp[j] < para->n)
@@ -167,14 +165,14 @@ static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
         uint64_t A[8] = {0};
         for (int i = 0; i < 13; i++)
         {
-            A[0] = *(uint64_t*)ptrIn & 0x7FFFFFFFFFFFF;
-            A[1] = (*(uint64_t*)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
-            A[2] = (*(uint64_t*)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
-            A[3] = (*(uint64_t*)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
-            A[4] = (*(uint64_t*)(ptrIn + 25) >> 4) & 0x7FFFFFFFFFFFF;
-            A[5] = (*(uint64_t*)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
-            A[6] = (*(uint64_t*)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
-            A[7] = (*(uint64_t*)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
+            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;//51 bits for 5 values
+            A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
+            A[2] = (*(uint64_t *)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
+            A[3] = (*(uint64_t *)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
+            A[4] = (*(uint64_t *)(ptrIn + 25) >> 4) & 0x7FFFFFFFFFFFF;
+            A[5] = (*(uint64_t *)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
+            A[6] = (*(uint64_t *)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
+            A[7] = (*(uint64_t *)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
             for (int j = 0; j < 8; j++)
             {
                 if (A[j] < n5)
@@ -190,8 +188,8 @@ static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
             }
             ptrIn = ptrIn + 51;
         }
-        A[0] = *(uint64_t*)ptrIn & 0x7FFFFFFFFFFFF;
-        A[1] = (*(uint64_t*)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
+        A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
+        A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
         for (int j = 0; j < 2; j++)
         {
             if (A[j] < n5)
@@ -211,12 +209,11 @@ static inline void u8Ton(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
     }
 }
 
-
-static inline void u8Tom(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* para, uint16_t* out,
-                         int* outLen)
+static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *para, uint16_t *out,
+                         int *outLen)
 {
-    uint8_t* ptrIn = in;
-    uint16_t* ptrOut = out;
+    uint8_t *ptrIn = in;
+    uint16_t *ptrOut = out;
     *outLen = 0;
     if (para->ss == 16)
     {
@@ -251,14 +248,14 @@ static inline void u8Tom(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
         uint16_t tmp[8] = {0};
         for (int i = 0; i < inLen; i = i + 11)
         {
-            tmp[0] = *(uint16_t*)ptrIn & 0x7FF;
-            tmp[1] = (*(uint16_t*)(ptrIn + 1) >> 3) & 0x7FF;
-            tmp[2] = (*(uint32_t*)(ptrIn + 2) >> 6) & 0x7FF;
-            tmp[3] = (*(uint16_t*)(ptrIn + 4) >> 1) & 0x7FF;
-            tmp[4] = (*(uint16_t*)(ptrIn + 5) >> 4) & 0x7FF;
-            tmp[5] = (*(uint32_t*)(ptrIn + 6) >> 7) & 0x7FF;
-            tmp[6] = (*(uint16_t*)(ptrIn + 8) >> 2) & 0x7FF;
-            tmp[7] = (*(uint16_t*)(ptrIn + 9) >> 5) & 0x7FF;
+            tmp[0] = *(uint16_t *)ptrIn & 0x7FF;
+            tmp[1] = (*(uint16_t *)(ptrIn + 1) >> 3) & 0x7FF;
+            tmp[2] = (*(uint32_t *)(ptrIn + 2) >> 6) & 0x7FF;
+            tmp[3] = (*(uint16_t *)(ptrIn + 4) >> 1) & 0x7FF;
+            tmp[4] = (*(uint16_t *)(ptrIn + 5) >> 4) & 0x7FF;
+            tmp[5] = (*(uint32_t *)(ptrIn + 6) >> 7) & 0x7FF;
+            tmp[6] = (*(uint16_t *)(ptrIn + 8) >> 2) & 0x7FF;
+            tmp[7] = (*(uint16_t *)(ptrIn + 9) >> 5) & 0x7FF;
             for (int j = 0; j < 8; j++)
             {
                 if (tmp[j] < para->m)
@@ -282,14 +279,14 @@ static inline void u8Tom(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
         uint64_t A[8] = {0};
         for (int i = 0; i < 13; i++)
         {
-            A[0] = *(uint64_t*)ptrIn & 0x7FFFFFFFFFFFF;
-            A[1] = (*(uint64_t*)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
-            A[2] = (*(uint64_t*)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
-            A[3] = (*(uint64_t*)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
-            A[4] = (*(uint64_t*)(ptrIn + 25) >> 4) & 0x7FFFFFFFFFFFF;
-            A[5] = (*(uint64_t*)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
-            A[6] = (*(uint64_t*)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
-            A[7] = (*(uint64_t*)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
+            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
+            A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
+            A[2] = (*(uint64_t *)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
+            A[3] = (*(uint64_t *)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
+            A[4] = (*(uint64_t *)(ptrIn + 25) >> 4) & 0x7FFFFFFFFFFFF;
+            A[5] = (*(uint64_t *)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
+            A[6] = (*(uint64_t *)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
+            A[7] = (*(uint64_t *)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
             for (int j = 0; j < 8; j++)
             {
                 if (A[j] < m5)
@@ -305,8 +302,8 @@ static inline void u8Tom(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
             }
             ptrIn = ptrIn + 51;
         }
-        A[0] = *(uint64_t*)ptrIn & 0x7FFFFFFFFFFFF;
-        A[1] = (*(uint64_t*)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
+        A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
+        A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
         for (int j = 0; j < 2; j++)
         {
             if (A[j] < m5)
@@ -326,8 +323,7 @@ static inline void u8Tom(uint8_t* in, const int inLen, const SCLOUDPLUS_Para* pa
     }
 }
 
-
-static inline int32_t LabelingComputeV(const uint8_t* m, const uint8_t tau, Complex v[16])
+static inline int32_t LabelingComputeV(const uint8_t *m, const uint8_t tau, Complex v[16])
 {
     if (m == NULL)
     {
@@ -412,8 +408,7 @@ static inline int32_t LabelingComputeV(const uint8_t* m, const uint8_t tau, Comp
         A[0], A[1], A[2], B[0], A[3], B[1], B[2], B[3],
         A[4], B[4], B[5], B[6], B[7], B[8], B[9], C[0],
         A[5], B[10], B[11], B[12], B[13], B[14], B[15], C[1],
-        B[16], B[17], B[18], C[2], B[19], C[3], C[4], C[5]
-    };
+        B[16], B[17], B[18], C[2], B[19], C[3], C[4], C[5]};
 
     for (int i = 0; i < 16; ++i)
     {
@@ -496,7 +491,6 @@ static inline int32_t DelabelingReduceW(const Complex in[16], const uint8_t tau,
         out[12] = (Complex){in[12].real & 0x3, in[12].imag & 0x3};
         out[15] = (Complex){in[15].real & 0x1, in[15].imag & 0x1};
 
-
         mod = in[1].imag & 0x3;
         sub = mod - in[1].imag;
         out[1] = (Complex){(in[1].real + sub) & 0x7, mod};
@@ -540,7 +534,6 @@ static inline int32_t DelabelingReduceW(const Complex in[16], const uint8_t tau,
         out[12] = (Complex){in[12].real & 0x7, in[12].imag & 0x7};
         out[15] = (Complex){in[15].real & 0x3, in[15].imag & 0x3};
 
-
         mod = in[1].imag & 0x7;
         sub = mod - in[1].imag;
         out[1] = (Complex){(in[1].real + sub) & 0xF, mod};
@@ -580,13 +573,12 @@ static inline int32_t DelabelingReduceW(const Complex in[16], const uint8_t tau,
     return PQCP_SUCCESS;
 }
 
-static inline int32_t DelabelingComputeU(const Complex v[16], const uint8_t tau, uint8_t* m)
+static inline int32_t DelabelingComputeU(const Complex v[16], const uint8_t tau, uint8_t *m)
 {
     const int A[6] = {0, 1, 2, 4, 8, 16};
     const int B[20] = {
         3, 5, 6, 7, 9, 10, 11, 12, 13, 14,
-        17, 18, 19, 20, 21, 22, 24, 25, 26, 28
-    };
+        17, 18, 19, 20, 21, 22, 24, 25, 26, 28};
     const int C[6] = {15, 23, 27, 29, 30, 31};
     uint16_t vecV[32];
     for (int i = 0; i < 16; i++)
@@ -636,15 +628,15 @@ static inline int32_t DelabelingComputeU(const Complex v[16], const uint8_t tau,
         m[11] =
             (vecV[C[5]] << 6) | (vecV[C[4]] << 4) | (vecV[C[3]] << 2) | (vecV[C[2]]);
         m[10] = (vecV[C[1]] << 6) | (vecV[C[0]] << 4) | (vecV[B[19]] << 1) |
-            ((vecV[B[18]]) >> 2);
+                ((vecV[B[18]]) >> 2);
         m[9] = (vecV[B[18]] << 6) | (vecV[B[17]] << 3) | vecV[B[16]];
         m[8] = (vecV[B[15]] << 5) | (vecV[B[14]] << 2) | (vecV[B[13]] >> 1);
         m[7] = (vecV[B[13]] << 7) | (vecV[B[12]] << 4) | (vecV[B[11]] << 1) |
-            (vecV[B[10]] >> 2);
+               (vecV[B[10]] >> 2);
         m[6] = (vecV[B[10]] << 6) | (vecV[B[9]] << 3) | vecV[B[8]];
         m[5] = (vecV[B[7]] << 5) | (vecV[B[6]] << 2) | (vecV[B[5]] >> 1);
         m[4] = (vecV[B[5]] << 7) | (vecV[B[4]] << 4) | (vecV[B[3]] << 1) |
-            (vecV[B[2]] >> 2);
+               (vecV[B[2]] >> 2);
         m[3] = (vecV[B[2]] << 6) | (vecV[B[1]] << 3) | vecV[B[0]];
         m[2] = (vecV[A[5]] << 4) | (vecV[A[4]]);
         m[1] = (vecV[A[3]] << 4) | (vecV[A[2]]);
@@ -689,7 +681,7 @@ static inline int32_t DelabelingRecoverW(const Complex w[16], const uint8_t logq
     return DelabelingReduceW(tmp, tau, v);
 }
 
-static inline int32_t EuclideanDistanceNoSqrt(const Complex* set1, const Complex* set2, int32_t set_size)
+static inline int32_t EuclideanDistanceNoSqrt(const Complex *set1, const Complex *set2, int32_t set_size)
 {
     int32_t sum = 0;
     for (int i = 0; i < set_size; i++)
@@ -702,7 +694,7 @@ static inline int32_t EuclideanDistanceNoSqrt(const Complex* set1, const Complex
     return sum;
 }
 
-static inline int32_t BDDForBWn(const Complex* t, const int32_t BWn, const uint8_t logq, const uint8_t tau, Complex* y)
+static inline int32_t BDDForBWn(const Complex *t, const int32_t BWn, const uint8_t logq, const uint8_t tau, Complex *y)
 {
     const int32_t tLen = BWn >> 1;
     const int32_t halfOftLen = tLen >> 1;
@@ -764,11 +756,10 @@ static inline int32_t BDDForBWn(const Complex* t, const int32_t BWn, const uint8
     return 0;
 }
 
-
-void SCLOUDPLUS_MsgEncode(const uint8_t* msg, const SCLOUDPLUS_Para* para, uint16_t* matrixM)
+void SCLOUDPLUS_MsgEncode(const uint8_t *msg, const SCLOUDPLUS_Para *para, uint16_t *matrixM)
 {
-    uint8_t* msgPtr = (uint8_t*)msg;
-    uint16_t* matMPtr = matrixM;
+    uint8_t *msgPtr = (uint8_t *)msg;
+    uint16_t *matMPtr = matrixM;
     memset_s(matrixM, para->mbar * para->nbar * sizeof(uint16_t), 0, para->mbar * para->nbar * sizeof(uint16_t));
     for (int i = 0; i < para->mu_count; i++)
     {
@@ -780,9 +771,9 @@ void SCLOUDPLUS_MsgEncode(const uint8_t* msg, const SCLOUDPLUS_Para* para, uint1
     }
 }
 
-void SCLOUDPLUS_MsgDecode(const uint16_t* matrixM, const SCLOUDPLUS_Para* para, uint8_t* msg)
+void SCLOUDPLUS_MsgDecode(const uint16_t *matrixM, const SCLOUDPLUS_Para *para, uint8_t *msg)
 {
-    uint8_t* msgPtr = msg;
+    uint8_t *msgPtr = msg;
     Complex encMsg[16], w[16], u[16];
     for (int i = 0; i < para->mu_count; i++)
     {
@@ -799,40 +790,39 @@ void SCLOUDPLUS_MsgDecode(const uint16_t* matrixM, const SCLOUDPLUS_Para* para, 
     }
 }
 
-
-void SCLOUDPLUS_PackPK(const uint16_t* B, const SCLOUDPLUS_Para* para, uint8_t* pk)
+void SCLOUDPLUS_PackPK(const uint16_t *B, const SCLOUDPLUS_Para *para, uint8_t *pk)
 {
-    const uint16_t* ptrIn = B;
-    uint8_t* ptrOut = pk;
+    const uint16_t *ptrIn = B;
+    uint8_t *ptrOut = pk;
     uint32_t temp = 0;
 
     for (int i = 0; i < para->m * para->nbar; i = i + 2)
     {
         temp = u16Tou32(ptrIn);
         temp = (temp & 0xFFF) ^ ((temp >> 4) & 0xFFF000);
-        *(uint32_t*)ptrOut = temp;
+        *(uint32_t *)ptrOut = temp;
         ptrIn = ptrIn + 2;
         ptrOut = ptrOut + 3;
     }
 }
 
-void SCLOUDPLUS_UnPackPK(const uint8_t* pk, const SCLOUDPLUS_Para* para, uint16_t* B)
+void SCLOUDPLUS_UnPackPK(const uint8_t *pk, const SCLOUDPLUS_Para *para, uint16_t *B)
 {
-    const uint8_t* ptrIn = pk;
-    uint16_t* ptrOut = B;
+    const uint8_t *ptrIn = pk;
+    uint16_t *ptrOut = B;
     for (int i = 0; i < para->m * para->nbar; i = i + 2)
     {
-        *ptrOut = *(uint16_t*)ptrIn & 0xFFF;
-        *(ptrOut + 1) = (*(uint16_t*)(ptrIn + 1) >> 4) & 0xFFF;
+        *ptrOut = *(uint16_t *)ptrIn & 0xFFF;
+        *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & 0xFFF;
         ptrIn = ptrIn + 3;
         ptrOut = ptrOut + 2;
     }
 }
 
-void SCLOUDPLUS_PackSK(const uint16_t* S, const SCLOUDPLUS_Para* para, uint8_t* sk)
+void SCLOUDPLUS_PackSK(const uint16_t *S, const SCLOUDPLUS_Para *para, uint8_t *sk)
 {
-    const uint16_t* ptrIn = S;
-    uint8_t* ptrOut = sk;
+    const uint16_t *ptrIn = S;
+    uint8_t *ptrOut = sk;
     uint8_t temp = 0;
     for (int i = 0; i < para->n * para->nbar; i = i + 4)
     {
@@ -846,10 +836,10 @@ void SCLOUDPLUS_PackSK(const uint16_t* S, const SCLOUDPLUS_Para* para, uint8_t* 
     }
 }
 
-void SCLOUDPLUS_UnPackSK(const uint8_t* sk, const SCLOUDPLUS_Para* para, uint16_t* S)
+void SCLOUDPLUS_UnPackSK(const uint8_t *sk, const SCLOUDPLUS_Para *para, uint16_t *S)
 {
-    const uint8_t* ptrIn = sk;
-    uint16_t* ptrOut = S;
+    const uint8_t *ptrIn = sk;
+    uint16_t *ptrOut = S;
     uint8_t temp = 0;
     for (int i = 0; i < para->n * para->nbar; i = i + 4)
     {
@@ -863,7 +853,7 @@ void SCLOUDPLUS_UnPackSK(const uint8_t* sk, const SCLOUDPLUS_Para* para, uint16_
     }
 }
 
-void SCLOUDPLUS_CompressC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint16_t* out)
+void SCLOUDPLUS_CompressC1(const uint16_t *C, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     if (para->ss == 16)
     {
@@ -888,7 +878,7 @@ void SCLOUDPLUS_CompressC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint1
     }
 }
 
-void SCLOUDPLUS_DeCompressC1(const uint16_t* in, const SCLOUDPLUS_Para* para, uint16_t* C)
+void SCLOUDPLUS_DeCompressC1(const uint16_t *in, const SCLOUDPLUS_Para *para, uint16_t *C)
 {
     if (para->ss == 16)
     {
@@ -913,7 +903,7 @@ void SCLOUDPLUS_DeCompressC1(const uint16_t* in, const SCLOUDPLUS_Para* para, ui
     }
 }
 
-void SCLOUDPLUS_CompressC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint16_t* out)
+void SCLOUDPLUS_CompressC2(const uint16_t *C, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     if (para->ss == 16 || para->ss == 32)
     {
@@ -938,7 +928,7 @@ void SCLOUDPLUS_CompressC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint1
     }
 }
 
-void SCLOUDPLUS_DeCompressC2(const uint16_t* in, const SCLOUDPLUS_Para* para, uint16_t* C)
+void SCLOUDPLUS_DeCompressC2(const uint16_t *in, const SCLOUDPLUS_Para *para, uint16_t *C)
 {
     if (para->ss == 16 || para->ss == 32)
     {
@@ -959,12 +949,12 @@ void SCLOUDPLUS_DeCompressC2(const uint16_t* in, const SCLOUDPLUS_Para* para, ui
     }
 }
 
-void SCLOUDPLUS_PackC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* out)
+void SCLOUDPLUS_PackC1(const uint16_t *C, const SCLOUDPLUS_Para *para, uint8_t *out)
 {
     if (para->ss == 16)
     {
         const int inLen = para->mbar * para->n;
-        const uint8_t* ptrIn = (uint8_t*)C;
+        const uint8_t *ptrIn = (uint8_t *)C;
         for (int i = 0; i < inLen; i++)
         {
             out[i] = ptrIn[2 * i];
@@ -979,14 +969,14 @@ void SCLOUDPLUS_PackC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     }
     else if (para->ss == 24)
     {
-        const uint16_t* ptrIn = C;
-        uint8_t* ptrOut = out;
+        const uint16_t *ptrIn = C;
+        uint8_t *ptrOut = out;
         uint32_t temp = 0;
         for (int i = 0; i < para->mbar * para->n; i = i + 2)
         {
             temp = u16Tou32(ptrIn);
             temp = (temp & 0xFFF) ^ ((temp >> 4) & 0xFFF000);
-            *(uint32_t*)ptrOut = temp;
+            *(uint32_t *)ptrOut = temp;
             ptrIn = ptrIn + 2;
             ptrOut = ptrOut + 3;
         }
@@ -994,7 +984,7 @@ void SCLOUDPLUS_PackC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     else if (para->ss == 32)
     {
         const int inLen = para->mbar * para->n;
-        const uint8_t* ptrIn = (uint8_t*)C;
+        const uint8_t *ptrIn = (uint8_t *)C;
         for (int i = 0; i < inLen; i++)
         {
             out[i] = ptrIn[2 * i];
@@ -1012,7 +1002,7 @@ void SCLOUDPLUS_PackC1(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     }
 }
 
-void SCLOUDPLUS_UnPackC1(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_t* C)
+void SCLOUDPLUS_UnPackC1(const uint8_t *in, const SCLOUDPLUS_Para *para, uint16_t *C)
 {
     if (para->ss == 16)
     {
@@ -1035,12 +1025,12 @@ void SCLOUDPLUS_UnPackC1(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_
     }
     else if (para->ss == 24)
     {
-        const uint8_t* ptrIn = in;
-        uint16_t* ptrOut = C;
+        const uint8_t *ptrIn = in;
+        uint16_t *ptrOut = C;
         for (int i = 0; i < para->mbar * para->n; i = i + 2)
         {
-            *ptrOut = *(uint16_t*)ptrIn & 0xFFF;
-            *(ptrOut + 1) = (*(uint16_t*)(ptrIn + 1) >> 4) & 0xFFF;
+            *ptrOut = *(uint16_t *)ptrIn & 0xFFF;
+            *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & 0xFFF;
             ptrIn = ptrIn + 3;
             ptrOut = ptrOut + 2;
         }
@@ -1065,16 +1055,16 @@ void SCLOUDPLUS_UnPackC1(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_
     }
 }
 
-void SCLOUDPLUS_PackC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* out)
+void SCLOUDPLUS_PackC2(const uint16_t *C, const SCLOUDPLUS_Para *para, uint8_t *out)
 {
     if (para->ss == 16)
     {
         const int inLen = para->mbar * para->nbar;
-        const uint16_t* ptrIn = C;
-        uint8_t* ptrOut = out;
+        const uint16_t *ptrIn = C;
+        uint8_t *ptrOut = out;
         for (int i = 0; i < inLen; i = i + 8)
         {
-            *ptrOut = ((*ptrIn) & 0x7F) | (*(ptrIn + 1) << 7); // 7+1
+            *ptrOut = ((*ptrIn) & 0x7F) | (*(ptrIn + 1) << 7);                  // 7+1
             *(ptrOut + 1) = ((*(ptrIn + 1) >> 1) & 0x3F) | (*(ptrIn + 2) << 6); // 6+2
             *(ptrOut + 2) = ((*(ptrIn + 2) >> 2) & 0x1F) | (*(ptrIn + 3) << 5); // 5+3
             *(ptrOut + 3) = ((*(ptrIn + 3) >> 3) & 0x0F) | (*(ptrIn + 4) << 4); // 4+4
@@ -1088,7 +1078,7 @@ void SCLOUDPLUS_PackC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     else if (para->ss == 24)
     {
         const int inLen = para->mbar * para->nbar;
-        const uint8_t* ptrIn = (uint8_t*)C;
+        const uint8_t *ptrIn = (uint8_t *)C;
         for (int i = 0; i < inLen; i++)
         {
             out[i] = ptrIn[2 * i];
@@ -1105,11 +1095,11 @@ void SCLOUDPLUS_PackC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     {
         const int inLen = para->mbar * para->nbar - ((para->mbar * para->nbar) & 0x7);
 
-        const uint16_t* ptrIn = C;
-        uint8_t* ptrOut = out;
+        const uint16_t *ptrIn = C;
+        uint8_t *ptrOut = out;
         for (int i = 0; i < inLen; i = i + 8)
         {
-            *ptrOut = ((*ptrIn) & 0x7F) | (*(ptrIn + 1) << 7); // 7+1
+            *ptrOut = ((*ptrIn) & 0x7F) | (*(ptrIn + 1) << 7);                  // 7+1
             *(ptrOut + 1) = ((*(ptrIn + 1) >> 1) & 0x3F) | (*(ptrIn + 2) << 6); // 6+2
             *(ptrOut + 2) = ((*(ptrIn + 2) >> 2) & 0x1F) | (*(ptrIn + 3) << 5); // 5+3
             *(ptrOut + 3) = ((*(ptrIn + 3) >> 3) & 0x0F) | (*(ptrIn + 4) << 4); // 4+4
@@ -1129,22 +1119,22 @@ void SCLOUDPLUS_PackC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
     }
 }
 
-void SCLOUDPLUS_UnPackC2(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_t* C)
+void SCLOUDPLUS_UnPackC2(const uint8_t *in, const SCLOUDPLUS_Para *para, uint16_t *C)
 {
     if (para->ss == 16)
     {
-        const uint8_t* ptrIn = in;
-        uint16_t* ptrOut = C;
+        const uint8_t *ptrIn = in;
+        uint16_t *ptrOut = C;
         const int outLen = para->mbar * para->nbar;
         for (int i = 0; i < outLen; i = i + 8)
         {
             *ptrOut = *ptrIn & 0x7F;
-            *(ptrOut + 1) = (*(uint16_t*)ptrIn >> 7) & 0x7F;
-            *(ptrOut + 2) = (*(uint16_t*)(ptrIn + 1) >> 6) & 0x7F;
-            *(ptrOut + 3) = (*(uint16_t*)(ptrIn + 2) >> 5) & 0x7F;
-            *(ptrOut + 4) = (*(uint16_t*)(ptrIn + 3) >> 4) & 0x7F;
-            *(ptrOut + 5) = (*(uint16_t*)(ptrIn + 4) >> 3) & 0x7F;
-            *(ptrOut + 6) = (*(uint16_t*)(ptrIn + 5) >> 2) & 0x7F;
+            *(ptrOut + 1) = (*(uint16_t *)ptrIn >> 7) & 0x7F;
+            *(ptrOut + 2) = (*(uint16_t *)(ptrIn + 1) >> 6) & 0x7F;
+            *(ptrOut + 3) = (*(uint16_t *)(ptrIn + 2) >> 5) & 0x7F;
+            *(ptrOut + 4) = (*(uint16_t *)(ptrIn + 3) >> 4) & 0x7F;
+            *(ptrOut + 5) = (*(uint16_t *)(ptrIn + 4) >> 3) & 0x7F;
+            *(ptrOut + 6) = (*(uint16_t *)(ptrIn + 5) >> 2) & 0x7F;
             *(ptrOut + 7) = (*(ptrIn + 6) >> 1) & 0x7F;
             ptrIn = ptrIn + 7;
             ptrOut = ptrOut + 8;
@@ -1168,32 +1158,32 @@ void SCLOUDPLUS_UnPackC2(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_
     else if (para->ss == 32)
     {
         const int outLen = para->mbar * para->nbar - ((para->mbar * para->nbar) & 0x7);
-        const uint8_t* ptrIn = in;
-        uint16_t* ptrOut = C;
+        const uint8_t *ptrIn = in;
+        uint16_t *ptrOut = C;
         for (int i = 0; i < outLen; i = i + 8)
         {
             *ptrOut = *ptrIn & 0x7F;
-            *(ptrOut + 1) = (*(uint16_t*)ptrIn >> 7) & 0x7F;
-            *(ptrOut + 2) = (*(uint16_t*)(ptrIn + 1) >> 6) & 0x7F;
-            *(ptrOut + 3) = (*(uint16_t*)(ptrIn + 2) >> 5) & 0x7F;
-            *(ptrOut + 4) = (*(uint16_t*)(ptrIn + 3) >> 4) & 0x7F;
-            *(ptrOut + 5) = (*(uint16_t*)(ptrIn + 4) >> 3) & 0x7F;
-            *(ptrOut + 6) = (*(uint16_t*)(ptrIn + 5) >> 2) & 0x7F;
+            *(ptrOut + 1) = (*(uint16_t *)ptrIn >> 7) & 0x7F;
+            *(ptrOut + 2) = (*(uint16_t *)(ptrIn + 1) >> 6) & 0x7F;
+            *(ptrOut + 3) = (*(uint16_t *)(ptrIn + 2) >> 5) & 0x7F;
+            *(ptrOut + 4) = (*(uint16_t *)(ptrIn + 3) >> 4) & 0x7F;
+            *(ptrOut + 5) = (*(uint16_t *)(ptrIn + 4) >> 3) & 0x7F;
+            *(ptrOut + 6) = (*(uint16_t *)(ptrIn + 5) >> 2) & 0x7F;
             *(ptrOut + 7) = (*(ptrIn + 6) >> 1) & 0x7F;
             ptrIn = ptrIn + 7;
             ptrOut = ptrOut + 8;
         }
         *ptrOut = *ptrIn & 0x7F;
-        *(ptrOut + 1) = (*(uint16_t*)ptrIn >> 7) & 0x7F;
-        *(ptrOut + 2) = (*(uint16_t*)(ptrIn + 1) >> 6) & 0x7F;
-        *(ptrOut + 3) = (*(uint16_t*)(ptrIn + 2) >> 5) & 0x7F;
+        *(ptrOut + 1) = (*(uint16_t *)ptrIn >> 7) & 0x7F;
+        *(ptrOut + 2) = (*(uint16_t *)(ptrIn + 1) >> 6) & 0x7F;
+        *(ptrOut + 3) = (*(uint16_t *)(ptrIn + 2) >> 5) & 0x7F;
     }
     else
     {
     }
 }
 
-int8_t SCLOUDPLUS_Verify(const uint8_t* a, const uint8_t* b, const int Len)
+int8_t SCLOUDPLUS_Verify(const uint8_t *a, const uint8_t *b, const int Len)
 {
     uint8_t r = 0;
     for (int i = 0; i < Len; i++)
@@ -1205,7 +1195,7 @@ int8_t SCLOUDPLUS_Verify(const uint8_t* a, const uint8_t* b, const int Len)
     return (int8_t)r;
 }
 
-void SCLOUDPLUS_CMov(uint8_t* r, const uint8_t* a, const uint8_t* b, const int Len, const int8_t bl)
+void SCLOUDPLUS_CMov(uint8_t *r, const uint8_t *a, const uint8_t *b, const int Len, const int8_t bl)
 {
     for (int i = 0; i < Len; i++)
     {
@@ -1213,7 +1203,7 @@ void SCLOUDPLUS_CMov(uint8_t* r, const uint8_t* a, const uint8_t* b, const int L
     }
 }
 
-void SCLOUDPLUS_Add(const uint16_t* in0, const uint16_t* in1, const int len, uint16_t* out)
+void SCLOUDPLUS_Add(const uint16_t *in0, const uint16_t *in1, const int len, uint16_t *out)
 {
     for (int i = 0; i < len; i++)
     {
@@ -1221,7 +1211,7 @@ void SCLOUDPLUS_Add(const uint16_t* in0, const uint16_t* in1, const int len, uin
     }
 }
 
-void SCLOUDPLUS_Sub(const uint16_t* in0, const uint16_t* in1, const int len, uint16_t* out)
+void SCLOUDPLUS_Sub(const uint16_t *in0, const uint16_t *in1, const int len, uint16_t *out)
 {
     for (int i = 0; i < len; i++)
     {
@@ -1229,7 +1219,7 @@ void SCLOUDPLUS_Sub(const uint16_t* in0, const uint16_t* in1, const int len, uin
     }
 }
 
-void SCLOUDPLUS_CS(const uint16_t* C, const uint16_t* S, const SCLOUDPLUS_Para* para, uint16_t* out)
+void SCLOUDPLUS_CS(const uint16_t *C, const uint16_t *S, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     memset_s(out, para->mbar * para->nbar * 2, 0, para->mbar * para->nbar * 2);
     for (int i = 0; i < para->mbar; i++)
@@ -1244,7 +1234,7 @@ void SCLOUDPLUS_CS(const uint16_t* C, const uint16_t* S, const SCLOUDPLUS_Para* 
     }
 }
 
-void SCLOUDPLUS_SB_E(const uint16_t* S, const uint16_t* B, const uint16_t* E, const SCLOUDPLUS_Para* para, uint16_t* out)
+void SCLOUDPLUS_SB_E(const uint16_t *S, const uint16_t *B, const uint16_t *E, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     memcpy_s(out, para->mbar * para->nbar * 2, E, para->mbar * para->nbar * 2);
     for (int i = 0; i < para->mbar; i++)
@@ -1259,12 +1249,12 @@ void SCLOUDPLUS_SB_E(const uint16_t* S, const uint16_t* B, const uint16_t* E, co
     }
 }
 
-int32_t SCLOUDPLUS_AS_E(const uint8_t* seedA, const uint16_t* S, const uint16_t* E, const SCLOUDPLUS_Para* para,
-                        uint16_t* B)
+int32_t SCLOUDPLUS_AS_E(const uint8_t *seedA, const uint16_t *S, const uint16_t *E, const SCLOUDPLUS_Para *para,
+                        uint16_t *B)
 {
     int32_t ret = 0;
     memcpy_s(B, para->m * para->nbar * 2, E, para->m * para->nbar * 2);
-    CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
+    CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL)
     {
         return PQCP_MALLOC_FAIL;
@@ -1295,7 +1285,7 @@ int32_t SCLOUDPLUS_AS_E(const uint8_t* seedA, const uint16_t* S, const uint16_t*
             aRowIn[4 * j + 2 * blockRowLen] = (i + 2) * blockNumber + j;
             aRowIn[4 * j + 3 * blockRowLen] = (i + 3) * blockNumber + j;
         }
-        ret = CRYPT_EAL_CipherUpdate(RandCtx, (uint8_t*)aRowIn, 4 * para->n * sizeof(uint16_t), (uint8_t*)aRowOut,
+        ret = CRYPT_EAL_CipherUpdate(RandCtx, (uint8_t *)aRowIn, 4 * para->n * sizeof(uint16_t), (uint8_t *)aRowOut,
                                      &outLen);
         if (ret != PQCP_SUCCESS)
         {
@@ -1327,8 +1317,8 @@ EXIT:
     return ret;
 }
 
-int32_t SCLOUDPLUS_SA_E(const uint8_t* seedA, const uint16_t* S,
-                        uint16_t* E, const SCLOUDPLUS_Para* para, uint16_t* C)
+int32_t SCLOUDPLUS_SA_E(const uint8_t *seedA, const uint16_t *S,
+                        uint16_t *E, const SCLOUDPLUS_Para *para, uint16_t *C)
 {
     int32_t ret = 0;
     uint32_t outLen = 8 * para->n * sizeof(uint16_t);
@@ -1338,7 +1328,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t* seedA, const uint16_t* S,
     uint16_t aRowOut[8 * para->n];
     memset_s(aRowIn, 8 * blockRowLen * sizeof(uint32_t), 0, 8 * blockRowLen * sizeof(uint32_t));
 
-    CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
+    CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL)
     {
         return PQCP_MALLOC_FAIL;
@@ -1363,7 +1353,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t* seedA, const uint16_t* S,
                 aRowIn[q * blockRowLen + 4 * p] = (i + q) * blockNumber + p;
             }
         }
-        ret = CRYPT_EAL_CipherUpdate(RandCtx, (uint8_t*)aRowIn, 8 * para->n * sizeof(uint16_t), (uint8_t*)aRowOut,
+        ret = CRYPT_EAL_CipherUpdate(RandCtx, (uint8_t *)aRowIn, 8 * para->n * sizeof(uint16_t), (uint8_t *)aRowOut,
                                      &outLen);
         if (ret != PQCP_SUCCESS)
         {
@@ -1389,7 +1379,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t* seedA, const uint16_t* S,
             }
         }
     }
-    memcpy_s((unsigned char*)C, 2 * para->mbar * para->n, (unsigned char*)E,
+    memcpy_s((unsigned char *)C, 2 * para->mbar * para->n, (unsigned char *)E,
              2 * para->mbar * para->n);
 
 EXIT:
@@ -1400,7 +1390,7 @@ EXIT:
     return ret;
 }
 
-static inline void cbd1(const uint8_t in, uint16_t* out)
+static inline void cbd1(const uint8_t in, uint16_t *out)
 {
     uint8_t b = 0, b0 = 0, b1 = 0;
     b = in;
@@ -1413,7 +1403,7 @@ static inline void cbd1(const uint8_t in, uint16_t* out)
     }
 }
 
-static inline void cbd2(const uint8_t in, uint16_t* out)
+static inline void cbd2(const uint8_t in, uint16_t *out)
 {
     uint8_t b = 0;
     b += in & 0x55;
@@ -1422,7 +1412,7 @@ static inline void cbd2(const uint8_t in, uint16_t* out)
     *(out + 1) = (uint16_t)(((b >> 4) & 0x03) - ((b >> 6) & 0x03));
 }
 
-static inline void cbd3(const uint32_t in, uint16_t* out)
+static inline void cbd3(const uint32_t in, uint16_t *out)
 {
     uint32_t b = 0;
     b += in & 0x00249249;
@@ -1434,7 +1424,7 @@ static inline void cbd3(const uint32_t in, uint16_t* out)
     }
 }
 
-static inline void cbd7(const uint64_t in, uint16_t* out)
+static inline void cbd7(const uint64_t in, uint16_t *out)
 {
     uint64_t b0 = 0;
     b0 += in & 0x2040810204081;
@@ -1450,36 +1440,19 @@ static inline void cbd7(const uint64_t in, uint16_t* out)
     }
 }
 
-
-int32_t SCLOUDPLUS_SampleEta1(const uint8_t* seed, const SCLOUDPLUS_Para* para, uint16_t* matrixE)
+int32_t SCLOUDPLUS_SampleEta1(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixE)
 {
     memset_s(matrixE, para->m * para->nbar * sizeof(uint16_t), 0, para->m * para->nbar * sizeof(uint16_t));
-    int32_t ret = 0;
+    int32_t ret = PQCP_SUCCESS;
     uint32_t hashLen = (para->m * para->nbar * 2 * para->eta1) >> 3;
-    uint8_t* tmp = BSL_SAL_Malloc(hashLen);
+    uint8_t *tmp = BSL_SAL_Malloc(hashLen);
     if (tmp == NULL)
     {
         return PQCP_MALLOC_FAIL;
     }
-    uint8_t* ptrTmp = tmp;
-    uint16_t* ptrMatrix = matrixE;
-    CRYPT_EAL_MdCTX* CBDCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
-    if (CBDCtx == NULL)
-    {
-        ret = PQCP_MALLOC_FAIL;
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdInit(CBDCtx);
-    if (ret != CRYPT_SUCCESS)
-    {
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdUpdate(CBDCtx, seed, 32);
-    if (ret != CRYPT_SUCCESS)
-    {
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdFinal(CBDCtx, tmp, &hashLen);
+    uint8_t *ptrTmp = tmp;
+    uint16_t *ptrMatrix = matrixE;
+    ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, seed, seedr2Len, NULL, 0, tmp, &hashLen);
     if (ret != CRYPT_SUCCESS)
     {
         goto EXIT;
@@ -1517,15 +1490,11 @@ int32_t SCLOUDPLUS_SampleEta1(const uint8_t* seed, const SCLOUDPLUS_Para* para, 
     }
 EXIT:
     BSL_SAL_FREE(tmp);
-    if (CBDCtx != NULL)
-    {
-        CRYPT_EAL_MdFreeCtx(CBDCtx);
-    }
     return ret;
 }
 
-int32_t SCLOUDPLUS_SampleEta2(const uint8_t* seed, const SCLOUDPLUS_Para* para, uint16_t* matrixE1,
-                              uint16_t* matrixE2)
+int32_t SCLOUDPLUS_SampleEta2(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixE1,
+                              uint16_t *matrixE2)
 {
     memset_s(matrixE1, para->mbar * para->n * 2, 0, para->mbar * para->n * 2);
     memset_s(matrixE2, para->mbar * para->nbar * 2, 0, para->mbar * para->nbar * 2);
@@ -1533,32 +1502,16 @@ int32_t SCLOUDPLUS_SampleEta2(const uint8_t* seed, const SCLOUDPLUS_Para* para, 
     const uint32_t hash1Len = ((para->mbar * para->n) * (2 * para->eta2)) >> 3;
     const uint32_t hash2Len = ((para->mbar * para->nbar) * (2 * para->eta2) + 7) >> 3;
     uint32_t hashLen = hash1Len + hash2Len;
-    uint8_t* tmp = BSL_SAL_Malloc(hash1Len + hash2Len);
+    uint8_t *tmp = BSL_SAL_Malloc(hash1Len + hash2Len);
     if (tmp == NULL)
     {
         return PQCP_MALLOC_FAIL;
     }
-    uint8_t* ptrTmp1 = tmp;
-    uint8_t* ptrTmp2 = tmp + hash1Len;
-    uint16_t* ptrMatrix1 = matrixE1;
-    uint16_t* ptrMatrix2 = matrixE2;
-
-    CRYPT_EAL_MdCTX* CBDCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
-    if (CBDCtx == NULL)
-    {
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdInit(CBDCtx);
-    if (ret != PQCP_SUCCESS)
-    {
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdUpdate(CBDCtx, seed, 32);
-    if (ret != PQCP_SUCCESS)
-    {
-        goto EXIT;
-    }
-    ret = CRYPT_EAL_MdFinal(CBDCtx, tmp, &hashLen);
+    uint8_t *ptrTmp1 = tmp;
+    uint8_t *ptrTmp2 = tmp + hash1Len;
+    uint16_t *ptrMatrix1 = matrixE1;
+    uint16_t *ptrMatrix2 = matrixE2;
+    ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, seed, seedr2Len, NULL, 0, tmp, &hashLen);
     if (ret != PQCP_SUCCESS)
     {
         goto EXIT;
@@ -1614,22 +1567,18 @@ int32_t SCLOUDPLUS_SampleEta2(const uint8_t* seed, const SCLOUDPLUS_Para* para, 
     }
 EXIT:
     BSL_SAL_FREE(tmp);
-    if (CBDCtx != NULL)
-    {
-        CRYPT_EAL_MdFreeCtx(CBDCtx);
-    }
     return ret;
 }
 
-int32_t SCLOUDPLUS_SamplePsi(const uint8_t* seed, const SCLOUDPLUS_Para* para, uint16_t* matrixS)
+int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixS)
 {
     int32_t ret = 0;
     memset_s(matrixS, para->n * para->nbar * 2, 0, para->n * para->nbar * 2);
-    uint8_t hash[680] = {0};
+    uint8_t hash[680] = {0}; // 5*136 shake256_rate
     uint16_t tmp[para->mnout];
     int outLen, k = 0;
-    const int inLen = 680;
-    CRYPT_EAL_MdCTX* PsiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
+    const int inLen = sizeof(hash);
+    CRYPT_EAL_MdCTX *PsiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
     if (PsiCtx == NULL)
     {
         ret = PQCP_MALLOC_FAIL;
@@ -1683,15 +1632,15 @@ EXIT:
     return ret;
 }
 
-int32_t SCLOUDPLUS_SamplePhi(const uint8_t* seed, const SCLOUDPLUS_Para* para, uint16_t* matrixs)
+int32_t SCLOUDPLUS_SamplePhi(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixs)
 {
     int32_t ret = 0;
     memset_s(matrixs, para->m * para->mbar * 2, 0, para->m * para->mbar * 2);
-    uint8_t hash[680] = {0};
+    uint8_t hash[680] = {0}; // 5*136 shake256_rate
     uint16_t tmp[para->mnout];
     int outLen, k = 0;
-    const int inLen = 680;
-    CRYPT_EAL_MdCTX* PhiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
+    const int inLen = sizeof(hash);
+    CRYPT_EAL_MdCTX *PhiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
     if (PhiCtx == NULL)
     {
         return PQCP_MALLOC_FAIL;
@@ -1741,14 +1690,14 @@ EXIT:
     return ret;
 }
 
-int32_t SCLOUDPLUS_MdFunc(const CRYPT_MD_AlgId id, const uint8_t* input1, const uint32_t inLen1, const uint8_t* input2, const uint32_t inLen2,
-                         uint8_t* output, uint32_t* outLen)
+int32_t SCLOUDPLUS_MdFunc(const CRYPT_MD_AlgId id, const uint8_t *input1, const uint32_t inLen1, const uint8_t *input2, const uint32_t inLen2,
+                          uint8_t *output, uint32_t *outLen)
 {
     if (input1 == NULL || outLen == NULL)
     {
         goto EXIT;
     }
-    CRYPT_EAL_MdCTX* MdCtx = CRYPT_EAL_MdNewCtx(id);
+    CRYPT_EAL_MdCTX *MdCtx = CRYPT_EAL_MdNewCtx(id);
     if (MdCtx == NULL)
     {
         goto EXIT;

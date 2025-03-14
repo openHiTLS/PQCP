@@ -23,6 +23,17 @@
 extern "C" {
 #endif /* __cpluscplus */
 
+#define alphaLen 32
+#define seedALen 16
+#define seedr1Len 32
+#define seedr2Len 32
+#define seedkLen 32
+#define randrLen 32
+#define randzLen 32
+#define hpkLen 32
+#define secBits1 128
+#define secBits2 192
+#define secBits3 256
 
 typedef struct
 {
@@ -97,8 +108,8 @@ void SCLOUDPLUS_MsgDecode(const uint16_t* matrixM, const SCLOUDPLUS_Para* para, 
 int8_t SCLOUDPLUS_Verify(const uint8_t* a, const uint8_t* b, const int Len);
 void SCLOUDPLUS_CMov(uint8_t* r, const uint8_t* a, const uint8_t* b, const int Len, const int8_t bl);
 int32_t SCLOUDPLUS_MdFunc(const CRYPT_MD_AlgId id, const uint8_t* input1, const uint32_t inLen1, const uint8_t* input2,
-                         const uint32_t inLen2,
-                         uint8_t* output, uint32_t* outLen);
+                          const uint32_t inLen2,
+                          uint8_t* output, uint32_t* outLen);
 #ifdef __cplusplus
 }
 #endif
