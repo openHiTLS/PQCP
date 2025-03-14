@@ -23,6 +23,7 @@ option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 # 调试选项设置
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3 -O0")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 
 # ASAN配置
 if(ENABLE_ASAN)
@@ -38,6 +39,7 @@ set(PROVIDER_SOURCES
     src/provider/pqcp_provider.c
     src/provider/pqcp_kem.c
     src/scloudplus/src/scloudplus.c
+    src/scloudplus/src/scloudplus_util.c
 )
 
 # 添加链接目录

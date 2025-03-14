@@ -24,18 +24,21 @@
 #include "crypt_eal_implprovider.h"
 #include "crypt_eal_pkey.h"
 #include "crypt_errno.h"
-
+#include "crypt_eal_rand.h"
 /* KEM测试用例 */
-
+CRYPT_EAL_LibCtx *libctx = NULL;
 static int32_t PQCP_TestLoadProvider(void)
 {
-    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, "/path/to/pqcp/build");
-    if (ret != CRYPT_SUCCESS) {
+    libctx = CRYPT_EAL_LibCtxNew();
+    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(libctx, "/home/qiuzhiyuan/C_code/scloud/pqcp/build");
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("设置PQCP提供者路径失败\n");
         return PQCP_TEST_FAILURE;
     }
-    ret = CRYPT_EAL_ProviderLoad(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider", NULL, NULL);
-    if (ret != CRYPT_SUCCESS) {
+    ret = CRYPT_EAL_ProviderLoad(libctx, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider", NULL, NULL);
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("加载PQCP提供者失败\n");
         return PQCP_TEST_FAILURE;
     }
@@ -45,30 +48,35 @@ static int32_t PQCP_TestLoadProvider(void)
 
 /* scloud+测试用例 */
 static PqcpTestResult TestScloudPlusKeygen(void)
-{    
+{
     /* 示例实现 */
     printf("执行scloud+密钥生成测试...\n");
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE, "provider=pqcp");
-    if (ctx == NULL) {
+    CRYPT_EAL_PkeyCtx* ctx = CRYPT_EAL_ProviderPkeyNewCtx(libctx, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+                                                          "provider=pqcp");
+    if (ctx == NULL)
+    {
         printf("创建scloud+密钥生成上下文失败\n");
         return PQCP_TEST_FAILURE;
     }
     int32_t val = 256;
     int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         CRYPT_EAL_PkeyFreeCtx(ctx);
         printf("设置scloud+密钥生成上下文密钥位数失败\n");
         return PQCP_TEST_FAILURE;
     }
     ret = CRYPT_EAL_PkeyGen(ctx);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         CRYPT_EAL_PkeyFreeCtx(ctx);
         printf("生成scloud+密钥失败\n");
         return PQCP_TEST_FAILURE;
     }
     CRYPT_EAL_PkeyPub pub = {CRYPT_PKEY_SCLOUDPLUS, {NULL, 0}};
     ret = CRYPT_EAL_PkeyGetPub(ctx, &pub);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         CRYPT_EAL_PkeyFreeCtx(ctx);
         printf("获取scloud+公钥失败\n");
         return PQCP_TEST_FAILURE;
@@ -76,7 +84,8 @@ static PqcpTestResult TestScloudPlusKeygen(void)
     CRYPT_EAL_PkeyPrv prv = {CRYPT_PKEY_SCLOUDPLUS, {NULL, 0}};
     ret = CRYPT_EAL_PkeyGetPrv(ctx, &prv);
     CRYPT_EAL_PkeyFreeCtx(ctx);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("获取scloud+私钥失败\n");
         return PQCP_TEST_FAILURE;
     }
@@ -86,40 +95,45 @@ static PqcpTestResult TestScloudPlusKeygen(void)
 
 static PqcpTestResult TestScloudPlusEncaps(void)
 {
-    
     /* 示例实现 */
     printf("执行scloud+密钥封装测试...\n");
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE, "provider=pqcp");
-    if (ctx == NULL) {
+    CRYPT_EAL_PkeyCtx* ctx = CRYPT_EAL_ProviderPkeyNewCtx(libctx, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+                                                          "provider=pqcp");
+    if (ctx == NULL)
+    {
         printf("创建scloud+密钥生成上下文失败\n");
         return PQCP_TEST_FAILURE;
     }
     int32_t val = 256;
     int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("设置scloud+密钥生成上下文密钥位数失败\n");
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
     ret = CRYPT_EAL_PkeyGen(ctx);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("生成scloud+密钥失败\n");
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
     ret = CRYPT_EAL_PkeyEncapsInit(ctx, NULL);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("初始化scloud+密钥封装失败\n");
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
-    uint8_t cipher[1024];
+    uint8_t cipher[16916];
     uint32_t cipherLen = sizeof(cipher);
-    uint8_t sharekey[1024];
+    uint8_t sharekey[32];
     uint32_t sharekeyLen = sizeof(sharekey);
     ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &cipherLen, sharekey, &sharekeyLen);
     CRYPT_EAL_PkeyFreeCtx(ctx);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("scloud+密钥封装失败\n");
         return PQCP_TEST_FAILURE;
     }
@@ -131,40 +145,61 @@ static PqcpTestResult TestScloudPlusDecaps(void)
 {
     /* 这里是scloud+密钥解封装测试的实现 */
     /* 在实际实现中，应该调用PQCP库的scloud+密钥解封装函数 */
-    
+
     /* 示例实现 */
     printf("执行scloud+密钥解封装测试...\n");
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE, "provider=pqcp");
-    if (ctx == NULL) {
+    CRYPT_EAL_PkeyCtx* ctx = CRYPT_EAL_ProviderPkeyNewCtx(libctx, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+                                                          "provider=pqcp");
+    if (ctx == NULL)
+    {
         printf("创建scloud+密钥生成上下文失败\n");
         return PQCP_TEST_FAILURE;
     }
     int32_t val = 256;
     int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("设置scloud+密钥生成上下文密钥位数失败\n");
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
     ret = CRYPT_EAL_PkeyGen(ctx);
-    if (ret != CRYPT_SUCCESS) {
-        printf("生成scloud+密钥失败\n");
+    if (ret != CRYPT_SUCCESS)
+    {
+
+        printf("生成scloud+密钥失败 %d\n",ret);
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
+    uint8_t cipher[16916];
+    uint32_t cipherLen = sizeof(cipher);
+    uint8_t sharekey1[32];
+    uint8_t sharekey2[32];
+    uint32_t sharekeyLen = sizeof(sharekey1);
+    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &cipherLen, sharekey1, &sharekeyLen);
+    printf("encaps sharekey :\n");
+    for (int i =0 ;i<32;i++)
+    {
+        printf("%02X ",sharekey1[i]);
+    }
+    printf("\n");
     ret = CRYPT_EAL_PkeyDecapsInit(ctx, NULL);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("初始化scloud+密钥解封装失败\n");
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
-    uint8_t cipher[1024];
-    uint32_t cipherLen = sizeof(cipher);
-    uint8_t sharekey[1024];
-    uint32_t sharekeyLen = sizeof(sharekey);
-    ret = CRYPT_EAL_PkeyDecaps(ctx, cipher, cipherLen, sharekey, &sharekeyLen);
+    ret = CRYPT_EAL_PkeyDecaps(ctx, cipher, cipherLen, sharekey2, &sharekeyLen);
+    printf("decaps sharekey :\n");
+    for (int i =0 ;i<32;i++)
+    {
+        printf("%02X ",sharekey2[i]);
+    }
+    printf("\n");
     CRYPT_EAL_PkeyFreeCtx(ctx);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != CRYPT_SUCCESS)
+    {
         printf("scloud+密钥解封装失败\n");
         return PQCP_TEST_FAILURE;
     }
@@ -177,18 +212,23 @@ static PqcpTestResult TestScloudPlusDecaps(void)
 int32_t PQCP_InitKemTestSuite(void)
 {
     /* 创建KEM测试套件 */
-    PqcpTestSuite *suite = PQCP_TestCreateSuite("kem", "后量子密钥封装机制测试");
-    if (suite == NULL) {
+    CRYPT_EAL_RandInit(CRYPT_RAND_SHA256, NULL, NULL, NULL, 0);
+
+    PqcpTestSuite* suite = PQCP_TestCreateSuite("kem", "后量子密钥封装机制测试");
+    if (suite == NULL)
+    {
         return -1;
     }
-    if (PQCP_TestLoadProvider() != PQCP_TEST_SUCCESS) {
+    if (PQCP_TestLoadProvider() != PQCP_TEST_SUCCESS)
+    {
+        BSL_SAL_FREE(libctx);
         return -1;
     }
     /* 添加scloud+测试用例 */
     PQCP_TestAddCase(suite, "scloudplus_keygen", "scloud+密钥生成测试", TestScloudPlusKeygen);
     PQCP_TestAddCase(suite, "scloudplus_encaps", "scloud+密钥封装测试", TestScloudPlusEncaps);
     PQCP_TestAddCase(suite, "scloudplus_decaps", "scloud+密钥解封装测试", TestScloudPlusDecaps);
-    
+
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);
 }

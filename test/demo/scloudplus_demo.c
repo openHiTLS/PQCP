@@ -49,7 +49,7 @@ static int32_t ScloudplusDemo(void)
     printf("\n=== Scloud+密钥封装机制(KEM)演示 ===\n\n");
     uint8_t share1[32] = {0};
     uint8_t share2[32] = {0};
-    
+
     /* 验证两个共享密钥是否相同 */
     if (memcmp(share1, share2, sizeof(share2)) == 0) {
         printf("\n密钥封装和解封装成功！共享密钥匹配。\n");
@@ -67,9 +67,9 @@ int32_t main(void)
 {
     printf("PQCP库Scloud+使用示例\n");
     printf("====================================\n");
-    
+
     int32_t result = 0;
-    
+
     /* 运行scloud+演示 */
     if (ScloudplusDemo() != 0) {
         result = -1;
@@ -82,4 +82,4 @@ int32_t main(void)
     }
 
     return result;
-} 
+}
