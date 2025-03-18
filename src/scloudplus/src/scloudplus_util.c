@@ -36,7 +36,7 @@ static inline Complex ComplexMul(const Complex a, const Complex b)
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real};
 }
-
+// a/(1+i) = a*(1-i)/2
 static inline Complex ComplexDivPhi(const Complex a)
 {
     return (Complex){
@@ -106,9 +106,9 @@ static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
         const uint32_t n2 = 360000;
         const uint32_t n3 = 216000000;
 
-        for (int i = 0; i < inLen; i = i + 7)
+        for (int i = 0; i < inLen; i = i + 7) // 7 bytes to get 6 values
         {
-            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF;//28 bits for 3 values in [0,599] i1 =[y]n, i2 = [(y-i1)/n]n, i3 = [(y-i1-i2*n)/n^2]n。  
+            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF; // 28 bits for 3 values in [0,599] i1 =[y]n, i2 = [(y-i1)/n]n, i3 = [(y-i1-i2*n)/n^2]n.
             if (tmp < n3)
             {
                 *ptrOut = tmp % n1;
@@ -132,9 +132,9 @@ static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
     else if (para->ss == 24)
     {
         uint16_t tmp[8] = {0};
-        for (int i = 0; i < inLen; i = i + 11)
+        for (int i = 0; i < inLen; i = i + 11) // 11 bytes to get 8 values
         {
-            tmp[0] = *(uint16_t *)ptrIn & 0x7FF;//normal reject sample
+            tmp[0] = *(uint16_t *)ptrIn & 0x7FF; // normal reject sample.n = 896 is near to 2^11.
             tmp[1] = (*(uint16_t *)(ptrIn + 1) >> 3) & 0x7FF;
             tmp[2] = (*(uint32_t *)(ptrIn + 2) >> 6) & 0x7FF;
             tmp[3] = (*(uint16_t *)(ptrIn + 4) >> 1) & 0x7FF;
@@ -165,7 +165,7 @@ static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
         uint64_t A[8] = {0};
         for (int i = 0; i < 13; i++)
         {
-            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;//51 bits for 5 values
+            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF; // 51 bits for 5 values.
             A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
             A[2] = (*(uint64_t *)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
             A[3] = (*(uint64_t *)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
@@ -173,7 +173,7 @@ static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
             A[5] = (*(uint64_t *)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
             A[6] = (*(uint64_t *)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
             A[7] = (*(uint64_t *)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
-            for (int j = 0; j < 8; j++)
+            for (int j = 0; j < 8; j++) // 51 bytes for 8*5 values.
             {
                 if (A[j] < n5)
                 {
@@ -188,6 +188,7 @@ static inline void u8Ton(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
             }
             ptrIn = ptrIn + 51;
         }
+        // 663 bytes used,17 bytes left to get 10 values.
         A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
         A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
         for (int j = 0; j < 2; j++)
@@ -220,9 +221,9 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
         const uint32_t m1 = 600;
         const uint32_t m2 = 360000;
         const uint32_t m3 = 216000000;
-        for (int i = 0; i < inLen; i = i + 7)
+        for (int i = 0; i < inLen; i = i + 7) // 7 bytes to get 6 values
         {
-            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF;
+            uint32_t tmp = u8Tou32(ptrIn) & 0xFFFFFFF; // 28 bits for 3 values in [0,599] i1 =[y]n, i2 = [(y-i1)/n]n, i3 = [(y-i1-i2*n)/n^2]n.
             if (tmp < m3)
             {
                 *ptrOut = tmp % m1;
@@ -246,9 +247,9 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
     else if (para->ss == 24)
     {
         uint16_t tmp[8] = {0};
-        for (int i = 0; i < inLen; i = i + 11)
+        for (int i = 0; i < inLen; i = i + 11) // 11 bytes to get 8 values
         {
-            tmp[0] = *(uint16_t *)ptrIn & 0x7FF;
+            tmp[0] = *(uint16_t *)ptrIn & 0x7FF; // normal reject sample.n = 928 is near to 2^11.
             tmp[1] = (*(uint16_t *)(ptrIn + 1) >> 3) & 0x7FF;
             tmp[2] = (*(uint32_t *)(ptrIn + 2) >> 6) & 0x7FF;
             tmp[3] = (*(uint16_t *)(ptrIn + 4) >> 1) & 0x7FF;
@@ -279,7 +280,7 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
         uint64_t A[8] = {0};
         for (int i = 0; i < 13; i++)
         {
-            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
+            A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF; // 51 bits for 5 values
             A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
             A[2] = (*(uint64_t *)(ptrIn + 12) >> 6) & 0x7FFFFFFFFFFFF;
             A[3] = (*(uint64_t *)(ptrIn + 19) >> 1) & 0x7FFFFFFFFFFFF;
@@ -287,7 +288,7 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
             A[5] = (*(uint64_t *)(ptrIn + 31) >> 7) & 0x7FFFFFFFFFFFF;
             A[6] = (*(uint64_t *)(ptrIn + 38) >> 2) & 0x7FFFFFFFFFFFF;
             A[7] = (*(uint64_t *)(ptrIn + 44) >> 5) & 0x7FFFFFFFFFFFF;
-            for (int j = 0; j < 8; j++)
+            for (int j = 0; j < 8; j++) // 51 bytes for 8*5 values.
             {
                 if (A[j] < m5)
                 {
@@ -302,6 +303,7 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
             }
             ptrIn = ptrIn + 51;
         }
+        // 663 bytes used,17 bytes left to get 10 values.
         A[0] = *(uint64_t *)ptrIn & 0x7FFFFFFFFFFFF;
         A[1] = (*(uint64_t *)(ptrIn + 6) >> 3) & 0x7FFFFFFFFFFFF;
         for (int j = 0; j < 2; j++)
@@ -322,8 +324,26 @@ static inline void u8Tom(uint8_t *in, const int inLen, const SCLOUDPLUS_Para *pa
     {
     }
 }
-
-static inline int32_t LabelingComputeV(const uint8_t *m, const uint8_t tau, Complex v[16])
+/**
+ * LabelingComputeV 函数（对应论文 Algorithm 2 的步骤1-3）
+ * 功能：将输入消息 m 映射到复数向量 v ∈ Z[i]^16（Barnes-Wall 格 BW32 的预编码向量）
+ *
+ * 参数说明：
+ * - m：输入消息字节流（长度由 τ 决定，τ=3 时为 8 字节，τ=4 时为 12 字节）
+ * - tau：模数参数（论文中的 τ，控制格基缩放）
+ * - v：输出的复数向量（长度 16，对应 32 维格的复数表示）
+ *
+ * 论文对应关系（τ=3/4 时的消息分割）：
+ * - A/B/C 数组对应论文中消息 m 的分块编码（Algorithm 2 步骤2）：
+ *     u_j ∈ {0, 1}^(2τ−wH(j))
+ *     v_j = f_(2τ−wH(j))(uj)
+ *     fl : {0, 1}^l → Z[i] such that f_l(u) = a + bi, where 0 ≤ a < 2^⌈l/2⌉, 0 ≤ b < 2^⌊l/2⌋
+ *     tau = 3 时：2τ−wH(j) 结果可能为2,3,4,5,6 ⌈l/2⌉可能为1,2,3 ⌊l/2⌋可能为1,2,3
+ *     tau = 4 时：2τ−wH(j) 结果可能为4,5,6,7,8 ⌈l/2⌉可能为2,3,4 ⌊l/2⌋可能为2,3,4
+ * 具体分割规则遵循论文中 μ = τ·2^k − (2^k/4)(k−1) 的约束（k=5 对应 BW32）
+ * https://eprint.iacr.org/2024/1306
+ */
+static inline int32_t LabelingComputeV(const uint8_t *m, const uint8_t tau, Complex v[bwComplexLen])
 {
     if (m == NULL)
     {
@@ -410,7 +430,7 @@ static inline int32_t LabelingComputeV(const uint8_t *m, const uint8_t tau, Comp
         A[5], B[10], B[11], B[12], B[13], B[14], B[15], C[1],
         B[16], B[17], B[18], C[2], B[19], C[3], C[4], C[5]};
 
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < bwComplexLen; ++i)
     {
         v[i].real = D[2 * i];
         v[i].imag = D[2 * i + 1];
@@ -418,12 +438,28 @@ static inline int32_t LabelingComputeV(const uint8_t *m, const uint8_t tau, Comp
     return PQCP_SUCCESS;
 }
 
-static inline int32_t LabelingComputeW(const Complex v[16], const uint8_t logq, const uint8_t tau, uint16_t w[32])
+/**
+ * LabelingComputeW 函数（对应论文 Algorithm 2 的步骤4-8）
+ * 功能：通过递归矩阵乘法构造 Barnes-Wall 格向量，并进行模数调整
+ *
+ * 参数说明：
+ * - v：输入的复数向量（来自 LabelingComputeV）
+ * - logq：模数 q 的对数值（用于缩放）
+ * - tau：模数参数（控制格基缩放）
+ * - w：输出的格向量（长度 32，对应 32 维整型格点）
+ *
+ * 论文对应关系：
+ * - tmp 的递归计算对应 Wn 矩阵的 Kronecker 积乘法（论文式(4)）
+ * - base = 1+i 对应 Barnes-Wall 格构造中的 ϕ 参数（论文定义6）
+ * - 最终缩放操作对应论文中的模数调整 [·]_{2^τ}（Algorithm 2 步骤8）
+ * - 然后将结果转到Q域上
+ */
+static inline int32_t LabelingComputeW(const Complex v[bwComplexLen], const uint8_t logq, const uint8_t tau, uint16_t w[bwComplexLen << 1])
 {
     const Complex base = (Complex){1, 1};
-    Complex tmp[16];
+    Complex tmp[bwComplexLen];
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < bwComplexLen; i++)
     {
         tmp[i] = v[i];
     }
@@ -456,18 +492,18 @@ static inline int32_t LabelingComputeW(const Complex v[16], const uint8_t logq, 
     {
         for (int i = 0; i < 16; i++)
         {
-            w[2 * i] = ((uint16_t)(tmp[i].real & 0x7) * (1 << (logq - 3))) & 0xFFF;
+            w[2 * i] = ((uint16_t)(tmp[i].real & 0x7) * (1 << (logq - tau))) & modQ;
 
-            w[2 * i + 1] = ((uint16_t)(tmp[i].imag & 0x7) * (1 << (logq - 3))) & 0xFFF;
+            w[2 * i + 1] = ((uint16_t)(tmp[i].imag & 0x7) * (1 << (logq - tau))) & modQ;
         }
     }
     else if (tau == 4)
     {
         for (int i = 0; i < 16; i++)
         {
-            w[2 * i] = ((uint16_t)(tmp[i].real & 0xF) * (1 << (logq - 4))) & 0xFFF;
+            w[2 * i] = ((uint16_t)(tmp[i].real & 0xF) * (1 << (logq - tau))) & modQ;
 
-            w[2 * i + 1] = ((uint16_t)(tmp[i].imag & 0xF) * (1 << (logq - 4))) & 0xFFF;
+            w[2 * i + 1] = ((uint16_t)(tmp[i].imag & 0xF) * (1 << (logq - tau))) & modQ;
         }
     }
     else
@@ -477,7 +513,23 @@ static inline int32_t LabelingComputeW(const Complex v[16], const uint8_t logq, 
     return PQCP_SUCCESS;
 }
 
-static inline int32_t DelabelingReduceW(const Complex in[16], const uint8_t tau, Complex out[16])
+/**
+ * DelabelingReduceW 函数（对应论文 Algorithm 3 的步骤6-10）
+ * 功能：调整解码后的复数向量，确保其分量落在 S_{2τ - w_H(j)} 范围内
+ * 
+ * 参数说明：
+ * - in：输入的复数向量（经过上述LabelingComputeW的逆变换的结果）
+ * - tau：模数参数（τ=3 或 4，控制格基缩放）
+ * - out：调整后的复数向量（满足 S_{2τ - w_H(j)} 约束）
+ * 
+ * 论文对应关系：
+ * - 实现论文 Algorithm 3 的步骤8-9，通过模数调整确保：
+ *   - 实部 a' = [a - (b - b')]_{2^{τ - ⌊w_H(j)/2⌋}}
+ *   - 虚部 b' = [b]_{2^{τ - ⌈w_H(j)/2⌉}}
+ * - 每个索引 j 的掩码值（如 0x7, 0x3 等）对应论文中 w_H(j) 的权重
+ */
+
+static inline int32_t DelabelingReduceW(const Complex in[bwComplexLen], const uint8_t tau, Complex out[bwComplexLen])
 {
     int32_t mod, sub;
     if (tau == 3)
@@ -573,15 +625,27 @@ static inline int32_t DelabelingReduceW(const Complex in[16], const uint8_t tau,
     return PQCP_SUCCESS;
 }
 
-static inline int32_t DelabelingComputeU(const Complex v[16], const uint8_t tau, uint8_t *m)
+/**
+ * DelabelingComputeU 函数（对应论文 Algorithm 3 的步骤11-12）
+ * 功能：将调整后的复数向量还原为原始消息比特
+ * 
+ * 参数说明：
+ * - v：调整后的复数向量（来自 DelabelingReduceW）
+ * - tau：模数参数
+ * - m：输出的原始消息字节流
+ * 
+ * LabelingComputeV函数的逆变换
+ */
+static inline int32_t DelabelingComputeU(const Complex v[bwComplexLen], const uint8_t tau, uint8_t *m)
 {
     const int A[6] = {0, 1, 2, 4, 8, 16};
     const int B[20] = {
         3, 5, 6, 7, 9, 10, 11, 12, 13, 14,
         17, 18, 19, 20, 21, 22, 24, 25, 26, 28};
     const int C[6] = {15, 23, 27, 29, 30, 31};
-    uint16_t vecV[32];
-    for (int i = 0; i < 16; i++)
+    uint32_t bwNLen = bwComplexLen << 1;
+    uint16_t vecV[bwNLen];
+    for (int i = 0; i < bwComplexLen; i++)
     {
         vecV[2 * i] = v[i].real;
         vecV[2 * i + 1] = v[i].imag;
@@ -648,11 +712,24 @@ static inline int32_t DelabelingComputeU(const Complex v[16], const uint8_t tau,
     }
     return PQCP_SUCCESS;
 }
-
-static inline int32_t DelabelingRecoverW(const Complex w[16], const uint8_t logq, const uint8_t tau, Complex v[16])
+/**
+ * DelabelingRecoverW 函数（对应论文 Algorithm 3 的步骤1-5）
+ * 功能：逆向递归矩阵乘法，恢复原始复数向量 v'
+ * 
+ * 参数说明：
+ * - w：输入的格向量（来自密文解码）
+ * - logq：模数 q 的对数值（用于逆向缩放）
+ * - tau：模数参数
+ * - v：输出的原始复数向量
+ * 
+ * 论文对应关系：
+ * - 逆向应用 Wn 矩阵的 Kronecker 积（Algorithm 1 的逆操作）
+ * - ComplexDivPhi 实现 ϕ^{-1} = (1-i)/2 的乘法（论文式 ϕ^{-1} = 1/2 * \bar{ϕ}）
+ */
+static inline int32_t DelabelingRecoverW(const Complex w[bwComplexLen], const uint8_t logq, const uint8_t tau, Complex v[bwComplexLen])
 {
-    Complex tmp[16];
-    for (int i = 0; i < 16; i++)
+    Complex tmp[bwComplexLen];
+    for (int i = 0; i < bwComplexLen; i++)
     {
         tmp[i] = (Complex){w[i].real >> (logq - tau), w[i].imag >> (logq - tau)};
     }
@@ -760,30 +837,32 @@ void SCLOUDPLUS_MsgEncode(const uint8_t *msg, const SCLOUDPLUS_Para *para, uint1
 {
     uint8_t *msgPtr = (uint8_t *)msg;
     uint16_t *matMPtr = matrixM;
+    uint32_t bwNLen = bwComplexLen << 1;
     memset_s(matrixM, para->mbar * para->nbar * sizeof(uint16_t), 0, para->mbar * para->nbar * sizeof(uint16_t));
     for (int i = 0; i < para->mu_count; i++)
     {
-        Complex v[16];
+        Complex v[bwComplexLen];
         LabelingComputeV(msgPtr, para->tau, v);
         LabelingComputeW(v, para->logq, para->tau, matMPtr);
         msgPtr += (para->mu >> 3);
-        matMPtr += 32;
+        matMPtr += bwNLen;
     }
 }
 
 void SCLOUDPLUS_MsgDecode(const uint16_t *matrixM, const SCLOUDPLUS_Para *para, uint8_t *msg)
 {
     uint8_t *msgPtr = msg;
-    Complex encMsg[16], w[16], u[16];
+    Complex encMsg[bwComplexLen], w[bwComplexLen], u[bwComplexLen];
+    uint32_t bwNLen = bwComplexLen << 1;
     for (int i = 0; i < para->mu_count; i++)
     {
-        for (int j = 0; j < 16; j++)
+        for (int j = 0; j < bwComplexLen; j++)
         {
-            encMsg[j] = (Complex){matrixM[32 * i + 2 * j], matrixM[32 * i + 2 * j + 1]};
+            encMsg[j] = (Complex){matrixM[bwNLen * i + 2 * j], matrixM[bwNLen * i + 2 * j + 1]};
             w[j] = (Complex){0, 0};
             u[j] = (Complex){0, 0};
         }
-        BDDForBWn(encMsg, 32, para->logq, para->tau, w);
+        BDDForBWn(encMsg, bwNLen, para->logq, para->tau, w);
         DelabelingRecoverW(w, para->logq, para->tau, u);
         DelabelingComputeU(u, para->tau, msgPtr);
         msgPtr += (para->mu >> 3);
@@ -812,8 +891,8 @@ void SCLOUDPLUS_UnPackPK(const uint8_t *pk, const SCLOUDPLUS_Para *para, uint16_
     uint16_t *ptrOut = B;
     for (int i = 0; i < para->m * para->nbar; i = i + 2)
     {
-        *ptrOut = *(uint16_t *)ptrIn & 0xFFF;
-        *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & 0xFFF;
+        *ptrOut = *(uint16_t *)ptrIn & modQ;
+        *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & modQ;
         ptrIn = ptrIn + 3;
         ptrOut = ptrOut + 2;
     }
@@ -853,13 +932,14 @@ void SCLOUDPLUS_UnPackSK(const uint8_t *sk, const SCLOUDPLUS_Para *para, uint16_
     }
 }
 
+//compress函数类似于KYBER
 void SCLOUDPLUS_CompressC1(const uint16_t *C, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     if (para->ss == 16)
     {
         for (int i = 0; i < para->mbar * para->n; i++)
         {
-            out[i] = ((((uint32_t)(C[i] & 0xFFF) << 9) + 2048) >> 12) & 0x1FF;
+            out[i] = ((((uint32_t)(C[i] & modQ) << 9) + 2048) >> 12) & 0x1FF;
         }
     }
     else if (para->ss == 24)
@@ -870,7 +950,7 @@ void SCLOUDPLUS_CompressC1(const uint16_t *C, const SCLOUDPLUS_Para *para, uint1
     {
         for (int i = 0; i < para->mbar * para->n; i++)
         {
-            out[i] = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12) & 0x3FF;
+            out[i] = ((((uint32_t)(C[i] & modQ) << 10) + 2048) >> 12) & 0x3FF;
         }
     }
     else
@@ -903,14 +983,15 @@ void SCLOUDPLUS_DeCompressC1(const uint16_t *in, const SCLOUDPLUS_Para *para, ui
     }
 }
 
+//此函数对应论文算法5的C_2压缩时的四舍五入,针对0.5的情况要进行向奇数位的舍入,如0.5得到1, 3.5也是得到3.其他值仍为正常的四舍五入
 void SCLOUDPLUS_CompressC2(const uint16_t *C, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
     if (para->ss == 16 || para->ss == 32)
     {
         for (int i = 0; i < para->mbar * para->nbar; i++)
         {
-            const uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 7) + 2048) >> 12);
-            const uint32_t remainder = (((uint32_t)(C[i] & 0xFFF) << 7) + 2048) % 6144;
+            const uint32_t temp = ((((uint32_t)(C[i] & modQ) << 7) + 2048) >> 12);
+            const uint32_t remainder = (((uint32_t)(C[i] & modQ) << 7) + 2048) % 6144;
             out[i] = (temp - ((!remainder) && 1)) & 0x7F;
         }
     }
@@ -918,8 +999,8 @@ void SCLOUDPLUS_CompressC2(const uint16_t *C, const SCLOUDPLUS_Para *para, uint1
     {
         for (int i = 0; i < para->mbar * para->nbar; i++)
         {
-            const uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12);
-            const uint32_t remainder = (((uint32_t)(C[i] & 0xFFF) << 10) + 2048) % 6144;
+            const uint32_t temp = ((((uint32_t)(C[i] & modQ) << 10) + 2048) >> 12);
+            const uint32_t remainder = (((uint32_t)(C[i] & modQ) << 10) + 2048) % 6144;
             out[i] = (temp - ((!remainder) && 1)) & 0x3FF;
         }
     }
@@ -1029,8 +1110,8 @@ void SCLOUDPLUS_UnPackC1(const uint8_t *in, const SCLOUDPLUS_Para *para, uint16_
         uint16_t *ptrOut = C;
         for (int i = 0; i < para->mbar * para->n; i = i + 2)
         {
-            *ptrOut = *(uint16_t *)ptrIn & 0xFFF;
-            *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & 0xFFF;
+            *ptrOut = *(uint16_t *)ptrIn & modQ;
+            *(ptrOut + 1) = (*(uint16_t *)(ptrIn + 1) >> 4) & modQ;
             ptrIn = ptrIn + 3;
             ptrOut = ptrOut + 2;
         }
@@ -1207,7 +1288,7 @@ void SCLOUDPLUS_Add(const uint16_t *in0, const uint16_t *in1, const int len, uin
 {
     for (int i = 0; i < len; i++)
     {
-        out[i] = (in0[i] + in1[i]) & 0xFFF;
+        out[i] = (in0[i] + in1[i]) & modQ;
     }
 }
 
@@ -1215,7 +1296,7 @@ void SCLOUDPLUS_Sub(const uint16_t *in0, const uint16_t *in1, const int len, uin
 {
     for (int i = 0; i < len; i++)
     {
-        out[i] = (in0[i] - in1[i]) & 0xFFF;
+        out[i] = (in0[i] - in1[i]) & modQ;
     }
 }
 
@@ -1573,7 +1654,7 @@ EXIT:
 int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixS)
 {
     int32_t ret = 0;
-    memset_s(matrixS, para->n * para->nbar * 2, 0, para->n * para->nbar * 2);
+    memset_s(matrixS, para->n * para->nbar * sizeof(uint16_t), 0, para->n * para->nbar * sizeof(uint16_t));
     uint8_t hash[680] = {0}; // 5*136 shake256_rate
     uint16_t tmp[para->mnout];
     int outLen, k = 0;
@@ -1588,7 +1669,7 @@ int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
     {
         goto EXIT;
     }
-    ret = CRYPT_EAL_MdUpdate(PsiCtx, seed, 32);
+    ret = CRYPT_EAL_MdUpdate(PsiCtx, seed, seedr1Len);
     if (ret != PQCP_SUCCESS)
     {
         goto EXIT;
@@ -1602,12 +1683,12 @@ int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
     for (int i = 0; i < para->nbar; i++)
     {
         int j = 0;
-        while (j < para->h1 * 2)
+        while (j < para->h1 * 2) // h1 1 and h1 -1
         {
             if (k == outLen)
             {
                 ret = CRYPT_EAL_MdSqueeze(PsiCtx, hash, inLen);
-                if (ret != 0)
+                if (ret != PQCP_SUCCESS)
                 {
                     goto EXIT;
                 }
@@ -1728,3 +1809,4 @@ EXIT:
     }
     return ret;
 }
+

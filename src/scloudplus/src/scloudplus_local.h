@@ -34,7 +34,8 @@ extern "C" {
 #define secBits1 128
 #define secBits2 192
 #define secBits3 256
-
+#define bwComplexLen 16
+#define modQ 0xFFF
 typedef struct
 {
     int32_t real;

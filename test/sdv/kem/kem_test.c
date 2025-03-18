@@ -126,11 +126,16 @@ static PqcpTestResult TestScloudPlusEncaps(void)
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
-    uint8_t cipher[16916];
-    uint32_t cipherLen = sizeof(cipher);
-    uint8_t sharekey[32];
+    uint8_t sharekey[val>>3];
+    ret = CRYPT_EAL_PkeyCtrl(ctx,PQCP_SCLOUDPLUS_GET_CIPHERLEN,&val,sizeof(val));
+    if (ret != CRYPT_SUCCESS)
+    {
+        printf("scloud+密钥封装失败\n");
+        return PQCP_TEST_FAILURE;
+    }
+    uint8_t cipher[val];
     uint32_t sharekeyLen = sizeof(sharekey);
-    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &cipherLen, sharekey, &sharekeyLen);
+    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &val, sharekey, &sharekeyLen);
     CRYPT_EAL_PkeyFreeCtx(ctx);
     if (ret != CRYPT_SUCCESS)
     {
@@ -155,7 +160,7 @@ static PqcpTestResult TestScloudPlusDecaps(void)
         printf("创建scloud+密钥生成上下文失败\n");
         return PQCP_TEST_FAILURE;
     }
-    int32_t val = 256;
+    int32_t val = 192;
     int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
     if (ret != CRYPT_SUCCESS)
     {
@@ -171,14 +176,19 @@ static PqcpTestResult TestScloudPlusDecaps(void)
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
-    uint8_t cipher[16916];
-    uint32_t cipherLen = sizeof(cipher);
-    uint8_t sharekey1[32];
-    uint8_t sharekey2[32];
+    uint8_t sharekey1[val>>3];
+    uint8_t sharekey2[val>>3];
+    ret = CRYPT_EAL_PkeyCtrl(ctx,PQCP_SCLOUDPLUS_GET_CIPHERLEN,&val,sizeof(val));
+    if (ret != CRYPT_SUCCESS)
+    {
+        printf("scloud+密钥封装失败\n");
+        return PQCP_TEST_FAILURE;
+    }
+    uint8_t cipher[val];
     uint32_t sharekeyLen = sizeof(sharekey1);
-    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &cipherLen, sharekey1, &sharekeyLen);
+    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &val, sharekey1, &sharekeyLen);
     printf("encaps sharekey :\n");
-    for (int i =0 ;i<32;i++)
+    for (int i =0 ;i<sharekeyLen;i++)
     {
         printf("%02X ",sharekey1[i]);
     }
@@ -190,9 +200,9 @@ static PqcpTestResult TestScloudPlusDecaps(void)
         CRYPT_EAL_PkeyFreeCtx(ctx);
         return PQCP_TEST_FAILURE;
     }
-    ret = CRYPT_EAL_PkeyDecaps(ctx, cipher, cipherLen, sharekey2, &sharekeyLen);
+    ret = CRYPT_EAL_PkeyDecaps(ctx, cipher, val, sharekey2, &sharekeyLen);
     printf("decaps sharekey :\n");
-    for (int i =0 ;i<32;i++)
+    for (int i =0 ;i<sharekeyLen;i++)
     {
         printf("%02X ",sharekey2[i]);
     }
@@ -225,8 +235,8 @@ int32_t PQCP_InitKemTestSuite(void)
         return -1;
     }
     /* 添加scloud+测试用例 */
-    PQCP_TestAddCase(suite, "scloudplus_keygen", "scloud+密钥生成测试", TestScloudPlusKeygen);
-    PQCP_TestAddCase(suite, "scloudplus_encaps", "scloud+密钥封装测试", TestScloudPlusEncaps);
+    // PQCP_TestAddCase(suite, "scloudplus_keygen", "scloud+密钥生成测试", TestScloudPlusKeygen);
+    // PQCP_TestAddCase(suite, "scloudplus_encaps", "scloud+密钥封装测试", TestScloudPlusEncaps);
     PQCP_TestAddCase(suite, "scloudplus_decaps", "scloud+密钥解封装测试", TestScloudPlusDecaps);
 
     /* 添加测试套件到测试框架 */

@@ -112,7 +112,7 @@ int32_t SCLOUDPLUS_PKEKeygen(const SCLOUDPLUS_Para *para, uint8_t *pk, uint8_t *
     uint16_t *S = MemoryPool;
     uint16_t *E = MemoryPool + (para->n * para->nbar);
     uint16_t *B = MemoryPool + (para->n * para->nbar) + (para->m * para->nbar);
-
+    
     uint32_t seedLen = seedALen + seedr1Len + seedr2Len;
     uint8_t alpha[alphaLen], seed[seedLen];
     const uint8_t *seedA = seed;
