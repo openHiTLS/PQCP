@@ -2,3 +2,10 @@
 build
 */build/*
 platform/*
+cmake-build-debug/*
+test/build/
+test/cmake-build-debug/
+test/output/
+.idea/
+output/
+src/scloudplus/src/scloudplus_cjson.c

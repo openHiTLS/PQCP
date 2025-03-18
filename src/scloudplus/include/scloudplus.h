@@ -19,10 +19,12 @@
 #include <stdint.h>
 #include "bsl_params.h"
 
+typedef struct SCLOUDPLUSPara SCLOUDPLUS_Para;
+
 // 密钥管理上下文结构
 typedef struct {
     // 可根据需要添加成员变量
-    int32_t placeholder;
+    SCLOUDPLUS_Para *para;
     uint8_t *public_key;
     uint8_t *private_key;
 } SCLOUDPLUS_Ctx;

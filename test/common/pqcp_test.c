@@ -265,7 +265,7 @@ void PQCP_TestListSuites(void)
 /**
  * 添加测试用例
  */
-int32_t PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description, 
+int32_t PQCP_TestAddCase(PqcpTestSuite *suite, const char *name, const char *description,
     PqcpTestResult (*run)(void))
 {
     if (suite == NULL || name == NULL || run == NULL) {

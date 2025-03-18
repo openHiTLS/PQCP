@@ -1,5 +1,5 @@
 /*
- * This file is part of the openHiTLS project.
+* This file is part of the openHiTLS project.
  *
  * openHiTLS is licensed under the Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,29 +13,25 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_TYPES_H
-#define PQCP_TYPES_H
+#ifndef PQCP_ERR_H
+#define PQCP_ERR_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CRYPT_PARAM_SCLOUDPLUS_BASE 900
-#define CRYPT_PARAM_SCLOUDPLUS_PUBKEY (CRYPT_PARAM_SCLOUDPLUS_BASE+1)
-#define CRYPT_PARAM_SCLOUDPLUS_PRVKEY (CRYPT_PARAM_SCLOUDPLUS_BASE+2)
-
-
 typedef enum
 {
-    PQCP_SCLOUDPLUS_KEY_BITS,
-    PQCP_SCLOUDPLUS_GET_PARA,
-    PQCP_SCLOUDPLUS_GET_CIPHERLEN,
-    PQCP_SCLOUDPLUS_GET_SECBITS,
-} PQCP_PKEY_CTRL_TYPE;
-
+    PQCP_SUCCESS = 0,
+    PQCP_NULL_INPUT,
+    PQCP_MALLOC_FAIL,
+    PQCP_MEM_ALLOC_FAIL,
+    PQCP_SCLOUDPLUS_INVALID_ARG,
+    PQCP_SCLOUDPLUS_CMP_FALSE,
+} CRYPT_ERROR;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PQCP_TYPES_H */
+#endif /* PQCP_ERR_H */
