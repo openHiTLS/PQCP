@@ -645,6 +645,7 @@ int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx,
     {
         return ret;
     }
+    *ssLen = ctx->para->ss;
     ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, k, seedkLen, C, ctx->para->ctx_size, sharedSecret, ssLen);
     if (ret != PQCP_SUCCESS)
     {
@@ -695,6 +696,7 @@ int32_t PQCP_SCLOUDPLUS_Decaps(SCLOUDPLUS_Ctx *ctx,
         goto EXIT;
     }
     int8_t bl = SCLOUDPLUS_Verify(C, C1, ctx->para->ctx_size);
+    *ssLen = ctx->para->ss;
     if (bl == 0)
     {
         ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, k1, seedkLen, C, ctx->para->ctx_size, sharedSecret, ssLen);
