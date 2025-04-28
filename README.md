@@ -1,14 +1,18 @@
 # pqcp
 
-PQCP means Post-quantum cryptography Provider
+PQCP means Pioneer Quotable Crypto Provider
 
-This project implements a Post-Quantum Cryptography Provider (PQCP) for OpenHiTLS, supporting various post-quantum cryptographic algorithms.
+This project provides a provider of non-standardized algorithms for OpenHTLS to support the new generation of advanced cryptographic algorithms.
 
 ## Features
-
-- Post-quantum KEM (Key Encapsulation Mechanism) algorithms
-- Post-quantum digital signature algorithms
-- Key management for post-quantum algorithms
+- Post-quantum algorithms
+    - Post-quantum KEM (Key Encapsulation Mechanism) algorithms
+    - Post-quantum digital signature algorithms
+    - Key management for post-quantum algorithms
+- A new generation of hash algorithms
+- A new generation of symmetry algorithms
+- Post-Quantum Certificate
+- Post-quantum protocols
 
 ## Building
 
