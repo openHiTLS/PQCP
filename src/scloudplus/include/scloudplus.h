@@ -25,8 +25,8 @@ typedef struct SCLOUDPLUSPara SCLOUDPLUS_Para;
 typedef struct {
     // 可根据需要添加成员变量
     SCLOUDPLUS_Para *para;
-    uint8_t *public_key;
-    uint8_t *private_key;
+    uint8_t *publicKey;
+    uint8_t *privateKey;
 } SCLOUDPLUS_Ctx;
 
 // 函数声明

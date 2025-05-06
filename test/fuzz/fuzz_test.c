@@ -499,7 +499,7 @@ int32_t main(int32_t argc, char *argv[])
     /* 创建输出目录 */
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "mkdir -p %s", outputDir);
-    system(cmd);
+    (void)system(cmd);
     
     /* 创建日志文件 */
     char logFileName[256];
