@@ -23,35 +23,32 @@
 extern "C" {
 #endif /* __cpluscplus */
 
-#define alphaLen 32
-#define seedALen 16
-#define seedr1Len 32
-#define seedr2Len 32
-#define seedkLen 32
-#define randrLen 32
-#define randzLen 32
-#define hpkLen 32
-#define secBits1 128
-#define secBits2 192
-#define secBits3 256
-#define bwComplexLen 16
-#define modQ 0xFFF
-typedef struct
-{
+#define SCLOUDPLUS_ALPHA_LEN 32
+#define SCLOUDPLUS_SEED_A_LEN 16
+#define SCLOUDPLUS_SEED_R1_LEN 32
+#define SCLOUDPLUS_SEED_R2_LEN 32
+#define SCLOUDPLUS_SEED_K_LEN 32
+#define SCLOUDPLUS_RAND_R_LEN 32
+#define SCLOUDPLUS_RAND_Z_LEN 32
+#define SCLOUDPLUS_HPK_LEN 32
+#define SCLOUDPLUS_SECBITS1 128
+#define SCLOUDPLUS_SECBITS2 192
+#define SCLOUDPLUS_SECBITS3 256
+#define SCLOUDPLUS_BW_COMPLEX_LEN 16
+#define SCLOUDPLUS_MOD_Q 0xFFF
+typedef struct {
     int32_t real;
     int32_t imag;
 } Complex;
 
-typedef enum SCLOUDPLUS_PARA_SET
-{
+typedef enum SCLOUDPLUS_PARA_SET {
     SCLOUDPLUS_PARA_SET1,
     SCLOUDPLUS_PARA_SET2,
     SCLOUDPLUS_PARA_SET3,
     SCLOUDPLUS_PARA_MAX
 } SCLOUDPLUS_PARA_SET;
 
-struct SCLOUDPLUSPara
-{
+struct SCLOUDPLUSPara {
     uint8_t ss; //secure_level
     uint8_t mbar;
     uint8_t nbar;
@@ -65,16 +62,16 @@ struct SCLOUDPLUSPara
     uint8_t eta1;
     uint8_t eta2;
     uint8_t mu;
-    uint8_t mu_count;
+    uint8_t muConut;
     uint8_t tau;
     uint16_t mnin;
     uint16_t mnout;
-    uint16_t c1_size;
-    uint16_t c2_size;
-    uint16_t ctx_size;
-    uint16_t pk_size;
-    uint16_t pke_sk_size;
-    uint16_t kem_sk_size;
+    uint16_t c1Size;
+    uint16_t c2Size;
+    uint16_t ctxSize;
+    uint16_t pkSize;
+    uint16_t pkeSkSize;
+    uint16_t kemSkSize;
 };
 
 int32_t SCLOUDPLUS_SamplePsi(const uint8_t* seed, const SCLOUDPLUS_Para* para, uint16_t* matrixS);
