@@ -108,7 +108,7 @@ echo "当前目录: $PWD"
 
 # 构建CMake命令
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
-CMAKE_ARGS="-DCMAKE_C_FLAGS_RELEASE=-march=native"
+CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_FLAGS_RELEASE=-march=native"
 CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=../$INSTALL_DIR"
 
 if [ $ENABLE_ASAN -eq 1 ]; then
@@ -127,11 +127,11 @@ fi
 echo "构建PQCP测试项目..."
 if [ $VERBOSE -eq 1 ]; then
     cmake .. $CMAKE_ARGS
+    make -j$(nproc) VERBOSE=1
 else
     cmake .. $CMAKE_ARGS > /dev/null
+    make -j$(nproc)
 fi
-
-make -j$(nproc)
 
 echo "PQCP测试构建完成！"
 echo "构建类型: $BUILD_TYPE"

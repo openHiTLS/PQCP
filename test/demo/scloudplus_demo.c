@@ -18,6 +18,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <linux/limits.h>
+#include <unistd.h>
+#include <libgen.h>
+#include "pqcp_types.h"
+#include "pqcp_provider.h"
+#include "crypt_eal_provider.h"
+#include "crypt_eal_implprovider.h"
+#include "crypt_eal_pkey.h"
+#include "crypt_errno.h"
+#include "crypt_eal_rand.h"
 
 /* 这里应该包含PQCP库的头文件 */
 /* 在实际使用中，应该替换为正确的头文件路径 */
@@ -47,17 +57,119 @@ static void PrintHex(const char *label, const unsigned char *data, size_t len)
 static int32_t ScloudplusDemo(void)
 {
     printf("\n=== Scloud+密钥封装机制(KEM)演示 ===\n\n");
-    uint8_t share1[32] = {0};
-    uint8_t share2[32] = {0};
-
-    /* 验证两个共享密钥是否相同 */
-    if (memcmp(share1, share2, sizeof(share2)) == 0) {
-        printf("\n密钥封装和解封装成功！共享密钥匹配。\n");
-        return 0;
-    } else {
-        printf("\n错误：密钥封装和解封装失败！共享密钥不匹配。\n");
-        return -1;
+    int32_t ret = -1;
+    CRYPT_EAL_PkeyCtx *deCtx = NULL;
+    int32_t cipherLen = 33832/2;
+    int8_t cipher[33832/2] = {0};
+    int32_t sharekeyLen = 32;
+    int8_t sharekey[32] = {0};
+    int32_t sharekey2Len = 32;
+    int8_t sharekey2[32] = {0};
+    int32_t val = 256;
+    uint8_t pubdata[37520/2];
+    BSL_Param pub[2] = {
+        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        BSL_PARAM_END
+    };
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+        "provider=pqcp");
+    if (ctx == NULL) {
+        printf("create ctx failed.\n");
+        goto EXIT;
     }
+    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+        "provider=pqcp");
+    if (deCtx == NULL) {
+        printf("create ctx failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
+    if (ret != CRYPT_SUCCESS) {
+        printf("ctrl param failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
+    if (ret != CRYPT_SUCCESS) {
+        printf("ctrl param failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyGen(ctx);
+    if (ret != CRYPT_SUCCESS) {
+        printf("gen key failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyEncapsInit(ctx, NULL);
+    if (ret != CRYPT_SUCCESS) {
+        printf("encaps init failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &cipherLen, sharekey, &sharekeyLen);
+    if (ret != CRYPT_SUCCESS) {
+        printf("encaps failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, &pub);
+    if (ret != CRYPT_SUCCESS) {
+        printf("get encaps key failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeySetPubEx(deCtx, &pub);
+    if (ret != CRYPT_SUCCESS) {
+        printf("set encaps key failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyDecapsInit(ctx, NULL);
+    if (ret != CRYPT_SUCCESS) {
+        printf("decaps init failed.\n");
+        goto EXIT;
+    }
+    ret = CRYPT_EAL_PkeyDecaps(ctx, cipher, cipherLen, sharekey2, &sharekeyLen);
+    if (ret != CRYPT_SUCCESS) {
+        printf("decaps failed.\n");
+        goto EXIT;
+    }
+    if (sharekeyLen != sharekey2Len || memcmp(sharekey, sharekey2, sharekeyLen) != 0) {
+        printf("\nerror：encaps or decaps failed！sharekey not match.\n");
+        ret = -1;
+    } else {
+        printf("\nencaps and decaps success！sharekey match\n");
+    }
+    
+EXIT:
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    CRYPT_EAL_PkeyFreeCtx(deCtx);
+    return ret;
+}
+
+static int32_t PQCP_TestLoadProvider(void)
+{
+    char basePath[PATH_MAX] = {0};
+    char fullPath[PATH_MAX] = {0};
+    
+    // 获取当前可执行文件路径作为根路径
+    if (readlink("/proc/self/exe", basePath, sizeof(basePath)-1) == -1) {
+        perror("get realpath failed.\n");
+        return PQCP_TEST_FAILURE;
+    }
+    printf("basePath：%s\n", basePath);
+    // 提取目录路径并拼接相对路径
+    dirname(basePath);  // 获取可执行文件所在目录
+    snprintf(fullPath, sizeof(fullPath), "%s/../../../build", basePath);
+    printf("fullPath： %s\n", fullPath);
+    
+    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, fullPath);
+    if (ret != 0) {
+        printf("set provider path failed.\n");
+        return PQCP_TEST_FAILURE;
+    }
+    
+    ret = CRYPT_EAL_ProviderLoad(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider", NULL, NULL);
+    if (ret != 0) {
+        printf("load provider failed.\n");
+        return PQCP_TEST_FAILURE;
+    }
+    
+    return PQCP_TEST_SUCCESS;
 }
 
 /**
@@ -69,7 +181,10 @@ int32_t main(void)
     printf("====================================\n");
 
     int32_t result = 0;
-
+    if (PQCP_TestLoadProvider() != CRYPT_SUCCESS) {
+        printf("\nload provider failed！\n");
+    }
+    CRYPT_EAL_RandInit(CRYPT_RAND_SHA256, NULL, NULL, NULL, 0);
     /* 运行scloud+演示 */
     if (ScloudplusDemo() != 0) {
         result = -1;
@@ -80,6 +195,7 @@ int32_t main(void)
     } else {
         printf("\nScloud+演示过程中出现错误！\n");
     }
-
+    CRYPT_EAL_RandDeinit();
+    (void)CRYPT_EAL_ProviderUnload(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider");
     return result;
 }

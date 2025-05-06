@@ -70,6 +70,7 @@ static void WriteCsvResult(FILE *csvFile, const PerfResult *result)
 
 static void PrintResult(const PerfResult *result, int32_t verbose)
 {
+    (void)verbose;
     printf("%-15s %-15s Avg: %.4f ms, Min: %.4f ms, Max: %.4f ms, Iterations: %u, Data: %zu bytes\n",
            result->algorithm, result->operation,
            result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
@@ -297,7 +298,6 @@ int32_t main(int32_t argc, char *argv[])
     int32_t iterations = 0;
     char *outputDir = "output/perf";
     char *csvFilePath = "perf_results.csv";
-    char *testGroup = NULL;
     FILE *csvFile = NULL;
     
     struct option long_options[] = {
@@ -360,7 +360,7 @@ int32_t main(int32_t argc, char *argv[])
     /* 创建输出目录 */
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "mkdir -p %s", outputDir);
-    system(cmd);
+    (void)system(cmd);
     
     /* 打开CSV文件 */
     char full_csv_path[512];

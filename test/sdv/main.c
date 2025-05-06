@@ -18,6 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include "crypt_eal_provider.h"
+#include "crypt_eal_implprovider.h"
+#include <linux/limits.h>
+#include <unistd.h>
+#include <libgen.h>
 
 /* 命令行选项 */
 static struct option g_longOptions[] = {
@@ -44,6 +49,42 @@ static void ShowHelp(const char *programName)
     printf("  -s, --suite=SUITE       运行指定的测试套件\n");
     printf("  -c, --case=CASE         运行指定的测试用例（需要与--suite一起使用）\n");
     printf("  -r, --report=FILE       指定测试报告文件名（默认为sdv_test_report.html）\n");
+}
+
+static int32_t PQCP_TestLoadProvider(void)
+{
+    char basePath[PATH_MAX] = {0};
+    char fullPath[PATH_MAX] = {0};
+    
+    // 获取当前可执行文件路径作为根路径
+    if (readlink("/proc/self/exe", basePath, sizeof(basePath)-1) == -1) {
+        perror("获取根路径失败");
+        return PQCP_TEST_FAILURE;
+    }
+    printf("basePath：%s\n", basePath);
+    // 提取目录路径并拼接相对路径
+    dirname(basePath);  // 获取可执行文件所在目录
+    snprintf(fullPath, sizeof(fullPath), "%s/../../../build", basePath);
+    printf("fullPath： %s\n", fullPath);
+    
+    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, fullPath);
+    if (ret != 0) {
+        printf("设置PQCP提供者路径失败\n");
+        return PQCP_TEST_FAILURE;
+    }
+    
+    ret = CRYPT_EAL_ProviderLoad(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider", NULL, NULL);
+    if (ret != 0) {
+        printf("加载PQCP提供者失败\n");
+        return PQCP_TEST_FAILURE;
+    }
+    
+    return PQCP_TEST_SUCCESS;
+}
+
+static void PQCP_TestUnLoadProvider(void)
+{
+    (void)CRYPT_EAL_ProviderUnload(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider");
 }
 
 /* 声明测试套件初始化函数 */
@@ -125,7 +166,9 @@ int32_t main(int32_t argc, char *argv[])
     }
     
     PqcpTestReport report = {0};
-    
+    if (PQCP_TestLoadProvider() != PQCP_TEST_SUCCESS) {
+        return PQCP_TEST_FAILURE;
+    }
     /* 运行测试 */
     if (suiteName != NULL) {
         if (caseName != NULL) {
@@ -139,7 +182,7 @@ int32_t main(int32_t argc, char *argv[])
         /* 运行所有测试 */
         report = PQCP_TestRunAll(verbose);
     }
-    
+    PQCP_TestUnLoadProvider();
     /* 打印测试报告 */
     PQCP_TestPrintReport(&report);
     
