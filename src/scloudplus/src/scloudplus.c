@@ -24,7 +24,7 @@
 #include "scloudplus_local.h"
 
 // 预定义三组参数配置
-static const SCLOUDPLUS_Para PRESET_PARAS[] = {
+static SCLOUDPLUS_Para PRESET_PARAS[] = {
     {
         .ss = 16,
         .mbar = 8,
@@ -466,7 +466,7 @@ int32_t PQCP_SCLOUDPLUS_Ctrl(SCLOUDPLUS_Ctx *ctx, int32_t cmd, void *val, uint32
             if (ctx->para == NULL || val == NULL || valLen != sizeof(SCLOUDPLUS_Para)) {
                 return PQCP_NULL_INPUT;
             }
-            (void)memcpy_s(val, sizeof(SCLOUDPLUS_Para), &ctx->para, sizeof(SCLOUDPLUS_Para));
+            (void)memcpy_s(val, sizeof(SCLOUDPLUS_Para), ctx->para, sizeof(SCLOUDPLUS_Para));
             return PQCP_SUCCESS;
         }
         case PQCP_SCLOUDPLUS_GET_CIPHERLEN: {

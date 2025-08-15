@@ -78,6 +78,8 @@ endforeach()
 include_directories(
     ${CMAKE_SOURCE_DIR}/common
     ${CMAKE_SOURCE_DIR}/../include
+    ${CMAKE_SOURCE_DIR}/../src/scloudplus/include
+    ${CMAKE_SOURCE_DIR}/../src/scloudplus/src
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/bsl
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/crypto
 )

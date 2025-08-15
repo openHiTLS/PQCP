@@ -26,6 +26,7 @@
 #include "crypt_eal_pkey.h"
 #include "crypt_errno.h"
 #include "crypt_eal_rand.h"
+#include "scloudplus_local.h"
 
 /* scloud+测试用例 */
 static PqcpTestResult TestScloudPlusKeygen(void)
@@ -85,6 +86,7 @@ static PqcpTestResult TestScloudPlus(void)
     int8_t sharekey2[32] = {0};
     int32_t val = 256;
     uint8_t pubdata[37520/2];
+    SCLOUDPLUS_Para tmpParm = {0};
     BSL_Param pub[2] = {
         {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
@@ -96,9 +98,13 @@ static PqcpTestResult TestScloudPlus(void)
         "provider=pqcp");
     ASSERT_TRUE(deCtx != NULL, "create ctx failed.");
     ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
-    ASSERT_EQ(ret, 0, "ctrl param failed.");
+    ASSERT_EQ(ret, 0, "ctrl set key failed.");
     ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
-    ASSERT_EQ(ret, 0, "ctrl param failed.");
+    ASSERT_EQ(ret, 0, "ctrl set key failed.");
+    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_SCLOUDPLUS_GET_PARA, &tmpParm, sizeof(tmpParm));
+    ASSERT_EQ(ret, 0, "ctrl get param failed.");
+    ASSERT_EQ(tmpParm.kemSkSize, 21904, "ctrl get param param failed."); // due to key bits = 256.
+
     ret = CRYPT_EAL_PkeyGen(ctx);
     ASSERT_EQ(ret, 0, "gen key failed.");
     ret = CRYPT_EAL_PkeyEncapsInit(ctx, NULL);
