@@ -28,12 +28,12 @@ typedef struct {
 } PQCP_ProvCtx;
 
 
-static const CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
+static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
     {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKeyMgmtScloudPlus, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
 
-static const CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
+static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
     {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKemScloudPlus, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
