@@ -55,16 +55,24 @@ static PqcpTestResult TestScloudPlusKeygen(void)
         printf("生成scloud+密钥失败\n");
         return PQCP_TEST_FAILURE;
     }
-    CRYPT_EAL_PkeyPub pub = {CRYPT_PKEY_SCLOUDPLUS, {NULL, 0}};
-    ret = CRYPT_EAL_PkeyGetPub(ctx, &pub);
+    uint8_t pubdata[37520/2];
+    uint8_t prvdata[43808/2];
+    BSL_Param pub[2] = {
+        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        BSL_PARAM_END
+    };
+    BSL_Param prv[2] = {
+        {CRYPT_PARAM_SCLOUDPLUS_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, &pub);
     if (ret != CRYPT_SUCCESS)
     {
         CRYPT_EAL_PkeyFreeCtx(ctx);
         printf("获取scloud+公钥失败\n");
         return PQCP_TEST_FAILURE;
     }
-    CRYPT_EAL_PkeyPrv prv = {CRYPT_PKEY_SCLOUDPLUS, {NULL, 0}};
-    ret = CRYPT_EAL_PkeyGetPrv(ctx, &prv);
+    ret = CRYPT_EAL_PkeyGetPrvEx(ctx, &prv);
     CRYPT_EAL_PkeyFreeCtx(ctx);
     if (ret != CRYPT_SUCCESS)
     {
