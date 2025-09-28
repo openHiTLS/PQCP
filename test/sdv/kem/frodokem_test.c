@@ -18,6 +18,11 @@ int FindMarker(FILE *infile, const char *marker);
 
 int ReadHex(FILE *infile, unsigned char *A, int Length, char *str);
 
+
+void RandombytesInit(unsigned char *entropy_input,
+                     unsigned char *personalization_string,
+                     int security_strength);
+void RandomBytesRelease();
 int GenTestRandombytes(uint8_t *x, uint32_t xlen);
 
 static inline int BytesEq(const uint8_t* a, const uint8_t* b, size_t n)
@@ -92,6 +97,20 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
         BSL_PARAM_END
     };
 
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_FRODOKEM, CRYPT_EAL_PKEY_KEM_OPERATE,
+                    "provider=pqcp");
+    if (ctx == NULL) {
+        printf("create ctx failed.\n");
+        goto EXIT;
+    }
+
+    int32_t val = id;
+    int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_FRODOKEM_ALG_PARAMS, &val, sizeof(val));
+    if (ret != CRYPT_SUCCESS) {
+        printf("ctrl param failed.\n");
+        goto EXIT;
+    }
+
     for (;;) {
         // Find the starting point of the next vector: "count = "
         if (!FindMarker(fp, "count = ")) break; // EOF
@@ -127,7 +146,7 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
         // Fix the RNG (to ensure generated results are consistent with KAT)
         RandombytesInit(seed, NULL, 256);
 
-        int32_t ret = CRYPT_EAL_SetRandCallBack(GenTestRandombytes);
+        ret = CRYPT_EAL_SetRandCallBack(GenTestRandombytes);
         if (ret != CRYPT_SUCCESS) {
             fprintf(stderr, "CRYPT_EAL_SetRandCallBack failed.\n");
             goto EXIT;
@@ -135,20 +154,6 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
 
         // Run KEM
         int ok_pk = 0, ok_sk = 0, ok_ct = 0, ok_ss = 0, ok_dec = 0;
-
-        CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_FRODOKEM, CRYPT_EAL_PKEY_KEM_OPERATE,
-                "provider=pqcp");
-        if (ctx == NULL) {
-            printf("create ctx failed.\n");
-            goto EXIT;
-        }
-
-        int32_t val = id;
-        ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_FRODOKEM_ALG_PARAMS, &val, sizeof(val));
-        if (ret != CRYPT_SUCCESS) {
-            printf("ctrl param failed.\n");
-            goto EXIT;
-        }
 
         ret = CRYPT_EAL_PkeyGen(ctx);
         if (ret != CRYPT_SUCCESS) {
@@ -216,9 +221,12 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
 
         if (ok_all) pass++;
         else fail++;
+        RandomBytesRelease();
     }
 
 EXIT:
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+
     free(seed);
     free(pk_ref);
     free(sk_ref);
@@ -360,7 +368,11 @@ static inline void drbg_set_aes256_key(const uint8_t key[32]) {
     } else {
         if (CRYPT_EAL_CipherInit(g_RandCtx, key, 32, NULL, 0, true) != 0) {
             fprintf(stderr, "ERROR! CRYPT_EAL_CipherInit failed!\n");
-            exit(1);
+            CRYPT_EAL_CipherFreeCtx(g_RandCtx);
+        }
+        if (CRYPT_EAL_CipherSetPadding(g_RandCtx, CRYPT_PADDING_NONE) != 0) {
+            fprintf(stderr, "ERROR! CRYPT_EAL_CipherSetPadding failed!\n");
+            CRYPT_EAL_CipherFreeCtx(g_RandCtx);
         }
         g_rk256_ready = 1;
     }
@@ -425,6 +437,10 @@ void RandombytesInit(unsigned char *entropy_input,
 
     AES256_CTR_DRBG_Update(seed_material, DRBG_ctx.Key, DRBG_ctx.V);
     DRBG_ctx.reseed_counter = 1;
+}
+
+void RandomBytesRelease() {
+    CRYPT_EAL_CipherFreeCtx(g_RandCtx);
 }
 
 int GenTestRandombytes(uint8_t *x, uint32_t xlen)
