@@ -12,17 +12,15 @@
 #include "frodo_local.h"
 #include "crypt_eal_cipher.h"
 
-#define MAX_MARKER_LEN 50
+#define MAX_LINE_LEN 90000
 
-int FindMarker(FILE *infile, const char *marker);
-
-int ReadHex(FILE *infile, unsigned char *A, int Length, char *str);
-
+int ParseHexFromFile(FILE* infile, unsigned char* A, int length, char* buffer);
 
 void RandombytesInit(unsigned char *entropy_input,
                      unsigned char *personalization_string,
                      int security_strength);
 void RandomBytesRelease();
+
 int GenTestRandombytes(uint8_t *x, uint32_t xlen);
 
 static inline int BytesEq(const uint8_t* a, const uint8_t* b, size_t n)
@@ -85,6 +83,8 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
     uint8_t* ss = malloc(params->ss);
     uint8_t* ss2 = malloc(params->ss);
 
+    char *buffer = malloc(MAX_LINE_LEN);
+
     int total = 0, pass = 0, fail = 0;
 
     BSL_Param pub[2] = {
@@ -111,35 +111,37 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
         goto EXIT;
     }
 
+    // skip the first line
+    fgets(buffer, MAX_LINE_LEN, fp);
+
     for (;;) {
-        // Find the starting point of the next vector: "count = "
-        if (!FindMarker(fp, "count = ")) break; // EOF
-        int count = read_count_value(fp);
-        if (count < 0) {
-            fprintf(stderr, "Parse 'count' failed.\n");
+        // skip 2 lines
+        if (fgets(buffer, MAX_LINE_LEN, fp) == NULL) {
             break;
         }
-        total++;
+        if (fgets(buffer, MAX_LINE_LEN, fp) == NULL) {
+            break;
+        }
 
         // Read seed pk sk ct ss
-        if (!ReadHex(fp, seed, lenSeed, "seed = ")) {
-            fprintf(stderr, "Parse seed @count=%d\n", count);
+        if (!ParseHexFromFile(fp, seed, lenSeed, buffer)) {
+            fprintf(stderr, "Parse seed @count=%d\n", total);
             break;
         }
-        if (!ReadHex(fp, pk_ref, params->pkSize, "pk = ")) {
-            fprintf(stderr, "Parse pk   @count=%d\n", count);
+        if (!ParseHexFromFile(fp, pk_ref, params->pkSize, buffer)) {
+            fprintf(stderr, "Parse pk   @count=%d\n", total);
             break;
         }
-        if (!ReadHex(fp, sk_ref, params->kemSkSize, "sk = ")) {
-            fprintf(stderr, "Parse sk   @count=%d\n", count);
+        if (!ParseHexFromFile(fp, sk_ref, params->kemSkSize, buffer)) {
+            fprintf(stderr, "Parse sk   @count=%d\n", total);
             break;
         }
-        if (!ReadHex(fp, ct_ref, params->ctxSize, "ct = ")) {
-            fprintf(stderr, "Parse ct   @count=%d\n", count);
+        if (!ParseHexFromFile(fp, ct_ref, params->ctxSize, buffer)) {
+            fprintf(stderr, "Parse ct   @count=%d\n", total);
             break;
         }
-        if (!ReadHex(fp, ss_ref, params->ss, "ss = ")) {
-            fprintf(stderr, "Parse ss   @count=%d\n", count);
+        if (!ParseHexFromFile(fp, ss_ref, params->ss, buffer)) {
+            fprintf(stderr, "Parse ss   @count=%d\n", total);
             break;
         }
 
@@ -219,6 +221,8 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
         ok_dec ? "OK" : "FAIL");
         */
 
+        total++;
+
         if (ok_all) pass++;
         else fail++;
         RandomBytesRelease();
@@ -247,92 +251,56 @@ EXIT:
     printf("\n");
 }
 
-int FindMarker(FILE *infile, const char *marker) {
-    char    line[MAX_MARKER_LEN];
-    int     i, len;
-    int     curr_char;
-
-    len = (int)strlen(marker);
-    if (len > MAX_MARKER_LEN - 1) {
-        len = MAX_MARKER_LEN - 1;
+int GetNumberFromHex(const char a)
+{
+    if (a >= '0' && a <= '9') {
+        return a - '0';
     }
-
-    // Read the initial characters to fill the buffer
-    for (i = 0; i < len; i++) {
-        curr_char = fgetc(infile);
-        if (curr_char == EOF) {
-            return 0;
-        }
-        line[i] = (char)curr_char;
+    if (a >= 'A' && a <= 'F') {
+        return a - 'A' + 10;
     }
-    line[len] = '\0';
-
-    // Slide the window one character at a time
-    while (1) {
-        if (strncmp(line, marker, len) == 0) {
-            return 1;
-        }
-
-        for (i = 0; i < len - 1; i++) {
-            line[i] = line[i + 1];
-        }
-
-        curr_char = fgetc(infile);
-        if (curr_char == EOF) {
-            return 0;
-        }
-        line[len - 1] = (char)curr_char;
-    }
-
-    return 0;
+    perror("GetNumberFromHex error");
+    return -1;
 }
 
-int ReadHex(FILE *infile, unsigned char *A, int Length, char *str) {
-    int i;
-    int ch;
-    int started = 0;
-    unsigned char ich;
-
-    if (Length == 0) {
+int ParseHexFromFile(FILE* infile, unsigned char* A, int length, char* buffer)
+{
+    if (length == 0) {
         return 1;
     }
 
-    memset(A, 0x00, Length);
+    if (fgets(buffer, MAX_LINE_LEN, infile) == NULL) {
+        return 0;
+    }
+    size_t len = strlen(buffer);
+    if (len < 10) {
+        return 0;
+    }
 
-    if (FindMarker(infile, str)) {
-        while ((ch = fgetc(infile)) != EOF) {
-            if (!isxdigit(ch)) {
-                if (!started) {
-                    if (ch == '\n') {
-                        break;
-                    }
-                    continue;
-                } else {
-                    break;
-                }
-            }
-            started = 1;
-
-            if (ch >= '0' && ch <= '9') {
-                ich = ch - '0';
-            } else if (ch >= 'A' && ch <= 'F') {
-                ich = ch - 'A' + 10;
-            } else if (ch >= 'a' && ch <= 'f') {
-                ich = ch - 'a' + 10;
-            } else {
-                ich = 0;
-            }
-
-            for (i = 0; i < Length - 1; i++) {
-                A[i] = (A[i] << 4) | (A[i + 1] >> 4);
-            }
-            A[Length - 1] = (A[Length - 1] << 4) | ich;
-        }
+    const char* ptr;
+    if (buffer[6] == ' ') {
+        // "seed = "
+        ptr = buffer + 7;
+        len -= 7;
+    } else if (buffer[4] == ' ') {
+        // "xx = "
+        ptr = buffer + 5;
+        len -= 5;
     } else {
         return 0;
     }
 
-    return started;
+    if (len < length * 2) {
+        return 0;
+    }
+
+    for (int i = 0; i < length; i++) {
+        const int a = GetNumberFromHex(ptr[2 * i + 0]);
+        const int b = GetNumberFromHex(ptr[2 * i + 1]);
+        A[i] = (a << 4) | b;
+    }
+
+    return 1;
 }
 
 #define RNG_SUCCESS       0
