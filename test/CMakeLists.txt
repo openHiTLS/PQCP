@@ -23,6 +23,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+find_package(Threads REQUIRED)
+
 # 设置编译选项
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3 -O0 -Wall -Wextra")
@@ -80,8 +82,11 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/src
+    ${CMAKE_SOURCE_DIR}/../src/frodokem/include
+    ${CMAKE_SOURCE_DIR}/../src/frodokem/src
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/bsl
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/crypto
+    ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/include
 )
 
 # 添加公共测试框架源文件
@@ -147,6 +152,7 @@ if(BUILD_SDV)
         ${HITLS_CRYPTO_LIB}
         ${HITLS_BSL_LIB}
         ${PQCP_PROVIDER_LIB}
+        Threads::Threads
         ${SECUREC_LIB})
     install(TARGETS pqcp_sdv_test DESTINATION bin)
 endif()
@@ -159,6 +165,7 @@ if(BUILD_PERF)
         ${HITLS_CRYPTO_LIB}
         ${HITLS_BSL_LIB}
         ${PQCP_PROVIDER_LIB}
+        Threads::Threads
         ${SECUREC_LIB})
     install(TARGETS pqcp_perf_test DESTINATION bin)
 endif()
@@ -171,6 +178,7 @@ if(BUILD_FUZZ)
         ${HITLS_CRYPTO_LIB}
         ${HITLS_BSL_LIB}
         ${PQCP_PROVIDER_LIB}
+        Threads::Threads
         ${SECUREC_LIB})
     install(TARGETS pqcp_fuzz_test DESTINATION bin)
 endif()
@@ -187,6 +195,7 @@ if(BUILD_DEMO)
             ${HITLS_CRYPTO_LIB}
             ${HITLS_BSL_LIB}
             ${PQCP_PROVIDER_LIB}
+            Threads::Threads
             ${SECUREC_LIB})
         install(TARGETS ${DEMO_NAME} DESTINATION bin)
     endforeach()

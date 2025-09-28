@@ -40,6 +40,13 @@ set(PROVIDER_SOURCES
     src/provider/pqcp_kem.c
     src/scloudplus/src/scloudplus.c
     src/scloudplus/src/scloudplus_util.c
+    src/frodokem/src/frodo_core_ref.c
+    src/frodokem/src/frodo_noise.c
+    src/frodokem/src/frodo_params.c
+    src/frodokem/src/frodo_util.c
+    src/frodokem/src/frodokem_api.c
+    src/frodokem/src/frodokem.c
+    src/frodokem/src/frodokem_pke.c
 )
 
 # 添加链接目录
@@ -56,6 +63,7 @@ target_include_directories(pqcp_provider
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scloudplus/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/frodokem/include
         ${OPENHITLS_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/bsl
