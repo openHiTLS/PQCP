@@ -7,11 +7,6 @@ extern "C" {
 
 #include <stdint.h>
 
-// === DEBUG TRACE (enable with -DFRODO_TRACE=1) ===
-#ifndef FRODO_TRACE
-#define FRODO_TRACE 0
-#endif
-
 #define FRODOKEM_LEN_A 16
 #define FRODOKEM_NBAR 8
 
