@@ -36,7 +36,9 @@ int FrodoPkeKeygenSeeded(const FrodoKemParams* params,
         return -1;
     }
 
-    memcpy(pk, seedA, params->lenSeedA);
+    for (int i = 0; i < params->lenSeedA; i++) {
+        pk[i] = seedA[i];
+    }
     FrodoCommonPack(pk + params->lenSeedA, params->pkSize - params->lenSeedA,
                     B, count, params->logq);
     free(B);

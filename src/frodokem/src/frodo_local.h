@@ -57,7 +57,7 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out, const uint16_t* s, const uin
 
 int FrodoCommonMulAddAsPlusEAvx2(uint16_t* b, const uint16_t* s, const uint16_t* e, const uint8_t* seed_A);
 
-int FrodoCommonMulAddSaPlusEPortable(uint16_t* b, const uint16_t* s, const uint16_t* e, const uint8_t* seed_A,
+int FrodoCommonMulAddSaPlusEPortable(uint16_t* b, const uint16_t* s, const uint16_t* e, const uint8_t* seedA,
                                      const FrodoKemParams* params);
 int FrodoCommonMulAddSaPlusEAvx2(uint16_t* b, const uint16_t* s, const uint16_t* e, const uint8_t* seed_A);
 
@@ -90,7 +90,7 @@ int FrodoPkeEncrypt(const FrodoKemParams* params, const uint8_t* pk, const uint8
                     uint8_t* ct);
 int FrodoPkeDecrypt(const FrodoKemParams* params, const uint8_t* pke_sk, const uint8_t* ct, uint8_t* mu);
 
-int FrodoKemKeypairInternal(const uint8_t* rnd, const FrodoKemParams* params, uint8_t* pk, uint8_t* sk);
+int FrodoKemKeypairInternal(const uint8_t* rnd, const FrodoKemParams* params, uint8_t* pk, uint8_t* sk, size_t lenSk);
 int FrodoKemEncapsInternal(const uint8_t* mu, const FrodoKemParams* params, uint8_t* ct, uint8_t* ss,
                            const uint8_t* pk);
 

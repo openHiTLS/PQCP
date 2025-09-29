@@ -26,7 +26,7 @@ typedef struct
 // Function Prototypes from frodokem_kem.c
 // =================================================================================
 
-int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk);
+int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk, size_t lenSk);
 
 int FrodoKemEncaps(const FrodoKemParams* params, uint8_t* ct, uint8_t* ss, const uint8_t* pk);
 

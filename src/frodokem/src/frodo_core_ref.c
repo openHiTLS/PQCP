@@ -6,7 +6,7 @@
 #include "pqcp_err.h"
 
 int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
-                                     const uint16_t* matrixSTranspose, 
+                                     const uint16_t* matrixSTranspose,
                                      const uint8_t*  seedA,
                                      const FrodoKemParams* params)
 {
@@ -16,7 +16,7 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
 
     #define FRODO_MAX_N         1344
-    #define FRODO_MAX_SEED_A    16   
+    #define FRODO_MAX_SEED_A    16
 
     ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
     ALIGN_HEADER(32) uint8_t  AES_PT[4 * 16 * (FRODO_MAX_N/8)] ALIGN_FOOTER(32);
@@ -113,10 +113,12 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
         uint8_t* in2 = &INBUF[2 * inlen];
         uint8_t* in3 = &INBUF[3 * inlen];
 
-        memcpy(in0 + 2, seedA, params->lenSeedA);
-        memcpy(in1 + 2, seedA, params->lenSeedA);
-        memcpy(in2 + 2, seedA, params->lenSeedA);
-        memcpy(in3 + 2, seedA, params->lenSeedA);
+        for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
+            in0[2 + ctr] = seedA[ctr];
+            in1[2 + ctr] = seedA[ctr];
+            in2[2 + ctr] = seedA[ctr];
+            in3[2 + ctr] = seedA[ctr];
+        }
 
         uint16_t* row0 = &A_rows[0 * N];
         uint16_t* row1 = &A_rows[1 * N];
@@ -156,9 +158,9 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
 
 
 int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
-                                     const uint16_t *s,         
-                                     const uint16_t *e,         
-                                     const uint8_t  *seed_A,
+                                     const uint16_t *s,
+                                     const uint16_t *e,
+                                     const uint8_t  *seedA,
                                      const FrodoKemParams *params)
 {
     const int N    = params->n;
@@ -169,7 +171,7 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
     }
 
     #define FRODO_MAX_N         1344
-    #define FRODO_MAX_SEED_A    16   
+    #define FRODO_MAX_SEED_A    16
 
     ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
     ALIGN_HEADER(32) uint8_t  AES_PT[4 * 16 * (FRODO_MAX_N/8)] ALIGN_FOOTER(32);
@@ -182,7 +184,7 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
             return PQCP_MALLOC_FAIL;
         }
 
-        int ret = CRYPT_EAL_CipherInit(RandCtx, seed_A, 16, NULL, 0, true);
+        int ret = CRYPT_EAL_CipherInit(RandCtx, seedA, 16, NULL, 0, true);
         if (ret != PQCP_SUCCESS) {
             CRYPT_EAL_CipherFreeCtx(RandCtx);
             return ret;
@@ -193,7 +195,7 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
             return ret;
         }
 
-        const int blocks_per_row = N / 8; 
+        const int blocks_per_row = N / 8;
 
         for (int blk = 0; blk < blocks_per_row; blk++) {
             const uint16_t jj    = (uint16_t)(blk << 3);
@@ -267,10 +269,12 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
         uint8_t *in2 = &INBUF[2 * inlen];
         uint8_t *in3 = &INBUF[3 * inlen];
 
-        memcpy(in0 + 2, seed_A, params->lenSeedA);
-        memcpy(in1 + 2, seed_A, params->lenSeedA);
-        memcpy(in2 + 2, seed_A, params->lenSeedA);
-        memcpy(in3 + 2, seed_A, params->lenSeedA);
+        for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
+            in0[2 + ctr] = seedA[ctr];
+            in1[2 + ctr] = seedA[ctr];
+            in2[2 + ctr] = seedA[ctr];
+            in3[2 + ctr] = seedA[ctr];
+        }
 
         uint16_t *row0 = &A_rows[0 * N];
         uint16_t *row1 = &A_rows[1 * N];

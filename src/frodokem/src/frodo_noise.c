@@ -28,7 +28,9 @@ void FrodoExpandShakeDs(uint8_t* out, size_t outlen,
 {
     uint8_t in[1 + 64];
     in[0] = ds;
-    memcpy(in + 1, seed, seedlen);
+    for (int i = 0; i < seedlen; i++) {
+        in[1 + i] = seed[i];
+    }
     if (use_shake256(params)) {
         FrodoKemShake256(out, outlen, in, 1 + seedlen);
     } else {

@@ -8,13 +8,14 @@
 #include "securec.h"
 #include "pqcp_err.h"
 #include "crypt_eal_rand.h"
+#include "securec.h"
 
 int32_t FrodoKemRandombytes(uint8_t *buffer, size_t len)
 {
     return CRYPT_EAL_Randbytes(buffer, len);
 }
 
-int FrodoKemKeypairInternal(const uint8_t *rnd, const FrodoKemParams* params, uint8_t* pk, uint8_t* sk)
+int FrodoKemKeypairInternal(const uint8_t *rnd, const FrodoKemParams* params, uint8_t* pk, uint8_t* sk, size_t lenSk)
 {
     const uint16_t n = params->n;
     const uint16_t nbar = params->nBar;
@@ -46,9 +47,9 @@ int FrodoKemKeypairInternal(const uint8_t *rnd, const FrodoKemParams* params, ui
     uint8_t* sk_S = sk_pk + params->pkSize;
     uint8_t* sk_pkh = sk_S + SnB;
 
-    memcpy(sk_s, s, params->ss);
-    memcpy(sk_pk, pk, params->pkSize);
-    memcpy(sk_S, (uint8_t*)sTranspose, SnB);
+    memcpy_s(sk_s, lenSk, s, params->ss);
+    memcpy_s(sk_pk, lenSk - params->ss, pk, params->pkSize);
+    memcpy_s(sk_S, lenSk - params->ss-params->pkSize, (uint8_t*)sTranspose, SnB);
 
     if (n == 640) {
         FrodoKemShake128(sk_pkh, params->lenPkHash, pk, params->pkSize);
@@ -61,7 +62,7 @@ clean:
     return 0;
 }
 
-int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk)
+int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk, size_t lenSk)
 {
     const size_t need = (size_t)params->ss + params->lenSeedSE + params->lenSeedA;
     uint8_t rnd[112] = {0};
@@ -69,7 +70,7 @@ int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk)
     if (ret != PQCP_SUCCESS) {
         return ret;
     }
-    return FrodoKemKeypairInternal(rnd, params, pk, sk);
+    return FrodoKemKeypairInternal(rnd, params, pk, sk, lenSk);
 }
 
 int FrodoKemEncapsInternal(const uint8_t *mu, const FrodoKemParams* params, uint8_t* ct, uint8_t* ss, const uint8_t* pk)
@@ -92,8 +93,8 @@ int FrodoKemEncapsInternal(const uint8_t *mu, const FrodoKemParams* params, uint
         free(seedk);
         return -1;
     }
-    memcpy(in, pkh, params->lenPkHash);
-    memcpy(in + params->lenPkHash, mu, params->lenMu + params->lenSalt);
+    memcpy_s(in, in_len, pkh, params->lenPkHash);
+    memcpy_s(in + params->lenPkHash, in_len - params->lenPkHash, mu, params->lenMu + params->lenSalt);
 
     if (params->n == 640) {
         FrodoKemShake128(seedk, seedk_len, in, in_len);
@@ -110,7 +111,9 @@ int FrodoKemEncapsInternal(const uint8_t *mu, const FrodoKemParams* params, uint
         return -1;
     }
 
-    memcpy(ct + params->ctxSize - params->lenSalt, mu + params->lenMu, params->lenSalt);
+    for (int i = 0; i < params->lenSalt; i++) {
+        ct[params->ctxSize - params->lenSalt + i] = mu[params->lenMu + i];
+    }
 
     size_t ct_k_len = params->ctxSize + params->ss;
     uint8_t* ct_k = (uint8_t*)malloc(ct_k_len);
@@ -119,8 +122,8 @@ int FrodoKemEncapsInternal(const uint8_t *mu, const FrodoKemParams* params, uint
         return -1;
     }
 
-    memcpy(ct_k, ct, params->ctxSize);
-    memcpy(ct_k + params->ctxSize, k, params->ss);
+    memcpy_s(ct_k, ct_k_len, ct, params->ctxSize);
+    memcpy_s(ct_k + params->ctxSize, ct_k_len - params->ctxSize, k, params->ss);
 
     if (params->n == 640) {
         FrodoKemShake128(ss, params->ss, ct_k, ct_k_len);
@@ -168,9 +171,9 @@ int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct,
         free(seed_k_bytes_prime);
         return -1;
     }
-    memcpy(pkh_mu_bytes_prime, sk_pkh, params->lenPkHash);
-    memcpy(pkh_mu_bytes_prime + params->lenPkHash, mu_prime, params->lenMu);
-    memcpy(pkh_mu_bytes_prime + params->lenPkHash + params->lenMu, ct + params->ctxSize - params->lenSalt,
+    memcpy_s(pkh_mu_bytes_prime, pkh_mu_len, sk_pkh, params->lenPkHash);
+    memcpy_s(pkh_mu_bytes_prime + params->lenPkHash, pkh_mu_len - params->lenPkHash, mu_prime, params->lenMu);
+    memcpy_s(pkh_mu_bytes_prime + params->lenPkHash + params->lenMu, pkh_mu_len - params->lenPkHash - params->lenMu, ct + params->ctxSize - params->lenSalt,
            params->lenSalt);
 
     if (params->n == 640) {
@@ -210,8 +213,8 @@ int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct,
         free(ct_prime);
         return -1;
     }
-    memcpy(ct_k_bytes, ct, params->ctxSize);
-    memcpy(ct_k_bytes + params->ctxSize, final_k, params->ss);
+    memcpy_s(ct_k_bytes, ct_k_len, ct, params->ctxSize);
+    memcpy_s(ct_k_bytes + params->ctxSize, ct_k_len - params->ctxSize, final_k, params->ss);
 
     if (params->n == 640) {
         FrodoKemShake128(ss, params->ss, ct_k_bytes, ct_k_len);

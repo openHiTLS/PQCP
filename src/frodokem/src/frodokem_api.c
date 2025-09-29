@@ -56,7 +56,7 @@ int32_t PQCP_FRODOKEM_Gen(FrodoKEM_Ctx* ctx)
     if (ctx->privateKey == NULL) {
         return PQCP_MALLOC_FAIL;
     }
-    int32_t ret = FrodoKemKeypair(ctx->para, ctx->publicKey, ctx->privateKey);
+    int32_t ret = FrodoKemKeypair(ctx->para, ctx->publicKey, ctx->privateKey, ctx->para->kemSkSize);
     if (ret != PQCP_SUCCESS) {
         goto EXIT;
     }
