@@ -7,24 +7,24 @@
 
 int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
                                      const uint16_t* matrixSTranspose,
-                                     const uint8_t*  seedA,
+                                     const uint8_t* seedA,
                                      const FrodoKemParams* params)
 {
-    const int N    = params->n;
+    const int N = params->n;
     const int NBAR = params->nBar;
     int ret = 0;
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
 
-    #define FRODO_MAX_N         1344
-    #define FRODO_MAX_SEED_A    16
+#define FRODO_MAX_N         1344
+#define FRODO_MAX_SEED_A    16
 
     ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t  AES_PT[4 * 16 * (FRODO_MAX_N/8)] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t  INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
+    ALIGN_HEADER(32) uint8_t AES_PT[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
+    ALIGN_HEADER(32) uint8_t INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
 
     if (params->prg == FRODO_PRG_AES) {
         // ====================== AES ======================
-        CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
+        CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
         if (RandCtx == NULL) {
             return PQCP_MALLOC_FAIL;
         }
@@ -43,12 +43,13 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
         const int blocks_per_row = N / 8;
 
         for (int blk = 0; blk < blocks_per_row; blk++) {
-            const uint16_t jj    = (uint16_t)(blk << 3);
-            const uint8_t  jj_lo = (uint8_t)(jj & 0xFF);
-            const uint8_t  jj_hi = (uint8_t)(jj >> 8);
+            const uint16_t jj = (uint16_t)(blk << 3);
+            const uint8_t jj_lo = (uint8_t)(jj & 0xFF);
+            const uint8_t jj_hi = (uint8_t)(jj >> 8);
             for (int r = 0; r < 4; r++) {
                 uint8_t* P = &AES_PT[16 * (blk + r * blocks_per_row)];
-                P[2] = jj_lo; P[3] = jj_hi;
+                P[2] = jj_lo;
+                P[3] = jj_hi;
                 for (int t = 4; t < 16; t++) P[t] = 0;
             }
         }
@@ -63,15 +64,19 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
                 const uint16_t i1 = (uint16_t)(i + 1);
                 const uint16_t i2 = (uint16_t)(i + 2);
                 const uint16_t i3 = (uint16_t)(i + 3);
-                P0[0] = (uint8_t)(i0 & 0xFF); P0[1] = (uint8_t)(i0 >> 8);
-                P1[0] = (uint8_t)(i1 & 0xFF); P1[1] = (uint8_t)(i1 >> 8);
-                P2[0] = (uint8_t)(i2 & 0xFF); P2[1] = (uint8_t)(i2 >> 8);
-                P3[0] = (uint8_t)(i3 & 0xFF); P3[1] = (uint8_t)(i3 >> 8);
+                P0[0] = (uint8_t)(i0 & 0xFF);
+                P0[1] = (uint8_t)(i0 >> 8);
+                P1[0] = (uint8_t)(i1 & 0xFF);
+                P1[1] = (uint8_t)(i1 >> 8);
+                P2[0] = (uint8_t)(i2 & 0xFF);
+                P2[1] = (uint8_t)(i2 >> 8);
+                P3[0] = (uint8_t)(i3 & 0xFF);
+                P3[1] = (uint8_t)(i3 >> 8);
             }
 
             int outLen = 4 * blocks_per_row * 16;
-            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t *)A_rows,
-                                     &outLen);
+            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t*)A_rows,
+                                         &outLen);
             if (ret != PQCP_SUCCESS) {
                 CRYPT_EAL_CipherFreeCtx(RandCtx);
                 return ret;
@@ -96,10 +101,10 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
                     sum2 += (uint16_t)((uint32_t)row2[k] * sv);
                     sum3 += (uint16_t)((uint32_t)row3[k] * sv);
                 }
-                    out[(i+0)*NBAR + j] = (uint16_t)(out[(i+0)*NBAR + j] + sum0);
-                    out[(i+1)*NBAR + j] = (uint16_t)(out[(i+1)*NBAR + j] + sum1);
-                    out[(i+2)*NBAR + j] = (uint16_t)(out[(i+2)*NBAR + j] + sum2);
-                    out[(i+3)*NBAR + j] = (uint16_t)(out[(i+3)*NBAR + j] + sum3);
+                out[(i + 0) * NBAR + j] = (uint16_t)(out[(i + 0) * NBAR + j] + sum0);
+                out[(i + 1) * NBAR + j] = (uint16_t)(out[(i + 1) * NBAR + j] + sum1);
+                out[(i + 2) * NBAR + j] = (uint16_t)(out[(i + 2) * NBAR + j] + sum2);
+                out[(i + 3) * NBAR + j] = (uint16_t)(out[(i + 3) * NBAR + j] + sum3);
             }
         }
 
@@ -126,10 +131,14 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
         uint16_t* row3 = &A_rows[3 * N];
 
         for (int i = 0; i < N; i += 4) {
-            in0[0] = (uint8_t)((i + 0) & 0xFF); in0[1] = (uint8_t)((i + 0) >> 8);
-            in1[0] = (uint8_t)((i + 1) & 0xFF); in1[1] = (uint8_t)((i + 1) >> 8);
-            in2[0] = (uint8_t)((i + 2) & 0xFF); in2[1] = (uint8_t)((i + 2) >> 8);
-            in3[0] = (uint8_t)((i + 3) & 0xFF); in3[1] = (uint8_t)((i + 3) >> 8);
+            in0[0] = (uint8_t)((i + 0) & 0xFF);
+            in0[1] = (uint8_t)((i + 0) >> 8);
+            in1[0] = (uint8_t)((i + 1) & 0xFF);
+            in1[1] = (uint8_t)((i + 1) >> 8);
+            in2[0] = (uint8_t)((i + 2) & 0xFF);
+            in2[1] = (uint8_t)((i + 2) >> 8);
+            in3[0] = (uint8_t)((i + 3) & 0xFF);
+            in3[1] = (uint8_t)((i + 3) >> 8);
 
             FrodoKemShake128((uint8_t*)row0, (size_t)N * sizeof(uint16_t), in0, inlen);
             FrodoKemShake128((uint8_t*)row1, (size_t)N * sizeof(uint16_t), in1, inlen);
@@ -140,16 +149,16 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
                 const uint16_t* ST_row = &matrixSTranspose[j * N];
                 uint16_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
                 for (int k = 0; k < N; k++) {
-                     uint16_t sv = ST_row[k];
-                     sum0 += (uint16_t)((uint32_t)row0[k] * sv);
-                     sum1 += (uint16_t)((uint32_t)row1[k] * sv);
-                     sum2 += (uint16_t)((uint32_t)row2[k] * sv);
-                     sum3 += (uint16_t)((uint32_t)row3[k] * sv);
+                    uint16_t sv = ST_row[k];
+                    sum0 += (uint16_t)((uint32_t)row0[k] * sv);
+                    sum1 += (uint16_t)((uint32_t)row1[k] * sv);
+                    sum2 += (uint16_t)((uint32_t)row2[k] * sv);
+                    sum3 += (uint16_t)((uint32_t)row3[k] * sv);
                 }
-                out[(i+0)*NBAR + j] = (uint16_t)(out[(i+0)*NBAR + j] + sum0);
-                out[(i+1)*NBAR + j] = (uint16_t)(out[(i+1)*NBAR + j] + sum1);
-                out[(i+2)*NBAR + j] = (uint16_t)(out[(i+2)*NBAR + j] + sum2);
-                out[(i+3)*NBAR + j] = (uint16_t)(out[(i+3)*NBAR + j] + sum3);
+                out[(i + 0) * NBAR + j] = (uint16_t)(out[(i + 0) * NBAR + j] + sum0);
+                out[(i + 1) * NBAR + j] = (uint16_t)(out[(i + 1) * NBAR + j] + sum1);
+                out[(i + 2) * NBAR + j] = (uint16_t)(out[(i + 2) * NBAR + j] + sum2);
+                out[(i + 3) * NBAR + j] = (uint16_t)(out[(i + 3) * NBAR + j] + sum3);
             }
         }
         return 0;
@@ -157,29 +166,29 @@ int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
 }
 
 
-int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
-                                     const uint16_t *s,
-                                     const uint16_t *e,
-                                     const uint8_t  *seedA,
-                                     const FrodoKemParams *params)
+int FrodoCommonMulAddSaPlusEPortable(uint16_t* out,
+                                     const uint16_t* s,
+                                     const uint16_t* e,
+                                     const uint8_t* seedA,
+                                     const FrodoKemParams* params)
 {
-    const int N    = params->n;
+    const int N = params->n;
     const int NBAR = params->nBar;
 
     for (int i = 0; i < NBAR * N; i += 2) {
-        *((uint32_t *)&out[i]) = *((const uint32_t *)&e[i]);
+        *((uint32_t*)&out[i]) = *((const uint32_t*)&e[i]);
     }
 
-    #define FRODO_MAX_N         1344
-    #define FRODO_MAX_SEED_A    16
+#define FRODO_MAX_N         1344
+#define FRODO_MAX_SEED_A    16
 
     ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t  AES_PT[4 * 16 * (FRODO_MAX_N/8)] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t  INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
+    ALIGN_HEADER(32) uint8_t AES_PT[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
+    ALIGN_HEADER(32) uint8_t INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
 
     if (params->prg == FRODO_PRG_AES) {
         // ====================== AES ======================
-        CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
+        CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
         if (RandCtx == NULL) {
             return PQCP_MALLOC_FAIL;
         }
@@ -198,35 +207,40 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
         const int blocks_per_row = N / 8;
 
         for (int blk = 0; blk < blocks_per_row; blk++) {
-            const uint16_t jj    = (uint16_t)(blk << 3);
-            const uint8_t  jj_lo = (uint8_t)(jj & 0xFF);
-            const uint8_t  jj_hi = (uint8_t)(jj >> 8);
+            const uint16_t jj = (uint16_t)(blk << 3);
+            const uint8_t jj_lo = (uint8_t)(jj & 0xFF);
+            const uint8_t jj_hi = (uint8_t)(jj >> 8);
             for (int r = 0; r < 4; r++) {
-                uint8_t *P = &AES_PT[16 * (blk + r * blocks_per_row)];
-                P[2] = jj_lo; P[3] = jj_hi;
+                uint8_t* P = &AES_PT[16 * (blk + r * blocks_per_row)];
+                P[2] = jj_lo;
+                P[3] = jj_hi;
                 for (int t = 4; t < 16; t++) P[t] = 0;
             }
         }
 
         for (int i = 0; i < N; i += 4) {
             for (int blk = 0; blk < blocks_per_row; blk++) {
-                uint8_t *P0 = &AES_PT[16 * (blk + 0 * blocks_per_row)];
-                uint8_t *P1 = &AES_PT[16 * (blk + 1 * blocks_per_row)];
-                uint8_t *P2 = &AES_PT[16 * (blk + 2 * blocks_per_row)];
-                uint8_t *P3 = &AES_PT[16 * (blk + 3 * blocks_per_row)];
+                uint8_t* P0 = &AES_PT[16 * (blk + 0 * blocks_per_row)];
+                uint8_t* P1 = &AES_PT[16 * (blk + 1 * blocks_per_row)];
+                uint8_t* P2 = &AES_PT[16 * (blk + 2 * blocks_per_row)];
+                uint8_t* P3 = &AES_PT[16 * (blk + 3 * blocks_per_row)];
                 const uint16_t i0 = (uint16_t)(i + 0);
                 const uint16_t i1 = (uint16_t)(i + 1);
                 const uint16_t i2 = (uint16_t)(i + 2);
                 const uint16_t i3 = (uint16_t)(i + 3);
-                P0[0] = (uint8_t)(i0 & 0xFF); P0[1] = (uint8_t)(i0 >> 8);
-                P1[0] = (uint8_t)(i1 & 0xFF); P1[1] = (uint8_t)(i1 >> 8);
-                P2[0] = (uint8_t)(i2 & 0xFF); P2[1] = (uint8_t)(i2 >> 8);
-                P3[0] = (uint8_t)(i3 & 0xFF); P3[1] = (uint8_t)(i3 >> 8);
+                P0[0] = (uint8_t)(i0 & 0xFF);
+                P0[1] = (uint8_t)(i0 >> 8);
+                P1[0] = (uint8_t)(i1 & 0xFF);
+                P1[1] = (uint8_t)(i1 >> 8);
+                P2[0] = (uint8_t)(i2 & 0xFF);
+                P2[1] = (uint8_t)(i2 >> 8);
+                P3[0] = (uint8_t)(i3 & 0xFF);
+                P3[1] = (uint8_t)(i3 >> 8);
             }
 
             int outLen = 4 * blocks_per_row * 16;
-            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t *)A_rows,
-                         &outLen);
+            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t*)A_rows,
+                                         &outLen);
             if (ret != PQCP_SUCCESS) {
                 CRYPT_EAL_CipherFreeCtx(RandCtx);
                 return ret;
@@ -236,10 +250,10 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
                 A_rows[k] = (uint16_t)LE_TO_UINT16(A_rows[k]);
             }
 
-            const uint16_t *row0 = &A_rows[0 * N];
-            const uint16_t *row1 = &A_rows[1 * N];
-            const uint16_t *row2 = &A_rows[2 * N];
-            const uint16_t *row3 = &A_rows[3 * N];
+            const uint16_t* row0 = &A_rows[0 * N];
+            const uint16_t* row1 = &A_rows[1 * N];
+            const uint16_t* row2 = &A_rows[2 * N];
+            const uint16_t* row3 = &A_rows[3 * N];
 
             for (int k = 0; k < NBAR; k++) {
                 const uint16_t s0 = s[k * N + (i + 0)];
@@ -247,7 +261,7 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
                 const uint16_t s2 = s[k * N + (i + 2)];
                 const uint16_t s3 = s[k * N + (i + 3)];
 
-                uint16_t *out_row = &out[k * N];
+                uint16_t* out_row = &out[k * N];
                 for (int j = 0; j < N; j++) {
                     uint16_t acc = out_row[j];
                     acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
@@ -264,10 +278,10 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
     } else {
         // ====================== SHAKE ======================
         const size_t inlen = 2 + (size_t)params->lenSeedA;
-        uint8_t *in0 = &INBUF[0 * inlen];
-        uint8_t *in1 = &INBUF[1 * inlen];
-        uint8_t *in2 = &INBUF[2 * inlen];
-        uint8_t *in3 = &INBUF[3 * inlen];
+        uint8_t* in0 = &INBUF[0 * inlen];
+        uint8_t* in1 = &INBUF[1 * inlen];
+        uint8_t* in2 = &INBUF[2 * inlen];
+        uint8_t* in3 = &INBUF[3 * inlen];
 
         for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
             in0[2 + ctr] = seedA[ctr];
@@ -276,21 +290,25 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
             in3[2 + ctr] = seedA[ctr];
         }
 
-        uint16_t *row0 = &A_rows[0 * N];
-        uint16_t *row1 = &A_rows[1 * N];
-        uint16_t *row2 = &A_rows[2 * N];
-        uint16_t *row3 = &A_rows[3 * N];
+        uint16_t* row0 = &A_rows[0 * N];
+        uint16_t* row1 = &A_rows[1 * N];
+        uint16_t* row2 = &A_rows[2 * N];
+        uint16_t* row3 = &A_rows[3 * N];
 
         for (int i = 0; i < N; i += 4) {
-            in0[0] = (uint8_t)((i + 0) & 0xFF); in0[1] = (uint8_t)((i + 0) >> 8);
-            in1[0] = (uint8_t)((i + 1) & 0xFF); in1[1] = (uint8_t)((i + 1) >> 8);
-            in2[0] = (uint8_t)((i + 2) & 0xFF); in2[1] = (uint8_t)((i + 2) >> 8);
-            in3[0] = (uint8_t)((i + 3) & 0xFF); in3[1] = (uint8_t)((i + 3) >> 8);
+            in0[0] = (uint8_t)((i + 0) & 0xFF);
+            in0[1] = (uint8_t)((i + 0) >> 8);
+            in1[0] = (uint8_t)((i + 1) & 0xFF);
+            in1[1] = (uint8_t)((i + 1) >> 8);
+            in2[0] = (uint8_t)((i + 2) & 0xFF);
+            in2[1] = (uint8_t)((i + 2) >> 8);
+            in3[0] = (uint8_t)((i + 3) & 0xFF);
+            in3[1] = (uint8_t)((i + 3) >> 8);
 
-            FrodoKemShake128((uint8_t *)row0, (size_t)N * sizeof(uint16_t), in0, inlen);
-            FrodoKemShake128((uint8_t *)row1, (size_t)N * sizeof(uint16_t), in1, inlen);
-            FrodoKemShake128((uint8_t *)row2, (size_t)N * sizeof(uint16_t), in2, inlen);
-            FrodoKemShake128((uint8_t *)row3, (size_t)N * sizeof(uint16_t), in3, inlen);
+            FrodoKemShake128((uint8_t*)row0, (size_t)N * sizeof(uint16_t), in0, inlen);
+            FrodoKemShake128((uint8_t*)row1, (size_t)N * sizeof(uint16_t), in1, inlen);
+            FrodoKemShake128((uint8_t*)row2, (size_t)N * sizeof(uint16_t), in2, inlen);
+            FrodoKemShake128((uint8_t*)row3, (size_t)N * sizeof(uint16_t), in3, inlen);
 
             for (int k = 0; k < NBAR; k++) {
                 const uint16_t s0 = s[k * N + (i + 0)];
@@ -298,7 +316,7 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
                 const uint16_t s2 = s[k * N + (i + 2)];
                 const uint16_t s3 = s[k * N + (i + 3)];
 
-                uint16_t *out_row = &out[k * N];
+                uint16_t* out_row = &out[k * N];
                 for (int j = 0; j < N; j++) {
                     uint16_t acc = out_row[j];
                     acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
@@ -314,10 +332,10 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t *out,
 }
 
 int FrodoCommonMulAddSbPlusEPortable(uint16_t* V0,
-                                            const uint16_t* STp,
-                                            const uint16_t* B,
-                                            const uint16_t* Epp,
-                                            const FrodoKemParams* params)
+                                     const uint16_t* STp,
+                                     const uint16_t* B,
+                                     const uint16_t* Epp,
+                                     const FrodoKemParams* params)
 {
     const size_t n = params->n;
     const size_t nbar = params->nBar;
@@ -342,7 +360,7 @@ int FrodoCommonMulAddSbPlusEPortable(uint16_t* V0,
 }
 
 void FrodoCommonMulBs(uint16_t* out, const uint16_t* b, const uint16_t* s,
-                         const FrodoKemParams* params)
+                      const FrodoKemParams* params)
 {
     const size_t n = params->n, nbar = params->nBar;
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
@@ -359,7 +377,7 @@ void FrodoCommonMulBs(uint16_t* out, const uint16_t* b, const uint16_t* s,
 }
 
 void FrodoCommonMulBsUsingSt(uint16_t* out, const uint16_t* b, const uint16_t* sT,
-                                  const FrodoKemParams* params)
+                             const FrodoKemParams* params)
 {
     const size_t n = params->n, nbar = params->nBar;
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
@@ -377,7 +395,7 @@ void FrodoCommonMulBsUsingSt(uint16_t* out, const uint16_t* b, const uint16_t* s
 }
 
 void FrodoCommonAdd(uint16_t* out, const uint16_t* a, const uint16_t* b,
-                      const FrodoKemParams* params)
+                    const FrodoKemParams* params)
 {
     const size_t ncoeff = (size_t)params->nBar * params->nBar;
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
@@ -388,7 +406,7 @@ void FrodoCommonAdd(uint16_t* out, const uint16_t* a, const uint16_t* b,
 }
 
 void FrodoCommonSub(uint16_t* out, const uint16_t* a, const uint16_t* b,
-                      const FrodoKemParams* params)
+                    const FrodoKemParams* params)
 {
     const size_t ncoeff = (size_t)params->nBar * params->nBar;
     const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
@@ -399,8 +417,8 @@ void FrodoCommonSub(uint16_t* out, const uint16_t* a, const uint16_t* b,
 }
 
 void FrodoCommonKeyEncode(uint16_t* out,
-                             const uint16_t* in,
-                             const FrodoKemParams* params)
+                          const uint16_t* in,
+                          const FrodoKemParams* params)
 {
     const uint8_t* mu = (const uint8_t*)in;
     const size_t total = (size_t)params->nBar * params->nBar;
@@ -420,8 +438,8 @@ void FrodoCommonKeyEncode(uint16_t* out,
 }
 
 void FrodoCommonKeyDecode(uint16_t* out,
-                             const uint16_t* in,
-                             const FrodoKemParams* params)
+                          const uint16_t* in,
+                          const FrodoKemParams* params)
 {
     uint8_t* mu = (uint8_t*)out;
 

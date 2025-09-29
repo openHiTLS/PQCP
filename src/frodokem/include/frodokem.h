@@ -32,68 +32,6 @@ int FrodoKemEncaps(const FrodoKemParams* params, uint8_t* ct, uint8_t* ss, const
 
 int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
 
-// --- API for eFrodoKEM-640-AES ---
-int CryptoKemKeypaireFrodo640Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo640Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo640Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for eFrodoKEM-640-SHAKE ---
-int CryptoKemKeypaireFrodo640Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo640Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo640Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for eFrodoKEM-976-AES ---
-int CryptoKemKeypaireFrodo976Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo976Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo976Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for eFrodoKEM-976-SHAKE ---
-int CryptoKemKeypaireFrodo976Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo976Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo976Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for eFrodoKEM-1344-AES ---
-int CryptoKemKeypaireFrodo1344Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo1344Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo1344Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for eFrodoKEM-1344-SHAKE ---
-int CryptoKemKeypaireFrodo1344Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEnceFrodo1344Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDeceFrodo1344Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-// ...
-
-// --- API for FrodoKEM-640-AES ---
-int CryptoKemKeypairFrodo640Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo640Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo640Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for FrodoKEM-640-SHAKE ---
-int CryptoKemKeypairFrodo640Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo640Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo640Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for FrodoKEM-976-AES ---
-int CryptoKemKeypairFrodo976Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo976Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo976Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for FrodoKEM-976-SHAKE ---
-int CryptoKemKeypairFrodo976Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo976Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo976Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for FrodoKEM-1344-AES ---
-int CryptoKemKeypairFrodo1344Aes(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo1344Aes(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo1344Aes(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-
-// --- API for FrodoKEM-1344-SHAKE ---
-int CryptoKemKeypairFrodo1344Shake(uint8_t* pk, uint8_t* sk);
-int CryptoKemEncFrodo1344Shake(uint8_t* ct, uint8_t* ss, const uint8_t* pk);
-int CryptoKemDecFrodo1344Shake(uint8_t* ss, const uint8_t* ct, const uint8_t* sk);
-// ...
-
 void* PQCP_FRODOKEM_NewCtx(void);
 int32_t PQCP_FRODOKEM_Gen(FrodoKEM_Ctx* ctx);
 int32_t PQCP_FRODOKEM_SetPrvKey(FrodoKEM_Ctx* ctx, BSL_Param* param);
@@ -109,11 +47,11 @@ void PQCP_FRODOKEM_FreeCtx(FrodoKEM_Ctx* ctx);
 int32_t PQCP_FRODOKEM_EncapsInit(FrodoKEM_Ctx* ctx, const BSL_Param* params);
 int32_t PQCP_FRODOKEM_DecapsInit(FrodoKEM_Ctx* ctx, const BSL_Param* params);
 int32_t PQCP_FRODOKEM_Encaps(FrodoKEM_Ctx* ctx,
-                               uint8_t* ciphertext, uint32_t* ctLen,
-                               uint8_t* sharedSecret, uint32_t* ssLen);
+                             uint8_t* ciphertext, uint32_t* ctLen,
+                             uint8_t* sharedSecret, uint32_t* ssLen);
 int32_t PQCP_FRODOKEM_Decaps(FrodoKEM_Ctx* ctx,
-                               const uint8_t* ciphertext, uint32_t ctLen,
-                               uint8_t* sharedSecret, uint32_t* ssLen);
+                             const uint8_t* ciphertext, uint32_t ctLen,
+                             uint8_t* sharedSecret, uint32_t* ssLen);
 
 #ifdef __cplusplus
 }

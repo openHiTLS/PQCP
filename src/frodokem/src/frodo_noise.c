@@ -42,17 +42,17 @@ void FrodoCommonSampleNFromR(uint16_t* samples, const size_t n,
                              const uint16_t* cdf_table, const size_t cdf_len,
                              const uint8_t* rbytes)
 {
-    if (cdf_len ==13) {
+    if (cdf_len == 13) {
         FrodoCommonSampleNFromR128(samples, n, cdf_table, rbytes);
-    }  else if  (cdf_len == 11) {
+    } else if (cdf_len == 11) {
         FrodoCommonSampleNFromR192(samples, n, cdf_table, rbytes);
-    }  else if  (cdf_len == 7) {
+    } else if (cdf_len == 7) {
         FrodoCommonSampleNFromR256(samples, n, cdf_table, rbytes);
     }
 }
 
 void FrodoCommonSampleNFromR128(uint16_t* samples, const size_t n,
-                             const uint16_t* cdf_table, const uint8_t* rbytes)
+                                const uint16_t* cdf_table, const uint8_t* rbytes)
 {
     for (size_t i = 0; i < n; i++) {
         uint16_t r = (uint16_t)rbytes[2 * i] | ((uint16_t)rbytes[2 * i + 1] << 8);
@@ -70,7 +70,7 @@ void FrodoCommonSampleNFromR128(uint16_t* samples, const size_t n,
 }
 
 void FrodoCommonSampleNFromR192(uint16_t* samples, const size_t n,
-                             const uint16_t* cdf_table, const uint8_t* rbytes)
+                                const uint16_t* cdf_table, const uint8_t* rbytes)
 {
     for (size_t i = 0; i < n; i++) {
         uint16_t r = (uint16_t)rbytes[2 * i] | ((uint16_t)rbytes[2 * i + 1] << 8);
@@ -88,7 +88,7 @@ void FrodoCommonSampleNFromR192(uint16_t* samples, const size_t n,
 }
 
 void FrodoCommonSampleNFromR256(uint16_t* samples, const size_t n,
-                             const uint16_t* cdf_table, const uint8_t* rbytes)
+                                const uint16_t* cdf_table, const uint8_t* rbytes)
 {
     for (size_t i = 0; i < n; i++) {
         uint16_t r = (uint16_t)rbytes[2 * i] | ((uint16_t)rbytes[2 * i + 1] << 8);

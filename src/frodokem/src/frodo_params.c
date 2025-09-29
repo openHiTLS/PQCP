@@ -15,7 +15,8 @@ static FrodoKemParams all_frodo_params[PQC_ALG_ID_FRODOKEM_COUNT] = {
     /* [PQC_ALG_ID_FRODOKEM_640_SHAKE] */
     {
         .name = "FrodoKEM-640-SHAKE",
-        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888, .ctxSize = 9752,
+        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888,
+        .ctxSize = 9752,
         .ss = 16, .lenSeedA = 16, .lenSeedSE = 32, .lenSalt = 32, .lenMu = 16, .lenPkHash = 16,
         .cdfTable = CDF_TABLE_640, .cdfLen = 13, .prg = FRODO_PRG_SHAKE
     },
@@ -36,7 +37,8 @@ static FrodoKemParams all_frodo_params[PQC_ALG_ID_FRODOKEM_COUNT] = {
     /* [PQC_ALG_ID_FRODOKEM_640_AES] */
     {
         .name = "FrodoKEM-640-AES",
-        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888, .ctxSize = 9752,
+        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888,
+        .ctxSize = 9752,
         .ss = 16, .lenSeedA = 16, .lenSeedSE = 32, .lenSalt = 32, .lenMu = 16, .lenPkHash = 16,
         .cdfTable = CDF_TABLE_640, .cdfLen = 13, .prg = FRODO_PRG_AES
     },
@@ -57,7 +59,8 @@ static FrodoKemParams all_frodo_params[PQC_ALG_ID_FRODOKEM_COUNT] = {
     /* [PQC_ALG_ID_eFRODOKEM_640_SHAKE] */
     {
         .name = "eFrodoKEM-640-SHAKE",
-        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888, .ctxSize = 9720,
+        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888,
+        .ctxSize = 9720,
         .ss = 16, .lenSeedA = 16, .lenSeedSE = 16, .lenSalt = 0, .lenMu = 16, .lenPkHash = 16,
         .cdfTable = CDF_TABLE_640, .cdfLen = 13, .prg = FRODO_PRG_SHAKE
     },
@@ -78,7 +81,8 @@ static FrodoKemParams all_frodo_params[PQC_ALG_ID_FRODOKEM_COUNT] = {
     /* [PQC_ALG_ID_eFRODOKEM_640_AES] */
     {
         .name = "eFrodoKEM-640-AES",
-        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888, .ctxSize = 9720,
+        .n = 640, .nBar = 8, .logq = 15, .extractedBits = 2, .d = 12, .pkSize = 9616, .kemSkSize = 19888,
+        .ctxSize = 9720,
         .ss = 16, .lenSeedA = 16, .lenSeedSE = 16, .lenSalt = 0, .lenMu = 16, .lenPkHash = 16,
         .cdfTable = CDF_TABLE_640, .cdfLen = 13, .prg = FRODO_PRG_AES
     },

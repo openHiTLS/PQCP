@@ -100,10 +100,10 @@ void FrodoCommonCtSelect(uint8_t* r, const uint8_t* a, const uint8_t* b, size_t 
     }
 }
 
-int32_t FrodoKemMdFunc(const CRYPT_MD_AlgId id, const uint8_t *input1, const uint32_t inLen1, const uint8_t *input2,
-    const uint32_t inLen2, uint8_t *output, uint32_t *outLen)
+int32_t FrodoKemMdFunc(const CRYPT_MD_AlgId id, const uint8_t* input1, const uint32_t inLen1, const uint8_t* input2,
+                       const uint32_t inLen2, uint8_t* output, uint32_t* outLen)
 {
-    CRYPT_EAL_MdCTX *MdCtx = CRYPT_EAL_MdNewCtx(id);
+    CRYPT_EAL_MdCTX* MdCtx = CRYPT_EAL_MdNewCtx(id);
     if (MdCtx == NULL) {
         return BSL_MALLOC_FAIL;
     }
@@ -122,8 +122,8 @@ int32_t FrodoKemMdFunc(const CRYPT_MD_AlgId id, const uint8_t *input1, const uin
         }
     }
     ret = CRYPT_EAL_MdFinal(MdCtx, output, outLen);
-    EXIT:
-        CRYPT_EAL_MdFreeCtx(MdCtx);
+EXIT:
+    CRYPT_EAL_MdFreeCtx(MdCtx);
     return ret;
 }
 

@@ -11,6 +11,7 @@ extern "C" {
 #define FRODOKEM_NBAR 8
 
 #define PQC_ALG_ID_FRODOKEM_COUNT 12
+
 typedef enum
 {
     PQC_ALG_ID_FRODOKEM_FIRST,

@@ -227,44 +227,44 @@ int32_t PQCP_FRODOKEM_Ctrl(FrodoKEM_Ctx* ctx, int32_t cmd, void* val, uint32_t v
         return PQCP_NULL_INPUT;
     }
     switch (cmd) {
-        case PQCP_FRODOKEM_ALG_PARAMS:
-            {
-                if (val == NULL || valLen != sizeof(uint32_t)) {
-                    return PQCP_NULL_INPUT;
-                }
-                int32_t algId = *(int32_t*)val;
-                ctx->para = FrodoGetParamsById(algId);
-                if (ctx->para == NULL) {
-                    return PQCP_FRODOKEM_INVALID_ARG;
-                }
-                return PQCP_SUCCESS;
+    case PQCP_FRODOKEM_ALG_PARAMS:
+        {
+            if (val == NULL || valLen != sizeof(uint32_t)) {
+                return PQCP_NULL_INPUT;
             }
-        case PQCP_FRODOKEM_GET_PARA:
-            {
-                if (ctx->para == NULL || val == NULL || valLen != sizeof(FrodoKemParams)) {
-                    return PQCP_NULL_INPUT;
-                }
-                (void)memcpy_s(val, sizeof(FrodoKemParams), ctx->para, sizeof(FrodoKemParams));
-                return PQCP_SUCCESS;
+            int32_t algId = *(int32_t*)val;
+            ctx->para = FrodoGetParamsById(algId);
+            if (ctx->para == NULL) {
+                return PQCP_FRODOKEM_INVALID_ARG;
             }
-        case PQCP_FRODOKEM_GET_CIPHERLEN:
-            {
-                if (ctx->para == NULL || val == NULL || valLen != sizeof(uint32_t)) {
-                    return PQCP_NULL_INPUT;
-                }
-                *(uint32_t*)val = ctx->para->ctxSize;
-                return PQCP_SUCCESS;
+            return PQCP_SUCCESS;
+        }
+    case PQCP_FRODOKEM_GET_PARA:
+        {
+            if (ctx->para == NULL || val == NULL || valLen != sizeof(FrodoKemParams)) {
+                return PQCP_NULL_INPUT;
             }
-        case PQCP_FRODOKEM_GET_SECBITS:
-            {
-                if (ctx->para == NULL || val == NULL || valLen != sizeof(uint32_t)) {
-                    return PQCP_NULL_INPUT;
-                }
-                *(uint32_t*)val = ctx->para->ss * 8;
-                return PQCP_SUCCESS;
+            (void)memcpy_s(val, sizeof(FrodoKemParams), ctx->para, sizeof(FrodoKemParams));
+            return PQCP_SUCCESS;
+        }
+    case PQCP_FRODOKEM_GET_CIPHERLEN:
+        {
+            if (ctx->para == NULL || val == NULL || valLen != sizeof(uint32_t)) {
+                return PQCP_NULL_INPUT;
             }
-        default:
-            return PQCP_FRODOKEM_INVALID_ARG;
+            *(uint32_t*)val = ctx->para->ctxSize;
+            return PQCP_SUCCESS;
+        }
+    case PQCP_FRODOKEM_GET_SECBITS:
+        {
+            if (ctx->para == NULL || val == NULL || valLen != sizeof(uint32_t)) {
+                return PQCP_NULL_INPUT;
+            }
+            *(uint32_t*)val = ctx->para->ss * 8;
+            return PQCP_SUCCESS;
+        }
+    default:
+        return PQCP_FRODOKEM_INVALID_ARG;
     }
 }
 

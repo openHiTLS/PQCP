@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "frodo_local.h"
 #include "internal/frodo_params.h"
