@@ -10,10 +10,9 @@ extern "C" {
 #include "internal/frodo_params.h"
 #include "bsl_params.h"
 
-// 密钥管理上下文结构
+// FrodoKEM key management context
 typedef struct
 {
-    // 可根据需要添加成员变量
     FrodoKemParams* para;
     uint8_t* publicKey;
     uint8_t* privateKey;

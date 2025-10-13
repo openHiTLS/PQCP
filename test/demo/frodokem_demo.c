@@ -191,7 +191,7 @@ int32_t main(void)
     }
     CRYPT_EAL_RandInit(CRYPT_RAND_SHA256, NULL, NULL, NULL, 0);
 
-    /* 运行scloud+演示 */
+    /* 运行FrodoKEM演示 */
     if (FrodoKEMDemo() != 0) {
         result = -1;
     }

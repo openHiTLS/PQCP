@@ -105,7 +105,7 @@ static FrodoKemParams all_frodo_params[PQC_ALG_ID_FRODOKEM_COUNT] = {
 FrodoKemParams* FrodoGetParamsById(const PQC_AlgWithParamId alg_id)
 {
     if (alg_id > PQC_ALG_ID_FRODOKEM_FIRST && alg_id < PQC_ALG_ID_FRODOKEM_LAST) {
-        return all_frodo_params + alg_id - 1;
+        return all_frodo_params + (alg_id - PQC_ALG_ID_FRODOKEM_FIRST - 1);
     }
     return NULL;
 }

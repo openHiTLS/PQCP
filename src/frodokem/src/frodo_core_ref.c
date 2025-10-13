@@ -5,166 +5,89 @@
 #include "crypt_eal_cipher.h"
 #include "pqcp_err.h"
 
+// function signature of multiplication when PRNG = AES
+typedef void (*MultFunctionAES)(uint16_t* out, const uint16_t* matrixS, int n, int nBar, uint16_t* rows, int rowNumber);
+
+// multiplication function used in SA+E (AES version)
+void MultSaPlusEAES(uint16_t* out, const uint16_t* matrixS, int n, int nBar, uint16_t* rows, int rowNumber);
+
+// multiplication function used in AS+E (AES version)
+void MultAsPlusEAES(uint16_t* out, const uint16_t* matrixST, int n, int nBar, uint16_t* rows, int rowNumber);
+
+// function signature of multiplication when PRNG = SHAKE
+typedef void (*MultFunctionSHAKE)(uint16_t* out, const uint16_t* matrixS, int n, int nBar, uint16_t* row0,
+                                  uint16_t* row1, uint16_t* row2, uint16_t* row3, int rowNumber);
+
+// multiplication function used in AS+E (SHAKE version)
+void MulAsPlusESHAKE(uint16_t* out, const uint16_t* matrixST, int n, int nbar, uint16_t* row0, uint16_t* row1,
+                     uint16_t* row2, uint16_t* row3, int rowNumber);
+
+// multiplication function used in SA+E (SHAKE version)
+void MulSaPlusESHAKE(uint16_t* out, const uint16_t* matrixS, int n, int nBar, uint16_t* row0, uint16_t* row1,
+                     uint16_t* row2, uint16_t* row3, int rowNumber);
+
+// initialize AES context
+CRYPT_EAL_CipherCtx* InitRandCtx(const uint8_t* seedA, int* ret);
+
+// initialize AES plaintext header
+void InitAESHeaderBlockNumber(uint8_t* AES_PT, const int blocks_per_row);
+
+// AES ctr mode encryption
+int AESCtrEncrypt(int n, uint16_t* rows, uint8_t* plaintext, CRYPT_EAL_CipherCtx* randCtx, int blocksPerRow,
+                  int rowNumber);
+
+int FrodoCommonMulAddAsPlusESHAKE(uint16_t* out, const uint16_t* matrixST, const uint8_t* seedA,
+                                  const FrodoKemParams* params, const int n, const int nbar,
+                                  uint16_t rows[5376], uint8_t seeds[72], MultFunctionSHAKE multFunction);
+
+int FrodoCommonMulAddAES(uint16_t* out, const uint16_t* matrixSTranspose, const uint8_t* seedA, const int n,
+                         const int nbar, uint16_t rows[5376], uint8_t plaintext[10752],
+                         MultFunctionAES multFunction)
+{
+    int ret = 0;
+    CRYPT_EAL_CipherCtx* randCtx = InitRandCtx(seedA, &ret);
+    if (ret != PQCP_SUCCESS) {
+        goto EXIT;
+    }
+
+    const int blocksPerRow = n / 8;
+    InitAESHeaderBlockNumber(plaintext, blocksPerRow);
+
+    for (int rowNumber = 0; rowNumber < n; rowNumber += 4) {
+        ret = AESCtrEncrypt(n, rows, plaintext, randCtx, blocksPerRow, rowNumber);
+        if (ret != PQCP_SUCCESS) {
+            goto EXIT;
+        }
+
+        multFunction(out, matrixSTranspose, n, nbar, rows, rowNumber);
+    }
+
+EXIT:
+    CRYPT_EAL_CipherFreeCtx(randCtx);
+    return ret;
+}
+
 int FrodoCommonMulAddAsPlusEPortable(uint16_t* out,
-                                     const uint16_t* matrixSTranspose,
+                                     const uint16_t* matrixST,
                                      const uint8_t* seedA,
                                      const FrodoKemParams* params)
 {
     const int N = params->n;
-    const int NBAR = params->nBar;
-    int ret = 0;
-    const uint16_t qmask = (uint16_t)((1u << params->logq) - 1u);
+    const int nBar = params->nBar;
 
 #define FRODO_MAX_N         1344
 #define FRODO_MAX_SEED_A    16
 
-    ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t AES_PT[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
+    ALIGN_HEADER(32) uint16_t rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
 
     if (params->prg == FRODO_PRG_AES) {
-        // ====================== AES ======================
-        CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
-        if (RandCtx == NULL) {
-            return PQCP_MALLOC_FAIL;
-        }
-
-        ret = CRYPT_EAL_CipherInit(RandCtx, seedA, 16, NULL, 0, true);
-        if (ret != PQCP_SUCCESS) {
-            CRYPT_EAL_CipherFreeCtx(RandCtx);
-            return ret;
-        }
-        ret = CRYPT_EAL_CipherSetPadding(RandCtx, CRYPT_PADDING_NONE);
-        if (ret != PQCP_SUCCESS) {
-            CRYPT_EAL_CipherFreeCtx(RandCtx);
-            return ret;
-        }
-
-        const int blocks_per_row = N / 8;
-
-        for (int blk = 0; blk < blocks_per_row; blk++) {
-            const uint16_t jj = (uint16_t)(blk << 3);
-            const uint8_t jj_lo = (uint8_t)(jj & 0xFF);
-            const uint8_t jj_hi = (uint8_t)(jj >> 8);
-            for (int r = 0; r < 4; r++) {
-                uint8_t* P = &AES_PT[16 * (blk + r * blocks_per_row)];
-                P[2] = jj_lo;
-                P[3] = jj_hi;
-                for (int t = 4; t < 16; t++) P[t] = 0;
-            }
-        }
-
-        for (int i = 0; i < N; i += 4) {
-            for (int blk = 0; blk < blocks_per_row; blk++) {
-                uint8_t* P0 = &AES_PT[16 * (blk + 0 * blocks_per_row)];
-                uint8_t* P1 = &AES_PT[16 * (blk + 1 * blocks_per_row)];
-                uint8_t* P2 = &AES_PT[16 * (blk + 2 * blocks_per_row)];
-                uint8_t* P3 = &AES_PT[16 * (blk + 3 * blocks_per_row)];
-                const uint16_t i0 = (uint16_t)(i + 0);
-                const uint16_t i1 = (uint16_t)(i + 1);
-                const uint16_t i2 = (uint16_t)(i + 2);
-                const uint16_t i3 = (uint16_t)(i + 3);
-                P0[0] = (uint8_t)(i0 & 0xFF);
-                P0[1] = (uint8_t)(i0 >> 8);
-                P1[0] = (uint8_t)(i1 & 0xFF);
-                P1[1] = (uint8_t)(i1 >> 8);
-                P2[0] = (uint8_t)(i2 & 0xFF);
-                P2[1] = (uint8_t)(i2 >> 8);
-                P3[0] = (uint8_t)(i3 & 0xFF);
-                P3[1] = (uint8_t)(i3 >> 8);
-            }
-
-            int outLen = 4 * blocks_per_row * 16;
-            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t*)A_rows,
-                                         &outLen);
-            if (ret != PQCP_SUCCESS) {
-                CRYPT_EAL_CipherFreeCtx(RandCtx);
-                return ret;
-            }
-
-            for (int k = 0; k < 4 * N; k++) {
-                A_rows[k] = (uint16_t)LE_TO_UINT16(A_rows[k]);
-            }
-
-            const uint16_t* row0 = &A_rows[0 * N];
-            const uint16_t* row1 = &A_rows[1 * N];
-            const uint16_t* row2 = &A_rows[2 * N];
-            const uint16_t* row3 = &A_rows[3 * N];
-
-            for (int j = 0; j < NBAR; j++) {
-                const uint16_t* ST_row = &matrixSTranspose[j * N];
-                uint16_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
-                for (int k = 0; k < N; k++) {
-                    uint16_t sv = ST_row[k];
-                    sum0 += (uint16_t)((uint32_t)row0[k] * sv);
-                    sum1 += (uint16_t)((uint32_t)row1[k] * sv);
-                    sum2 += (uint16_t)((uint32_t)row2[k] * sv);
-                    sum3 += (uint16_t)((uint32_t)row3[k] * sv);
-                }
-                out[(i + 0) * NBAR + j] = (uint16_t)(out[(i + 0) * NBAR + j] + sum0);
-                out[(i + 1) * NBAR + j] = (uint16_t)(out[(i + 1) * NBAR + j] + sum1);
-                out[(i + 2) * NBAR + j] = (uint16_t)(out[(i + 2) * NBAR + j] + sum2);
-                out[(i + 3) * NBAR + j] = (uint16_t)(out[(i + 3) * NBAR + j] + sum3);
-            }
-        }
-
-        CRYPT_EAL_CipherFreeCtx(RandCtx);
-        return 0;
+        ALIGN_HEADER(32) uint8_t plaintext[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
+        return FrodoCommonMulAddAES(out, matrixST, seedA, N, nBar, rows, plaintext, MultAsPlusEAES);
     } else {
-        // ====================== SHAKE ======================
-        const size_t inlen = 2 + (size_t)params->lenSeedA;
-        uint8_t* in0 = &INBUF[0 * inlen];
-        uint8_t* in1 = &INBUF[1 * inlen];
-        uint8_t* in2 = &INBUF[2 * inlen];
-        uint8_t* in3 = &INBUF[3 * inlen];
-
-        for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
-            in0[2 + ctr] = seedA[ctr];
-            in1[2 + ctr] = seedA[ctr];
-            in2[2 + ctr] = seedA[ctr];
-            in3[2 + ctr] = seedA[ctr];
-        }
-
-        uint16_t* row0 = &A_rows[0 * N];
-        uint16_t* row1 = &A_rows[1 * N];
-        uint16_t* row2 = &A_rows[2 * N];
-        uint16_t* row3 = &A_rows[3 * N];
-
-        for (int i = 0; i < N; i += 4) {
-            in0[0] = (uint8_t)((i + 0) & 0xFF);
-            in0[1] = (uint8_t)((i + 0) >> 8);
-            in1[0] = (uint8_t)((i + 1) & 0xFF);
-            in1[1] = (uint8_t)((i + 1) >> 8);
-            in2[0] = (uint8_t)((i + 2) & 0xFF);
-            in2[1] = (uint8_t)((i + 2) >> 8);
-            in3[0] = (uint8_t)((i + 3) & 0xFF);
-            in3[1] = (uint8_t)((i + 3) >> 8);
-
-            FrodoKemShake128((uint8_t*)row0, (size_t)N * sizeof(uint16_t), in0, inlen);
-            FrodoKemShake128((uint8_t*)row1, (size_t)N * sizeof(uint16_t), in1, inlen);
-            FrodoKemShake128((uint8_t*)row2, (size_t)N * sizeof(uint16_t), in2, inlen);
-            FrodoKemShake128((uint8_t*)row3, (size_t)N * sizeof(uint16_t), in3, inlen);
-
-            for (int j = 0; j < NBAR; j++) {
-                const uint16_t* ST_row = &matrixSTranspose[j * N];
-                uint16_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
-                for (int k = 0; k < N; k++) {
-                    uint16_t sv = ST_row[k];
-                    sum0 += (uint16_t)((uint32_t)row0[k] * sv);
-                    sum1 += (uint16_t)((uint32_t)row1[k] * sv);
-                    sum2 += (uint16_t)((uint32_t)row2[k] * sv);
-                    sum3 += (uint16_t)((uint32_t)row3[k] * sv);
-                }
-                out[(i + 0) * NBAR + j] = (uint16_t)(out[(i + 0) * NBAR + j] + sum0);
-                out[(i + 1) * NBAR + j] = (uint16_t)(out[(i + 1) * NBAR + j] + sum1);
-                out[(i + 2) * NBAR + j] = (uint16_t)(out[(i + 2) * NBAR + j] + sum2);
-                out[(i + 3) * NBAR + j] = (uint16_t)(out[(i + 3) * NBAR + j] + sum3);
-            }
-        }
-        return 0;
+        ALIGN_HEADER(32) uint8_t seeds[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
+        return FrodoCommonMulAddAsPlusESHAKE(out, matrixST, seedA, params, N, nBar, rows, seeds, MulAsPlusESHAKE);
     }
 }
-
 
 int FrodoCommonMulAddSaPlusEPortable(uint16_t* out,
                                      const uint16_t* s,
@@ -172,162 +95,23 @@ int FrodoCommonMulAddSaPlusEPortable(uint16_t* out,
                                      const uint8_t* seedA,
                                      const FrodoKemParams* params)
 {
-    const int N = params->n;
-    const int NBAR = params->nBar;
+    const int n = params->n;
+    const int nBar = params->nBar;
 
-    for (int i = 0; i < NBAR * N; i += 2) {
+    for (int i = 0; i < nBar * n; i += 2) {
         *((uint32_t*)&out[i]) = *((const uint32_t*)&e[i]);
     }
 
 #define FRODO_MAX_N         1344
 #define FRODO_MAX_SEED_A    16
 
-    ALIGN_HEADER(32) uint16_t A_rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t AES_PT[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
-    ALIGN_HEADER(32) uint8_t INBUF[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
-
+    ALIGN_HEADER(32) uint16_t rows[4 * FRODO_MAX_N] ALIGN_FOOTER(32);
     if (params->prg == FRODO_PRG_AES) {
-        // ====================== AES ======================
-        CRYPT_EAL_CipherCtx* RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
-        if (RandCtx == NULL) {
-            return PQCP_MALLOC_FAIL;
-        }
-
-        int ret = CRYPT_EAL_CipherInit(RandCtx, seedA, 16, NULL, 0, true);
-        if (ret != PQCP_SUCCESS) {
-            CRYPT_EAL_CipherFreeCtx(RandCtx);
-            return ret;
-        }
-        ret = CRYPT_EAL_CipherSetPadding(RandCtx, CRYPT_PADDING_NONE);
-        if (ret != PQCP_SUCCESS) {
-            CRYPT_EAL_CipherFreeCtx(RandCtx);
-            return ret;
-        }
-
-        const int blocks_per_row = N / 8;
-
-        for (int blk = 0; blk < blocks_per_row; blk++) {
-            const uint16_t jj = (uint16_t)(blk << 3);
-            const uint8_t jj_lo = (uint8_t)(jj & 0xFF);
-            const uint8_t jj_hi = (uint8_t)(jj >> 8);
-            for (int r = 0; r < 4; r++) {
-                uint8_t* P = &AES_PT[16 * (blk + r * blocks_per_row)];
-                P[2] = jj_lo;
-                P[3] = jj_hi;
-                for (int t = 4; t < 16; t++) P[t] = 0;
-            }
-        }
-
-        for (int i = 0; i < N; i += 4) {
-            for (int blk = 0; blk < blocks_per_row; blk++) {
-                uint8_t* P0 = &AES_PT[16 * (blk + 0 * blocks_per_row)];
-                uint8_t* P1 = &AES_PT[16 * (blk + 1 * blocks_per_row)];
-                uint8_t* P2 = &AES_PT[16 * (blk + 2 * blocks_per_row)];
-                uint8_t* P3 = &AES_PT[16 * (blk + 3 * blocks_per_row)];
-                const uint16_t i0 = (uint16_t)(i + 0);
-                const uint16_t i1 = (uint16_t)(i + 1);
-                const uint16_t i2 = (uint16_t)(i + 2);
-                const uint16_t i3 = (uint16_t)(i + 3);
-                P0[0] = (uint8_t)(i0 & 0xFF);
-                P0[1] = (uint8_t)(i0 >> 8);
-                P1[0] = (uint8_t)(i1 & 0xFF);
-                P1[1] = (uint8_t)(i1 >> 8);
-                P2[0] = (uint8_t)(i2 & 0xFF);
-                P2[1] = (uint8_t)(i2 >> 8);
-                P3[0] = (uint8_t)(i3 & 0xFF);
-                P3[1] = (uint8_t)(i3 >> 8);
-            }
-
-            int outLen = 4 * blocks_per_row * 16;
-            ret = CRYPT_EAL_CipherUpdate(RandCtx, AES_PT, (size_t)4 * blocks_per_row * 16, (uint8_t*)A_rows,
-                                         &outLen);
-            if (ret != PQCP_SUCCESS) {
-                CRYPT_EAL_CipherFreeCtx(RandCtx);
-                return ret;
-            }
-
-            for (int k = 0; k < 4 * N; k++) {
-                A_rows[k] = (uint16_t)LE_TO_UINT16(A_rows[k]);
-            }
-
-            const uint16_t* row0 = &A_rows[0 * N];
-            const uint16_t* row1 = &A_rows[1 * N];
-            const uint16_t* row2 = &A_rows[2 * N];
-            const uint16_t* row3 = &A_rows[3 * N];
-
-            for (int k = 0; k < NBAR; k++) {
-                const uint16_t s0 = s[k * N + (i + 0)];
-                const uint16_t s1 = s[k * N + (i + 1)];
-                const uint16_t s2 = s[k * N + (i + 2)];
-                const uint16_t s3 = s[k * N + (i + 3)];
-
-                uint16_t* out_row = &out[k * N];
-                for (int j = 0; j < N; j++) {
-                    uint16_t acc = out_row[j];
-                    acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
-                    acc = (uint16_t)(acc + (uint16_t)(row1[j] * s1));
-                    acc = (uint16_t)(acc + (uint16_t)(row2[j] * s2));
-                    acc = (uint16_t)(acc + (uint16_t)(row3[j] * s3));
-                    out_row[j] = acc;
-                }
-            }
-        }
-
-        CRYPT_EAL_CipherFreeCtx(RandCtx);
-        return 0;
+        ALIGN_HEADER(32) uint8_t plaintext[4 * 16 * (FRODO_MAX_N / 8)] ALIGN_FOOTER(32);
+        return FrodoCommonMulAddAES(out, s, seedA, n, nBar, rows, plaintext, MultSaPlusEAES);
     } else {
-        // ====================== SHAKE ======================
-        const size_t inlen = 2 + (size_t)params->lenSeedA;
-        uint8_t* in0 = &INBUF[0 * inlen];
-        uint8_t* in1 = &INBUF[1 * inlen];
-        uint8_t* in2 = &INBUF[2 * inlen];
-        uint8_t* in3 = &INBUF[3 * inlen];
-
-        for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
-            in0[2 + ctr] = seedA[ctr];
-            in1[2 + ctr] = seedA[ctr];
-            in2[2 + ctr] = seedA[ctr];
-            in3[2 + ctr] = seedA[ctr];
-        }
-
-        uint16_t* row0 = &A_rows[0 * N];
-        uint16_t* row1 = &A_rows[1 * N];
-        uint16_t* row2 = &A_rows[2 * N];
-        uint16_t* row3 = &A_rows[3 * N];
-
-        for (int i = 0; i < N; i += 4) {
-            in0[0] = (uint8_t)((i + 0) & 0xFF);
-            in0[1] = (uint8_t)((i + 0) >> 8);
-            in1[0] = (uint8_t)((i + 1) & 0xFF);
-            in1[1] = (uint8_t)((i + 1) >> 8);
-            in2[0] = (uint8_t)((i + 2) & 0xFF);
-            in2[1] = (uint8_t)((i + 2) >> 8);
-            in3[0] = (uint8_t)((i + 3) & 0xFF);
-            in3[1] = (uint8_t)((i + 3) >> 8);
-
-            FrodoKemShake128((uint8_t*)row0, (size_t)N * sizeof(uint16_t), in0, inlen);
-            FrodoKemShake128((uint8_t*)row1, (size_t)N * sizeof(uint16_t), in1, inlen);
-            FrodoKemShake128((uint8_t*)row2, (size_t)N * sizeof(uint16_t), in2, inlen);
-            FrodoKemShake128((uint8_t*)row3, (size_t)N * sizeof(uint16_t), in3, inlen);
-
-            for (int k = 0; k < NBAR; k++) {
-                const uint16_t s0 = s[k * N + (i + 0)];
-                const uint16_t s1 = s[k * N + (i + 1)];
-                const uint16_t s2 = s[k * N + (i + 2)];
-                const uint16_t s3 = s[k * N + (i + 3)];
-
-                uint16_t* out_row = &out[k * N];
-                for (int j = 0; j < N; j++) {
-                    uint16_t acc = out_row[j];
-                    acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
-                    acc = (uint16_t)(acc + (uint16_t)(row1[j] * s1));
-                    acc = (uint16_t)(acc + (uint16_t)(row2[j] * s2));
-                    acc = (uint16_t)(acc + (uint16_t)(row3[j] * s3));
-                    out_row[j] = acc;
-                }
-            }
-        }
-        return 0;
+        ALIGN_HEADER(32) uint8_t seeds[4 * (2 + FRODO_MAX_SEED_A)] ALIGN_FOOTER(32);
+        return FrodoCommonMulAddAsPlusESHAKE(out, s, seedA, params, n, nBar, rows, seeds, MulSaPlusESHAKE);
     }
 }
 
@@ -462,4 +246,191 @@ void FrodoCommonKeyDecode(uint16_t* out,
             }
         }
     }
+}
+
+inline void U16ToBytesLE(const uint16_t val, uint8_t* bytes)
+{
+    bytes[0] = val & 0xff;
+    bytes[1] = val >> 8;
+}
+
+CRYPT_EAL_CipherCtx* InitRandCtx(const uint8_t* seedA, int* ret)
+{
+    CRYPT_EAL_CipherCtx* randCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
+    if (randCtx == NULL) {
+        *ret = PQCP_MALLOC_FAIL;
+        return NULL;
+    }
+
+    *ret = CRYPT_EAL_CipherInit(randCtx, seedA, 16, NULL, 0, true);
+    if (*ret != PQCP_SUCCESS) {
+        return randCtx;
+    }
+    *ret = CRYPT_EAL_CipherSetPadding(randCtx, CRYPT_PADDING_NONE);
+
+    return randCtx;
+}
+
+void InitAESHeaderBlockNumber(uint8_t* AES_PT, const int blocks_per_row)
+{
+    for (int blk = 0; blk < blocks_per_row; blk++) {
+        for (int r = 0; r < 4; r++) {
+            uint8_t* P = &AES_PT[16 * (blk + r * blocks_per_row)];
+            U16ToBytesLE(blk << 3, P + 2);
+            for (int t = 4; t < 16; t++) P[t] = 0;
+        }
+    }
+}
+
+// ctr mode AES encryption
+int AESCtrEncrypt(const int n, uint16_t* rows, uint8_t* plaintext, CRYPT_EAL_CipherCtx* randCtx, const int blocksPerRow,
+                  int rowNumber)
+{
+    for (int blk = 0; blk < blocksPerRow; blk++) {
+        U16ToBytesLE(rowNumber + 0, &plaintext[16 * (blk + 0 * blocksPerRow)]);
+        U16ToBytesLE(rowNumber + 1, &plaintext[16 * (blk + 1 * blocksPerRow)]);
+        U16ToBytesLE(rowNumber + 2, &plaintext[16 * (blk + 2 * blocksPerRow)]);
+        U16ToBytesLE(rowNumber + 3, &plaintext[16 * (blk + 3 * blocksPerRow)]);
+    }
+
+    int outLen = 4 * blocksPerRow * 16;
+    int ret = CRYPT_EAL_CipherUpdate(randCtx, plaintext, (size_t)outLen, (uint8_t*)rows, &outLen);
+    if (ret != PQCP_SUCCESS) {
+        return ret;
+    }
+
+    for (int k = 0; k < 4 * n; k++) {
+        rows[k] = (uint16_t)LE_TO_UINT16(rows[k]);
+    }
+    return 0;
+}
+
+void MultAsPlusEAES(uint16_t* out, const uint16_t* matrixST, const int n, const int nBar, uint16_t* rows,
+                    int rowNumber)
+{
+    const uint16_t* row0 = &rows[0 * n];
+    const uint16_t* row1 = &rows[1 * n];
+    const uint16_t* row2 = &rows[2 * n];
+    const uint16_t* row3 = &rows[3 * n];
+
+    for (int j = 0; j < nBar; j++) {
+        const uint16_t* ST_row = &matrixST[j * n];
+        uint16_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+        for (int k = 0; k < n; k++) {
+            uint16_t sv = ST_row[k];
+            sum0 += (uint16_t)((uint32_t)row0[k] * sv);
+            sum1 += (uint16_t)((uint32_t)row1[k] * sv);
+            sum2 += (uint16_t)((uint32_t)row2[k] * sv);
+            sum3 += (uint16_t)((uint32_t)row3[k] * sv);
+        }
+        out[(rowNumber + 0) * nBar + j] = (uint16_t)(out[(rowNumber + 0) * nBar + j] + sum0);
+        out[(rowNumber + 1) * nBar + j] = (uint16_t)(out[(rowNumber + 1) * nBar + j] + sum1);
+        out[(rowNumber + 2) * nBar + j] = (uint16_t)(out[(rowNumber + 2) * nBar + j] + sum2);
+        out[(rowNumber + 3) * nBar + j] = (uint16_t)(out[(rowNumber + 3) * nBar + j] + sum3);
+    }
+}
+
+void MultSaPlusEAES(uint16_t* out, const uint16_t* matrixS, const int n, const int nBar, uint16_t* rows, int rowNumber)
+{
+    const uint16_t* row0 = &rows[0 * n];
+    const uint16_t* row1 = &rows[1 * n];
+    const uint16_t* row2 = &rows[2 * n];
+    const uint16_t* row3 = &rows[3 * n];
+
+    for (int k = 0; k < nBar; k++) {
+        const uint16_t s0 = matrixS[k * n + (rowNumber + 0)];
+        const uint16_t s1 = matrixS[k * n + (rowNumber + 1)];
+        const uint16_t s2 = matrixS[k * n + (rowNumber + 2)];
+        const uint16_t s3 = matrixS[k * n + (rowNumber + 3)];
+
+        uint16_t* out_row = &out[k * n];
+        for (int j = 0; j < n; j++) {
+            uint16_t acc = out_row[j];
+            acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
+            acc = (uint16_t)(acc + (uint16_t)(row1[j] * s1));
+            acc = (uint16_t)(acc + (uint16_t)(row2[j] * s2));
+            acc = (uint16_t)(acc + (uint16_t)(row3[j] * s3));
+            out_row[j] = acc;
+        }
+    }
+}
+
+void MulAsPlusESHAKE(uint16_t* out, const uint16_t* matrixST, const int n, const int nbar, uint16_t* row0,
+                     uint16_t* row1, uint16_t* row2, uint16_t* row3, int rowNumber)
+{
+    for (int j = 0; j < nbar; j++) {
+        const uint16_t* ST_row = &matrixST[j * n];
+        uint16_t sum0 = 0, sum1 = 0, sum2 = 0, sum3 = 0;
+        for (int k = 0; k < n; k++) {
+            uint16_t sv = ST_row[k];
+            sum0 += (uint16_t)((uint32_t)row0[k] * sv);
+            sum1 += (uint16_t)((uint32_t)row1[k] * sv);
+            sum2 += (uint16_t)((uint32_t)row2[k] * sv);
+            sum3 += (uint16_t)((uint32_t)row3[k] * sv);
+        }
+        out[(rowNumber + 0) * nbar + j] = (uint16_t)(out[(rowNumber + 0) * nbar + j] + sum0);
+        out[(rowNumber + 1) * nbar + j] = (uint16_t)(out[(rowNumber + 1) * nbar + j] + sum1);
+        out[(rowNumber + 2) * nbar + j] = (uint16_t)(out[(rowNumber + 2) * nbar + j] + sum2);
+        out[(rowNumber + 3) * nbar + j] = (uint16_t)(out[(rowNumber + 3) * nbar + j] + sum3);
+    }
+}
+
+void MulSaPlusESHAKE(uint16_t* out, const uint16_t* matrixS, const int n, const int nBar, uint16_t* row0,
+                     uint16_t* row1,
+                     uint16_t* row2, uint16_t* row3, int rowNumber)
+{
+    for (int k = 0; k < nBar; k++) {
+        const uint16_t s0 = matrixS[k * n + (rowNumber + 0)];
+        const uint16_t s1 = matrixS[k * n + (rowNumber + 1)];
+        const uint16_t s2 = matrixS[k * n + (rowNumber + 2)];
+        const uint16_t s3 = matrixS[k * n + (rowNumber + 3)];
+
+        uint16_t* out_row = &out[k * n];
+        for (int j = 0; j < n; j++) {
+            uint16_t acc = out_row[j];
+            acc = (uint16_t)(acc + (uint16_t)(row0[j] * s0));
+            acc = (uint16_t)(acc + (uint16_t)(row1[j] * s1));
+            acc = (uint16_t)(acc + (uint16_t)(row2[j] * s2));
+            acc = (uint16_t)(acc + (uint16_t)(row3[j] * s3));
+            out_row[j] = acc;
+        }
+    }
+}
+
+int FrodoCommonMulAddAsPlusESHAKE(uint16_t* out, const uint16_t* matrixST, const uint8_t* seedA,
+                                  const FrodoKemParams* params, const int n, const int nbar,
+                                  uint16_t rows[5376], uint8_t seeds[72], MultFunctionSHAKE multFunction)
+{
+    const size_t inlen = 2 + (size_t)params->lenSeedA;
+    uint8_t* in0 = &seeds[0 * inlen];
+    uint8_t* in1 = &seeds[1 * inlen];
+    uint8_t* in2 = &seeds[2 * inlen];
+    uint8_t* in3 = &seeds[3 * inlen];
+
+    for (int ctr = 0; ctr < params->lenSeedA; ctr++) {
+        in0[2 + ctr] = seedA[ctr];
+        in1[2 + ctr] = seedA[ctr];
+        in2[2 + ctr] = seedA[ctr];
+        in3[2 + ctr] = seedA[ctr];
+    }
+
+    uint16_t* row0 = &rows[0 * n];
+    uint16_t* row1 = &rows[1 * n];
+    uint16_t* row2 = &rows[2 * n];
+    uint16_t* row3 = &rows[3 * n];
+
+    for (int i = 0; i < n; i += 4) {
+        U16ToBytesLE(i + 0, in0);
+        U16ToBytesLE(i + 1, in1);
+        U16ToBytesLE(i + 2, in2);
+        U16ToBytesLE(i + 3, in3);
+
+        FrodoKemShake128((uint8_t*)row0, (size_t)n * sizeof(uint16_t), in0, inlen);
+        FrodoKemShake128((uint8_t*)row1, (size_t)n * sizeof(uint16_t), in1, inlen);
+        FrodoKemShake128((uint8_t*)row2, (size_t)n * sizeof(uint16_t), in2, inlen);
+        FrodoKemShake128((uint8_t*)row3, (size_t)n * sizeof(uint16_t), in3, inlen);
+
+        multFunction(out, matrixST, n, nbar, row0, row1, row2, row3, i);
+    }
+    return 0;
 }
