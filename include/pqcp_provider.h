@@ -25,6 +25,7 @@ extern "C" {
 
 /* Algorithm IDs */
 #define CRYPT_PKEY_SCLOUDPLUS 0x88000001
+#define CRYPT_PKEY_FRODOKEM 0x88000002
 
 /* Provider initialization function */
 int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,

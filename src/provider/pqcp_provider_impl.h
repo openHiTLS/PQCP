@@ -21,4 +21,7 @@
 extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
 extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
 
+extern const CRYPT_EAL_Func g_pqcpKeyMgmtFrodoKem[];
+extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
+
 #endif /* PQCP_PROVIDER_IMPL_H */

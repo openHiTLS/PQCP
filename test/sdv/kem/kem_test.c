@@ -182,6 +182,23 @@ int32_t TestScloudPlus256_3(void)
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_256_3.data");
 }
 
+const char g_FrodoKemKATpath[] = "../../testdata/frodokem";
+
+int32_t TestFrodoKem(void)
+{
+    const int n = sizeof(gKatFileMap) / sizeof(KatFileMap);
+    char* path = malloc(strlen(g_FrodoKemKATpath) + MAX_FILENAME_LEN + 2);
+    strcpy(path, g_FrodoKemKATpath);
+    path[strlen(g_FrodoKemKATpath)] = DIR_SEP;
+
+    for (int i = 0; i < n; i++) {
+        strcpy(path + 1 + strlen(g_FrodoKemKATpath), gKatFileMap[i].filename);
+
+        TestFrodoKemEncapsDecaps(gKatFileMap[i].id, path);
+    }
+    free(path);
+}
+
 /* 初始化KEM测试套件 */
 int32_t PQCP_InitKemTestSuite(void)
 {
@@ -206,6 +223,8 @@ int32_t PQCP_InitKemTestSuite(void)
     PQCP_TestAddCase(suite, "scloudplus KAT test256_1", "scloud+ vector test 256-1", TestScloudPlus256_1);
     PQCP_TestAddCase(suite, "scloudplus KAT test256_2", "scloud+ vector test 256-2", TestScloudPlus256_2);
     PQCP_TestAddCase(suite, "scloudplus KAT test256_3", "scloud+ vector test 256-3", TestScloudPlus256_3);
+
+    PQCP_TestAddCase(suite, "FrodoKem all test KAT", "all kat", TestFrodoKem);
 
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);
