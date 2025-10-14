@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "frodo_local.h"
 #include "internal/frodo_params.h"
@@ -70,13 +69,17 @@ int FrodoKemKeypair(const FrodoKemParams* params, uint8_t* pk, uint8_t* sk, size
     if (ret != PQCP_SUCCESS) {
         return ret;
     }
-    return FrodoKemKeypairInternal(rnd, params, pk, sk, lenSk);
+    ret = FrodoKemKeypairInternal(rnd, params, pk, sk, lenSk);
+    BSL_SAL_CleanseData(rnd, need);
+    return ret;
 }
 
 int FrodoKemEncapsInternal(const uint8_t* mu, const FrodoKemParams* params, uint8_t* ct, uint8_t* ss, const uint8_t* pk)
 {
     uint8_t pkh[32];
-    if (params->lenPkHash > sizeof(pkh)) return -1;
+    if (params->lenPkHash > sizeof(pkh)) {
+        return PQCP_FRODOKEM_INVALID_ARG;
+    }
     if (params->n == 640) {
         FrodoKemShake128(pkh, params->lenPkHash, pk, params->pkSize);
     } else {
@@ -85,13 +88,15 @@ int FrodoKemEncapsInternal(const uint8_t* mu, const FrodoKemParams* params, uint
 
     const size_t seedk_len = params->lenSeedSE + params->ss;
     uint8_t* seedk = (uint8_t*)malloc(seedk_len);
-    if (!seedk) return -1;
+    if (!seedk) {
+        return PQCP_MEM_ALLOC_FAIL;
+    }
 
     const size_t in_len = params->lenPkHash + params->lenMu + params->lenSalt;
     uint8_t* in = (uint8_t*)malloc(in_len);
     if (!in) {
         free(seedk);
-        return -1;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     memcpy_s(in, in_len, pkh, params->lenPkHash);
     memcpy_s(in + params->lenPkHash, in_len - params->lenPkHash, mu, params->lenMu + params->lenSalt);
@@ -108,7 +113,7 @@ int FrodoKemEncapsInternal(const uint8_t* mu, const FrodoKemParams* params, uint
 
     if (FrodoPkeEncrypt(params, pk, mu, seedSEp, ct) != 0) {
         free(seedk);
-        return -1;
+        return PQCP_FRODOKEM_ENCRYPT_FAIL;
     }
 
     for (int i = 0; i < params->lenSalt; i++) {
@@ -119,7 +124,7 @@ int FrodoKemEncapsInternal(const uint8_t* mu, const FrodoKemParams* params, uint
     uint8_t* ct_k = (uint8_t*)malloc(ct_k_len);
     if (!ct_k) {
         free(seedk);
-        return -1;
+        return PQCP_MEM_ALLOC_FAIL;
     }
 
     memcpy_s(ct_k, ct_k_len, ct, params->ctxSize);
@@ -163,13 +168,15 @@ int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct,
 
     size_t seed_k_len = params->lenSeedSE + params->ss;
     uint8_t* seed_k_bytes_prime = (uint8_t*)malloc(seed_k_len);
-    if (!seed_k_bytes_prime) return -1;
+    if (!seed_k_bytes_prime) {
+        return PQCP_MEM_ALLOC_FAIL;
+    }
 
     size_t pkh_mu_len = params->lenPkHash + params->lenMu + params->lenSalt;
     uint8_t* pkh_mu_bytes_prime = (uint8_t*)malloc(pkh_mu_len);
     if (!pkh_mu_bytes_prime) {
         free(seed_k_bytes_prime);
-        return -1;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     memcpy_s(pkh_mu_bytes_prime, pkh_mu_len, sk_pkh, params->lenPkHash);
     memcpy_s(pkh_mu_bytes_prime + params->lenPkHash, pkh_mu_len - params->lenPkHash, mu_prime, params->lenMu);
@@ -189,7 +196,7 @@ int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct,
     if (!ct_prime) {
         free(seed_k_bytes_prime);
         free(pkh_mu_bytes_prime);
-        return -1;
+        return PQCP_MEM_ALLOC_FAIL;
     }
 
     ret = FrodoPkeEncrypt(params, sk_pk, mu_prime, seedSE_prime, ct_prime);
@@ -212,7 +219,7 @@ int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct,
         free(seed_k_bytes_prime);
         free(pkh_mu_bytes_prime);
         free(ct_prime);
-        return -1;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     memcpy_s(ct_k_bytes, ct_k_len, ct, params->ctxSize);
     memcpy_s(ct_k_bytes + params->ctxSize, ct_k_len - params->ctxSize, final_k, params->ss);
