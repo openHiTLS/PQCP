@@ -83,13 +83,13 @@ static int32_t FrodoKEMDemo(void)
         goto EXIT;
     }
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_FRODOKEM_ALG_PARAMS, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_FRODOKEM_SET_PARAMS_BY_ID, &val, sizeof(val));
     if (ret != CRYPT_SUCCESS) {
         printf("ctrl param failed.\n");
         goto EXIT;
     }
 
-    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_FRODOKEM_ALG_PARAMS, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_FRODOKEM_SET_PARAMS_BY_ID, &val, sizeof(val));
     if (ret != CRYPT_SUCCESS) {
         printf("ctrl param failed.\n");
         goto EXIT;
