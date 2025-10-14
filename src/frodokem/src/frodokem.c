@@ -165,7 +165,9 @@ int FrodoKemEncaps(const FrodoKemParams* params, uint8_t* ct, uint8_t* ss, const
         return ret;
     }
 
-    return FrodoKemEncapsInternal(mu, params, ct, ss, pk);
+    ret = FrodoKemEncapsInternal(mu, params, ct, ss, pk);
+    BSL_SAL_CleanseData(mu, params->lenMu + params->lenSalt);
+    return ret;
 }
 
 int FrodoKemDecaps(const FrodoKemParams* params, uint8_t* ss, const uint8_t* ct, const uint8_t* sk)

@@ -227,7 +227,7 @@ int32_t PQCP_FRODOKEM_Ctrl(FrodoKEM_Ctx* ctx, int32_t cmd, void* val, uint32_t v
         return PQCP_NULL_INPUT;
     }
     switch (cmd) {
-    case PQCP_FRODOKEM_ALG_PARAMS:
+    case PQCP_FRODOKEM_SET_PARAMS_BY_ID:
         {
             if (val == NULL || valLen != sizeof(uint32_t)) {
                 return PQCP_NULL_INPUT;
