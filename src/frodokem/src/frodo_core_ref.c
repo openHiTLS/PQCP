@@ -263,11 +263,9 @@ void FrodoCommonKeyDecode(uint16_t* out,
     }
 }
 
-inline void U16ToBytesLE(const uint16_t val, uint8_t* bytes)
-{
-    bytes[0] = val & 0xff;
-    bytes[1] = val >> 8;
-}
+#define U16ToBytesLE(val, bytes) \
+    (bytes)[0] = (val) & 0xff; \
+    (bytes)[1] = (val) >> 8;
 
 CRYPT_EAL_CipherCtx* InitRandCtx(const uint8_t* seedA, int* ret)
 {

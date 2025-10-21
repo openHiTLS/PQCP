@@ -93,15 +93,15 @@ done
 mkdir -p $OUTPUT_DIR
 
 # 设置可执行文件路径
-EXECUTABLE="./build/bin/pqcp_sdv_test"
-
+EXECUTABLE_PATH="../build/bin/pqcp_sdv_test"
+EXECUTABLE="./pqcp_sdv_test"
 # 检查可执行文件是否存在
-if [ ! -f "$EXECUTABLE" ]; then
+if [ ! -f "$EXECUTABLE_PATH" ]; then
     echo "错误: 找不到测试可执行文件 $EXECUTABLE"
     echo "请先运行 build.sh 构建测试项目"
     exit 1
 fi
-
+cd ../build/bin
 # 列出所有测试
 if [ ! -z ${LIST_TESTS+x} ]; then
     echo "列出所有可用的测试套件和测试用例:"

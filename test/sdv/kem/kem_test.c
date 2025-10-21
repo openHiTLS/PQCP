@@ -139,46 +139,55 @@ EXIT:
 
 int32_t TestScloudPlus128_1(void)
 {
+    printf("Testing [ScloudPlus128_1] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_128_1.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_128_1.data");
 }
 
 int32_t TestScloudPlus128_2(void)
 {
+    printf("Testing [ScloudPlus128_2] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_128_2.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_128_2.data");
 }
 
 int32_t TestScloudPlus128_3(void)
 {
+    printf("Testing [ScloudPlus128_3] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_128_3.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_128_3.data");
 }
 
 int32_t TestScloudPlus192_1(void)
 {
+    printf("Testing [ScloudPlus192_1] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_192_1.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_192_1.data");
 }
 
 int32_t TestScloudPlus192_2(void)
 {
+    printf("Testing [ScloudPlus192_2] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_192_2.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_192_2.data");
 }
 
 int32_t TestScloudPlus192_3(void)
 {
+    printf("Testing [ScloudPlus192_3] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_192_3.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_192_3.data");
 }
 
 int32_t TestScloudPlus256_1(void)
 {
+    printf("Testing [ScloudPlus256_1] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_256_1.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_256_1.data");
 }
 
 int32_t TestScloudPlus256_2(void)
 {
+    printf("Testing [ScloudPlus256_2] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_256_2.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_256_2.data");
 }
 
 int32_t TestScloudPlus256_3(void)
 {
+    printf("Testing [ScloudPlus256_3] with [../../testdata/scloudplus/scloudplus_testvector/test_vector_256_3.data\n");
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_256_3.data");
 }
 

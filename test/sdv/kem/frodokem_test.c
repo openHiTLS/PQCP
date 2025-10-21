@@ -163,12 +163,7 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
         // Fix the RNG (to ensure generated results are consistent with KAT)
         RandombytesInit(seed, NULL, 256);
 
-        ret = CRYPT_EAL_SetRandCallBack(GenTestRandombytes);
-        if (ret != CRYPT_SUCCESS) {
-            fprintf(stderr, "CRYPT_EAL_SetRandCallBack failed.\n");
-            goto EXIT;
-        }
-
+        CRYPT_EAL_SetRandCallBack(GenTestRandombytes);
         // Run KEM
         int ok_pk = 0, ok_sk = 0, ok_ct = 0, ok_ss = 0, ok_dec = 0;
 
@@ -246,6 +241,7 @@ void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path)
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
 
+    free(buffer);
     free(seed);
     free(pk_ref);
     free(sk_ref);
@@ -257,7 +253,7 @@ EXIT:
     free(ct);
     free(ss);
     free(ss2);
-
+    RandomBytesRelease();
     fclose(fp);
     printf("%s KAT: total=%d  pass=%d  fail=%d\n", params->name, total, pass, fail);
     if (total != pass) {
@@ -344,6 +340,9 @@ static int g_rk256_ready = 0;
 CRYPT_EAL_CipherCtx *g_RandCtx = NULL;
 
 static inline void drbg_set_aes256_key(const uint8_t key[32]) {
+    if (g_RandCtx != NULL) {
+        CRYPT_EAL_CipherFreeCtx(g_RandCtx);
+    }
     g_RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES256_ECB);
     if (g_RandCtx == NULL) {
         fprintf(stderr, "ERROR! CRYPT_EAL_CipherNewCtx failed!\n");
@@ -424,6 +423,7 @@ void RandombytesInit(unsigned char *entropy_input,
 
 void RandomBytesRelease() {
     CRYPT_EAL_CipherFreeCtx(g_RandCtx);
+    g_RandCtx = NULL;
 }
 
 int GenTestRandombytes(uint8_t *x, uint32_t xlen)
