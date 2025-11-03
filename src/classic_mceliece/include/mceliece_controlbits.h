@@ -13,18 +13,18 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_IMPL_H
-#define PQCP_PROVIDER_IMPL_H
+#ifndef MCELIECE_CONTROLBITS_H
+#define MCELIECE_CONTROLBITS_H
 
-#include "crypt_eal_provider.h"
+#include "mceliece_types.h"
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
-extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
+/* Compute control bits for a Benes network from a permutation pi of size n=2^w.
+ * out must point to ((2*w-1)*n/16) bytes, zeroed by the caller or by the impl. */
+CRYPT_ERROR CbitsFromPermNs(uint8_t *out, const int16_t *pi, int64_t w, int64_t n);
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtFrodoKem[];
-extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
+// Derive support L[0..N-1] from control bits
+CRYPT_ERROR SupportFromCbits(GFElement *L, const uint8_t *cbits, int64_t w, int32_t lenN);
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtMceliece[];
-extern const CRYPT_EAL_Func g_pqcpKemMceliece[];
 
-#endif /* PQCP_PROVIDER_IMPL_H */
+#endif // MCELIECE_CONTROLBITS_H
+

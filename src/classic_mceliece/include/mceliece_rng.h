@@ -13,18 +13,14 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_IMPL_H
-#define PQCP_PROVIDER_IMPL_H
+#ifndef MCELIECE_RNG_H
+#define MCELIECE_RNG_H
 
-#include "crypt_eal_provider.h"
+#include "mceliece_shake.h"
+#include "crypt_eal_init.h"
+#include "crypt_eal_cipher.h"
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
-extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
+CRYPT_ERROR McElieceRandomBytesInit(const uint8_t *entropyInput, uint8_t *personalizationString, const int32_t securityStrength);
+CRYPT_ERROR McElieceRandomBytes(uint8_t *x, uint32_t xlen);
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtFrodoKem[];
-extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
-
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtMceliece[];
-extern const CRYPT_EAL_Func g_pqcpKemMceliece[];
-
-#endif /* PQCP_PROVIDER_IMPL_H */
+#endif // MCELIECE_RNG_H

@@ -47,6 +47,20 @@ set(PROVIDER_SOURCES
     src/frodokem/src/frodokem_api.c
     src/frodokem/src/frodokem.c
     src/frodokem/src/frodokem_pke.c
+    src/classic_mceliece/src/mceliece_params.c
+    src/classic_mceliece/src/mceliece_api.c
+    src/classic_mceliece/src/mceliece_shake.c
+    src/classic_mceliece/src/mceliece_vector.c
+    src/classic_mceliece/src/mceliece_rng.c
+    src/classic_mceliece/src/mceliece_poly.c
+    src/classic_mceliece/src/mceliece_matrix_ops.c
+    src/classic_mceliece/src/mceliece_keygen.c
+    src/classic_mceliece/src/mceliece_kem.c
+    src/classic_mceliece/src/mceliece_gf.c
+    src/classic_mceliece/src/mceliece_genpoly.c
+    src/classic_mceliece/src/mceliece_encode.c
+    src/classic_mceliece/src/mceliece_decode.c
+    src/classic_mceliece/src/mceliece_controlbits.c
 )
 
 # 添加链接目录
@@ -63,6 +77,7 @@ target_include_directories(pqcp_provider
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scloudplus/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/classic_mceliece/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/frodokem/include
         ${OPENHITLS_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto

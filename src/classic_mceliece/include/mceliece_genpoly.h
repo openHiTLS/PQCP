@@ -13,18 +13,26 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_IMPL_H
-#define PQCP_PROVIDER_IMPL_H
+#ifndef MCELIECE_GENPOLY_H
+#define MCELIECE_GENPOLY_H
 
-#include "crypt_eal_provider.h"
+#include "mceliece_types.h"
+#include "mceliece_gf.h"
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
-extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtFrodoKem[];
-extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
+// Compute the minimal/connection polynomial g(x) of f over GF(2^m)
+// out[0..t-1] are coefficients g_0..g_{t-1} with monic leading coeff implied
+// f[0..t-1] are coefficients of f(x) in GF(2^m)
+// Returns 0 on success, -1 on failure (singular system)
+CRYPT_ERROR GenpolyOverGF(GFElement *out, const GFElement *f, int32_t t, int32_t m);
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtMceliece[];
-extern const CRYPT_EAL_Func g_pqcpKemMceliece[];
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* PQCP_PROVIDER_IMPL_H */
+#endif // MCELIECE_GENPOLY_H
+
+

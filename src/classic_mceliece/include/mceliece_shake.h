@@ -13,30 +13,29 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_H
-#define PQCP_PROVIDER_H
+#ifndef MCELIECE_SHAKE_H
+#define MCELIECE_SHAKE_H
 
-#include "crypt_eal_provider.h"
-#include "bsl_params.h"
+#include "crypt_eal_md.h"
+#include "pqcp_err.h"
+#include "bsl_errno.h"
+#include "mceliece_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Algorithm IDs */
-#define CRYPT_PKEY_SCLOUDPLUS 0x88000001
-#define CRYPT_PKEY_FRODOKEM 0x88000002
-#define CRYPT_PKEY_MCELIECE 0x88000003
+// High-level SHAKE256 function
+CRYPT_ERROR McElieceShake256(uint8_t *output, const size_t outlen, const uint8_t *input, size_t inlen);
 
-/* Provider initialization function */
-int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
-                              BSL_Param *param,
-                              CRYPT_EAL_Func *capFuncs,
-                              CRYPT_EAL_Func **outFuncs,
-                              void **provCtx);
+CRYPT_ERROR McElieceMdFunc(const CRYPT_MD_AlgId id, const uint8_t *input1, const uint32_t inLen1, const uint8_t *input2,
+    const uint32_t inLen2, uint8_t *output, uint32_t *outLen);
+
+// McEliece-specific hash functions
+void McEliecePrg(const uint8_t *seed, uint8_t *output, const size_t outputLen);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PQCP_PROVIDER_H */ 
+#endif  // MCELIECE_SHAKE_H

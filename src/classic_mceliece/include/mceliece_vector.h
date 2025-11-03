@@ -13,18 +13,24 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_IMPL_H
-#define PQCP_PROVIDER_IMPL_H
+#ifndef MCELIECE_VECTOR_H
+#define MCELIECE_VECTOR_H
 
-#include "crypt_eal_provider.h"
+#include "mceliece_types.h"
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
-extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtFrodoKem[];
-extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
+// Bit manipulation functions for binary vectors
+void VectorSetBit(uint8_t *vec, const uint32_t bitIdx, const uint32_t value);
+uint32_t VectorGetBit(const uint8_t *vec, const uint32_t bitIdx);
 
-extern const CRYPT_EAL_Func g_pqcpKeyMgmtMceliece[];
-extern const CRYPT_EAL_Func g_pqcpKemMceliece[];
+// Vector utility functions
+int32_t VectorWeight(const uint8_t *vec, const int32_t lenBytes);  // Calculate Hamming weight
 
-#endif /* PQCP_PROVIDER_IMPL_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif // MCELIECE_VECTOR_H

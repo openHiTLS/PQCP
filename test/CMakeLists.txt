@@ -45,10 +45,10 @@ if(ENABLE_GCOV)
 endif()
 
 # 设置依赖库搜索路径
-set(PQCP_DEPENDENCY_DIRS 
-    ${CMAKE_SOURCE_DIR}/../platform/openhitls/build
-    ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/lib
-    ${CMAKE_SOURCE_DIR}/../build
+set(PQCP_DEPENDENCY_DIRS
+        ${CMAKE_SOURCE_DIR}/../platform/openhitls/build
+        ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/lib
+        ${CMAKE_SOURCE_DIR}/../build
     CACHE STRING "PQCP dependency library paths")
 
 # 查找依赖库
@@ -82,6 +82,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/src
+    ${CMAKE_SOURCE_DIR}/../src/classic_mceliece/include
+    ${CMAKE_SOURCE_DIR}/../src/classic_mceliece/src
     ${CMAKE_SOURCE_DIR}/../src/frodokem/include
     ${CMAKE_SOURCE_DIR}/../src/frodokem/src
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/bsl

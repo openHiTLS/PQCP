@@ -13,30 +13,27 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_PROVIDER_H
-#define PQCP_PROVIDER_H
+#ifndef MCELIECE_DECODE_H
+#define MCELIECE_DECODE_H
 
-#include "crypt_eal_provider.h"
-#include "bsl_params.h"
+#include "mceliece_types.h"
+#include "mceliece_matrix_ops.h"
+#include "mceliece_gf.h"
+#include "mceliece_vector.h"
+#include "mceliece_poly.h"
+#include "mceliece_controlbits.h"
+#include "pqcp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Algorithm IDs */
-#define CRYPT_PKEY_SCLOUDPLUS 0x88000001
-#define CRYPT_PKEY_FRODOKEM 0x88000002
-#define CRYPT_PKEY_MCELIECE 0x88000003
-
-/* Provider initialization function */
-int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
-                              BSL_Param *param,
-                              CRYPT_EAL_Func *capFuncs,
-                              CRYPT_EAL_Func **outFuncs,
-                              void **provCtx);
+// Goppa code decoding - recovers error vector from syndrome
+CRYPT_ERROR DecodeGoppa(
+    const uint8_t *received, const GFPolynomial *g, const GFElement *alpha, uint8_t *errorVector, int32_t errorVecLen, int32_t *decodeSuccess, const McelieceParams *params);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PQCP_PROVIDER_H */ 
+#endif  // MCELIECE_DECODE_H

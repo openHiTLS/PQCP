@@ -1,5 +1,5 @@
 /*
-* This file is part of the openHiTLS project.
+ * This file is part of the openHiTLS project.
  *
  * openHiTLS is licensed under the Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,34 +13,36 @@
  * See the Mulan PSL v2 for more details.
  */
 
-#ifndef PQCP_ERR_H
-#define PQCP_ERR_H
+#ifndef MCELIECE_GF_H
+#define MCELIECE_GF_H
+
+#include "mceliece_types.h"  // for MCELIECE_M/MCELIECE_Q
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum
-{
-    PQCP_SUCCESS = 0,
-    PQCP_NULL_INPUT,
-    PQCP_MALLOC_FAIL,
-    PQCP_MEM_ALLOC_FAIL,
-    PQCP_FRODOKEM_ENCRYPT_FAIL,
-    PQCP_SCLOUDPLUS_INVALID_ARG,
-    PQCP_SCLOUDPLUS_CMP_FALSE,
-    PQCP_FRODOKEM_INVALID_ARG,
-    PQCP_FRODOKEM_CMP_FALSE,
-    PQCP_MCELIECE_INVALID_ARG,
-    PQCP_MCELIECE_CMP_FALSE,
-    PQCP_MCELIECE_KEYGEN_FAIL,
-    PQCP_MCELIECE_ENCODE_FAIL,
-    PQCP_MCELIECE_DECODE_FAIL
-} CRYPT_ERROR;
- 
+//init
+CRYPT_ERROR GFInitial(int32_t m);
+
+// GF(2^13) add(/xor)
+GFElement GFAddtion(GFElement a, GFElement b);
+
+// GF(2^13) mul
+GFElement GFMultiplication(GFElement a, GFElement b);
+
+// GF(2^13) inverse
+GFElement GFInverse(GFElement a);
+
+// GF(2^13) division
+GFElement GFDivision(GFElement a, GFElement b);
+
+// GF(2^13) power
+GFElement GFPower(GFElement base, int32_t exp);
+    
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PQCP_ERR_H */
+#endif // MCELIECE_GF_H
