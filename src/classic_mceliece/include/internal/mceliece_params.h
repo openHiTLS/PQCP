@@ -16,7 +16,8 @@
 #ifndef MCELIECE_PARAMS_H
 #define MCELIECE_PARAMS_H
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include "bsl_sal.h"
@@ -70,10 +71,10 @@ typedef struct
 
 } McelieceParams;
 
-McelieceParams* McelieceGetParamsById(PQC_Mceliece_AlgWithParamId alg_id);
+McelieceParams *McelieceGetParamsById(PQC_Mceliece_AlgWithParamId algID);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //MCELIECE_PARAMS_H
+#endif // MCELIECE_PARAMS_H

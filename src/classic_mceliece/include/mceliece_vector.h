@@ -19,7 +19,8 @@
 #include "mceliece_types.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Bit manipulation functions for binary vectors
@@ -27,7 +28,7 @@ void VectorSetBit(uint8_t *vec, const uint32_t bitIdx, const uint32_t value);
 uint32_t VectorGetBit(const uint8_t *vec, const uint32_t bitIdx);
 
 // Vector utility functions
-int32_t VectorWeight(const uint8_t *vec, const int32_t lenBytes);  // Calculate Hamming weight
+int32_t VectorWeight(const uint8_t *vec, const int32_t lenBytes); // Calculate Hamming weight
 
 #ifdef __cplusplus
 }

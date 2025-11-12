@@ -21,16 +21,16 @@
 #include "mceliece_vector.h"
 #include "mceliece_rng.h"
 #include "mceliece_matrix_ops.h"
-#include "crypt_eal_init.h"
 #include "crypt_eal_rand.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Generate a random vector with fixed Hamming weight t
 // Used in the encapsulation phase to generate the error vector e
-CRYPT_ERROR FixedWeightVector(uint8_t *output, const int32_t vectorLen, const int32_t targetWeight, const McelieceParams *params);
+CRYPT_ERROR FixedWeightVector(uint8_t *output, const McelieceParams *params);
 
 // Encode an error vector using the public key matrix T
 // Computes C = H * e where H = [I_mt | T]

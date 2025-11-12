@@ -25,6 +25,4 @@ CRYPT_ERROR CbitsFromPermNs(uint8_t *out, const int16_t *pi, int64_t w, int64_t 
 // Derive support L[0..N-1] from control bits
 CRYPT_ERROR SupportFromCbits(GFElement *L, const uint8_t *cbits, int64_t w, int32_t lenN);
 
-
 #endif // MCELIECE_CONTROLBITS_H
-

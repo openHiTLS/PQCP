@@ -16,13 +16,14 @@
 #ifndef MCELIECE_GF_H
 #define MCELIECE_GF_H
 
-#include "mceliece_types.h"  // for MCELIECE_M/MCELIECE_Q
+#include "mceliece_types.h" // for MCELIECE_M/MCELIECE_Q
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-//init
+// init
 CRYPT_ERROR GFInitial(int32_t m);
 
 // GF(2^13) add(/xor)
@@ -39,7 +40,6 @@ GFElement GFDivision(GFElement a, GFElement b);
 
 // GF(2^13) power
 GFElement GFPower(GFElement base, int32_t exp);
-    
 
 #ifdef __cplusplus
 }

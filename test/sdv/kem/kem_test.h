@@ -99,3 +99,4 @@ KatFileMap gKatFileMap[] = {
 #endif
 
 void TestFrodoKemEncapsDecaps(const PQC_AlgWithParamId id, char* kat_path);
+void TestClassicMcElieceKAT(const char *data_path);

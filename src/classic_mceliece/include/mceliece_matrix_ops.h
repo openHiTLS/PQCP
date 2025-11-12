@@ -22,22 +22,25 @@
 #include "mceliece_poly.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Extract the rightmost 9-byte from the matrix, perform a tail-shift, and write it back
 #define LOAD_SHIFT_9TO8(tmp, src, tail)                                          \
-    do {                                                                         \
-        for (int32_t _i = 0; _i < 9; ++_i)                                           \
+    do                                                                           \
+    {                                                                            \
+        for (int32_t _i = 0; _i < 9; ++_i)                                       \
             (tmp)[_i] = (src)[_i];                                               \
-        for (int32_t _i = 0; _i < 8; ++_i)                                           \
+        for (int32_t _i = 0; _i < 8; ++_i)                                       \
             (tmp)[_i] = ((tmp)[_i] >> (tail)) | ((tmp)[_i + 1] << (8 - (tail))); \
     } while (0)
 
 #define STORE_SHIFT_8TO9(dst, tmp, tail)                                              \
-    do {                                                                              \
+    do                                                                                \
+    {                                                                                 \
         (dst)[0] = ((tmp)[0] << (tail)) | ((dst)[0] << (8 - (tail)) >> (8 - (tail))); \
-        for (int32_t _i = 1; _i < 8; ++_i)                                                \
+        for (int32_t _i = 1; _i < 8; ++_i)                                            \
             (dst)[_i] = ((tmp)[_i] << (tail)) | ((tmp)[_i - 1] >> (8 - (tail)));      \
         (dst)[8] = ((dst)[8] >> (tail) << (tail)) | ((tmp)[7] >> (8 - (tail)));       \
     } while (0)
@@ -67,7 +70,8 @@ static void CMStore8(uint8_t *x, uint64_t v)
 static int32_t CMCtz64(uint64_t x)
 {
     int32_t c = 0;
-    while ((x & 1) == 0) {
+    while ((x & 1) == 0)
+    {
         c++;
         x >>= 1;
     }
@@ -93,4 +97,4 @@ int32_t GaussPartialSemiSystematic(uint8_t *mat, const int32_t colsBytes, int16_
 }
 #endif
 
-#endif  // MCELIECE_MATRIX_OPS_H
+#endif // MCELIECE_MATRIX_OPS_H

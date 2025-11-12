@@ -22,14 +22,15 @@
 #include "mceliece_types.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // High-level SHAKE256 function
 CRYPT_ERROR McElieceShake256(uint8_t *output, const size_t outlen, const uint8_t *input, size_t inlen);
 
 CRYPT_ERROR McElieceMdFunc(const CRYPT_MD_AlgId id, const uint8_t *input1, const uint32_t inLen1, const uint8_t *input2,
-    const uint32_t inLen2, uint8_t *output, uint32_t *outLen);
+                            const uint32_t inLen2, uint8_t *output, uint32_t *outLen);
 
 // McEliece-specific hash functions
 void McEliecePrg(const uint8_t *seed, uint8_t *output, const size_t outputLen);
@@ -38,4 +39,4 @@ void McEliecePrg(const uint8_t *seed, uint8_t *output, const size_t outputLen);
 }
 #endif
 
-#endif  // MCELIECE_SHAKE_H
+#endif // MCELIECE_SHAKE_H

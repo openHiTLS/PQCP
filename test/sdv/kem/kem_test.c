@@ -208,6 +208,21 @@ int32_t TestFrodoKem(void)
     free(path);
 }
 
+int32_t TestClassicMcEliece(void)
+{
+    // read .rsp files
+    FILE *ls = popen("ls ../../testdata/classic_mceliece/*mceliece*.rsp 2>/dev/null", "r");
+    if (!ls) return EXIT_FAILURE;
+
+    char path[512];
+    while (fgets(path, sizeof(path), ls)) {
+        path[strcspn(path, "\n")] = 0;  // remove \n
+        // process KAT testing 
+        TestClassicMcElieceKAT(path);
+    }
+    pclose(ls);
+}
+
 /* 初始化KEM测试套件 */
 int32_t PQCP_InitKemTestSuite(void)
 {
@@ -234,6 +249,7 @@ int32_t PQCP_InitKemTestSuite(void)
     PQCP_TestAddCase(suite, "scloudplus KAT test256_3", "scloud+ vector test 256-3", TestScloudPlus256_3);
 
     PQCP_TestAddCase(suite, "FrodoKem all test KAT", "all kat", TestFrodoKem);
+    PQCP_TestAddCase(suite, "ClassicMcEliece all test KAT", "all kat", TestClassicMcEliece);
 
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);

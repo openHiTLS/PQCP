@@ -20,7 +20,8 @@
 #include "mceliece_gf.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Compute the minimal/connection polynomial g(x) of f over GF(2^m)
@@ -34,5 +35,3 @@ CRYPT_ERROR GenpolyOverGF(GFElement *out, const GFElement *f, int32_t t, int32_t
 #endif
 
 #endif // MCELIECE_GENPOLY_H
-
-

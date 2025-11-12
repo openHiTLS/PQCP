@@ -26,7 +26,8 @@
 #include <stdio.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #define MCELIECE_GF_POLY 0x201B // Irreducible polynomial for GF(2^13): x^13 + x^4 + x^3 + x + 1
@@ -44,26 +45,30 @@ extern "C" {
 #define MCELIECE_L_BYTES ((MCELIECE_L) / (8))
 
 typedef uint16_t GFElement;
-typedef struct {
+typedef struct
+{
     int32_t rows;
     int32_t cols;
     GFElement *data;
 } GFMatrixFq;
 
-typedef struct {
+typedef struct
+{
     GFElement *coeffs;
     int32_t degree;
     int32_t maxDegree;
 } GFPolynomial;
 
-typedef struct {
+typedef struct
+{
     uint8_t *data;
     int32_t rows;
     int32_t cols;
     int32_t colsBytes;
 } GFMatrix;
 
-typedef struct {
+typedef struct
+{
     uint8_t delta[MCELIECE_L_BYTES];
     uint64_t c;
     GFPolynomial g;
@@ -74,7 +79,8 @@ typedef struct {
     size_t controlbitsLen;
 } CMPrivateKey;
 
-typedef struct {
+typedef struct
+{
     GFMatrix matT;
 } CMPublicKey;
 
@@ -82,4 +88,4 @@ typedef struct {
 }
 #endif
 
-#endif  // MCELIECE_TYPES_H
+#endif // MCELIECE_TYPES_H

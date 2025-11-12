@@ -27,7 +27,8 @@
 #include "bsl_sal.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Core key generation functions
@@ -50,4 +51,4 @@ void PublicKeyFree(CMPublicKey *pk);
 }
 #endif
 
-#endif  // MCELIECE_KEYGEN_H
+#endif // MCELIECE_KEYGEN_H

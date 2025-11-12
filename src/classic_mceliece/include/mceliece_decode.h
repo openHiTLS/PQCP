@@ -25,7 +25,8 @@
 #include "pqcp_err.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Goppa code decoding - recovers error vector from syndrome
@@ -36,4 +37,4 @@ CRYPT_ERROR DecodeGoppa(
 }
 #endif
 
-#endif  // MCELIECE_DECODE_H
+#endif // MCELIECE_DECODE_H

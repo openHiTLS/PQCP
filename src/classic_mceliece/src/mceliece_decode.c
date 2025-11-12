@@ -20,7 +20,8 @@
 // Output: syndrome[0..2t-1]
 static CRYPT_ERROR ComputeSyndrome(const uint8_t *received, const GFPolynomial *g, const GFElement *alpha, GFElement *syndrome, const McelieceParams *params)
 {
-    if (received == NULL || g == NULL || alpha == NULL || syndrome == NULL) {
+    if (received == NULL || g == NULL || alpha == NULL || syndrome == NULL)
+    {
         return PQCP_NULL_INPUT;
     }
 
@@ -29,28 +30,35 @@ static CRYPT_ERROR ComputeSyndrome(const uint8_t *received, const GFPolynomial *
     uint32_t full64 = params->n >> 6;
 
     GFElement *gAlpha = (GFElement *)BSL_SAL_Malloc(params->n * sizeof(GFElement));
-    GFElement *invG2  = (GFElement *)BSL_SAL_Malloc(params->n * sizeof(GFElement));
-    if (gAlpha == NULL || invG2 == NULL) {
+    GFElement *invG2 = (GFElement *)BSL_SAL_Malloc(params->n * sizeof(GFElement));
+    if (gAlpha == NULL || invG2 == NULL)
+    {
         BSL_SAL_FREE(gAlpha);
         BSL_SAL_FREE(invG2);
         return PQCP_MALLOC_FAIL;
     }
 
-    for (int32_t i = 0; i < params->n; i++) {
+    for (int32_t i = 0; i < params->n; i++)
+    {
         gAlpha[i] = PolynomialEval(g, alpha[i]);
         invG2[i] = GFInverse(GFMultiplication(gAlpha[i], gAlpha[i]));
     }
 
     GFElement chk = 0;
-    for (int32_t j = 0; j < syndLen; j++) {
+    for (int32_t j = 0; j < syndLen; j++)
+    {
         GFElement acc = 0;
-        for (uint32_t i64 = 0; i64 < full64; i64++) {
+        for (uint32_t i64 = 0; i64 < full64; i64++)
+        {
             uint64_t w = received64[i64];
-            if (w == 0) {   // Early-exit sentinel for zero 64-bit chunks (no bits set)
+            if (w == 0)
+            { // Early-exit sentinel for zero 64-bit chunks (no bits set)
                 continue;
             }
-            for (int32_t b = 0; b < 64; b++) {  // Number of bits processed per 64-bit word during bit-sliced syndrome accumulation
-                if ((w & (1ull << b)) != 0) {
+            for (int32_t b = 0; b < 64; b++)
+            { // Number of bits processed per 64-bit word during bit-sliced syndrome accumulation
+                if ((w & (1ull << b)) != 0)
+                {
                     uint32_t i = (i64 << 6) + b;
                     GFElement t = GFMultiplication(GFPower(alpha[i], j), invG2[i]);
                     acc = GFAddtion(acc, t);
@@ -62,9 +70,12 @@ static CRYPT_ERROR ComputeSyndrome(const uint8_t *received, const GFPolynomial *
         syndrome[j] = acc;
 
         // tail, less than 64 bits
-        for (uint32_t i = full64 * 64; i < params->n; i++) {
-            if (VectorGetBit(received, i) != 0) {
-                if (gAlpha[i] != 0) {
+        for (uint32_t i = full64 * 64; i < params->n; i++)
+        {
+            if (VectorGetBit(received, i) != 0)
+            {
+                if (gAlpha[i] != 0)
+                {
                     GFElement alphaPow = GFPower(alpha[i], j);
                     GFElement g2 = GFMultiplication(gAlpha[i], gAlpha[i]);
                     GFElement term = GFDivision(alphaPow, g2);
@@ -78,13 +89,12 @@ static CRYPT_ERROR ComputeSyndrome(const uint8_t *received, const GFPolynomial *
     return PQCP_SUCCESS;
 }
 
-
 // Initialize BM state: C(x)=1, B(x)=1, L=0, m=1, b=1
 static void BmInitState(GFPolynomial *polyC, GFPolynomial *polyB, int32_t *lenLFSR, int32_t *m, GFElement *b)
 {
-    PolynomialSetCoeff(polyC, 0, 1);    // Constant coefficient 1 used to initialize the error-locator polynomial C(x)=1
+    PolynomialSetCoeff(polyC, 0, 1); // Constant coefficient 1 used to initialize the error-locator polynomial C(x)=1
     PolynomialSetCoeff(polyB, 0, 1);
-    *lenLFSR = 0;   // Initial length of the LFSR register before any update step
+    *lenLFSR = 0; // Initial length of the LFSR register before any update step
     // Initial shift offset and discrepancy denominator values for Berlekamp–Massey
     *m = 1;
     *b = 1;
@@ -94,8 +104,10 @@ static void BmInitState(GFPolynomial *polyC, GFPolynomial *polyB, int32_t *lenLF
 static GFElement BmComputeDiscrepancy(const GFElement *syndrome, const GFPolynomial *polyC, const int32_t lenN, const int32_t lenLFSR)
 {
     GFElement d = syndrome[lenN];
-    for (int32_t i = 1; i <= lenLFSR && (lenN - i) >= 0; i++) {
-        if (i <= polyC->degree && polyC->coeffs[i] != 0) {
+    for (int32_t i = 1; i <= lenLFSR && (lenN - i) >= 0; i++)
+    {
+        if (i <= polyC->degree && polyC->coeffs[i] != 0)
+        {
             d = GFAddtion(d, GFMultiplication(polyC->coeffs[i], syndrome[lenN - i]));
         }
     }
@@ -105,12 +117,15 @@ static GFElement BmComputeDiscrepancy(const GFElement *syndrome, const GFPolynom
 // C(x) = C(x) - (d/b) * x^m * B(x)
 static void BmUpdateConnection(GFPolynomial *polyC, const GFPolynomial *polyB, GFElement d, GFElement b, const int32_t m)
 {
-    if (b == 0) return; // Guard against division by zero when discrepancy denominator is zero
+    if (b == 0)
+        return; // Guard against division by zero when discrepancy denominator is zero
     GFElement corr = GFDivision(d, b);
-    for (int32_t i = 0; i <= polyB->degree; i++) {
-        if (polyB->coeffs[i] != 0 && (i + m) <= polyC->maxDegree) {
+    for (int32_t i = 0; i <= polyB->degree; i++)
+    {
+        if (polyB->coeffs[i] != 0 && (i + m) <= polyC->maxDegree)
+        {
             GFElement term = GFMultiplication(corr, polyB->coeffs[i]);
-            GFElement cur  = (i + m <= polyC->degree) ? polyC->coeffs[i + m] : 0;
+            GFElement cur = (i + m <= polyC->degree) ? polyC->coeffs[i + m] : 0;
             PolynomialSetCoeff(polyC, i + m, GFAddtion(cur, term));
         }
     }
@@ -119,8 +134,9 @@ static void BmUpdateConnection(GFPolynomial *polyC, const GFPolynomial *polyB, G
 // Copy sigma result out: sigma[i] = C[t-i]
 static void BmExportSigma(const GFPolynomial *polyC, GFPolynomial *sigma, const int32_t t)
 {
-    for (int32_t i = 0; i <= t; i++) {
-        sigma->coeffs[i] = polyC->coeffs[t - i];    // Index offset 0 used to copy constant term into the reversed sigma polynomial
+    for (int32_t i = 0; i <= t; i++)
+    {
+        sigma->coeffs[i] = polyC->coeffs[t - i]; // Index offset 0 used to copy constant term into the reversed sigma polynomial
     }
 }
 
@@ -130,7 +146,8 @@ static void BmExportSigma(const GFPolynomial *polyC, GFPolynomial *sigma, const 
 // Output: error locator polynomial sigma and error evaluator polynomial omega
 static CRYPT_ERROR BerlekampMassey(const GFElement *syndrome, GFPolynomial *sigma, const McelieceParams *params)
 {
-    if (syndrome == NULL || sigma == NULL) {
+    if (syndrome == NULL || sigma == NULL)
+    {
         return PQCP_NULL_INPUT;
     }
 
@@ -138,7 +155,8 @@ static CRYPT_ERROR BerlekampMassey(const GFElement *syndrome, GFPolynomial *sigm
     GFPolynomial *polyB = PolynomialCreate(params->t);
     GFPolynomial *polyT = PolynomialCreate(params->t);
 
-    if (polyC == NULL || polyB == NULL || polyT == NULL) {
+    if (polyC == NULL || polyB == NULL || polyT == NULL)
+    {
         PolynomialFree(polyC);
         PolynomialFree(polyB);
         PolynomialFree(polyT);
@@ -149,21 +167,28 @@ static CRYPT_ERROR BerlekampMassey(const GFElement *syndrome, GFPolynomial *sigm
     GFElement b;
     BmInitState(polyC, polyB, &lenLFSR, &m, &b);
 
-    for (int32_t lenN = 0; lenN < 2 * params->t; lenN++) {
+    for (int32_t lenN = 0; lenN < 2 * params->t; lenN++)
+    {
         GFElement d = BmComputeDiscrepancy(syndrome, polyC, lenN, lenLFSR);
 
-        if (d == 0) {   // Zero-discrepancy sentinel; triggers simple increment of shift counter
+        if (d == 0)
+        { // Zero-discrepancy sentinel; triggers simple increment of shift counter
             m++;
-        } else {
+        }
+        else
+        {
             PolynomialCopy(polyT, polyC);
             BmUpdateConnection(polyC, polyB, d, b, m);
 
-            if (2 * lenLFSR <= lenN) {
+            if (2 * lenLFSR <= lenN)
+            {
                 lenLFSR = lenN + 1 - lenLFSR;
                 PolynomialCopy(polyB, polyT);
                 b = d;
                 m = 1;
-            } else {
+            }
+            else
+            {
                 m++;
             }
         }
@@ -179,23 +204,28 @@ static CRYPT_ERROR BerlekampMassey(const GFElement *syndrome, GFPolynomial *sigm
 // Our BM produces a locator defined in terms of α_j^{-1}, so check σ(α_j^{-1}) = 0
 static CRYPT_ERROR ChienSearch(const GFPolynomial *sigma, const GFElement *alpha, int32_t *errorPositions, int32_t *numErrors, const McelieceParams *params)
 {
-    if (sigma == NULL || alpha == NULL || errorPositions == NULL || numErrors == NULL) {
+    if (sigma == NULL || alpha == NULL || errorPositions == NULL || numErrors == NULL)
+    {
         return PQCP_NULL_INPUT;
     }
 
     GFElement *images = (GFElement *)BSL_SAL_Malloc(params->n * sizeof(GFElement));
-    if (images == NULL) {
+    if (images == NULL)
+    {
         return PQCP_MALLOC_FAIL;
     }
     PolynomialRoots(images, sigma->coeffs, alpha, params->n, params->t);
 
-    for (int32_t j = 0; j < params->n; j++) {
-        if (images[j] == 0) {   // Sentinel indicating a root of the error-locator polynomial
+    for (int32_t j = 0; j < params->n; j++)
+    {
+        if (images[j] == 0)
+        { // Sentinel indicating a root of the error-locator polynomial
             // Found a root, corresponding to error position
             errorPositions[*numErrors] = j;
             (*numErrors)++;
-            if (*numErrors >= params->t) {
-                break;  // At most t errors
+            if (*numErrors >= params->t)
+            {
+                break; // At most t errors
             }
         }
     }
@@ -203,16 +233,17 @@ static CRYPT_ERROR ChienSearch(const GFPolynomial *sigma, const GFElement *alpha
     return PQCP_SUCCESS;
 }
 
-
 // safely allocate syndrome buffer and fill it
 static GFElement *SafeSyndrome(const uint8_t *r, const GFPolynomial *g, const GFElement *alpha, const McelieceParams *p)
 {
     GFElement *s = BSL_SAL_Malloc(2U * p->t * sizeof(GFElement));
-    if (s == NULL) {
+    if (s == NULL)
+    {
         return NULL;
     }
     CRYPT_ERROR ret = ComputeSyndrome(r, g, alpha, s, p);
-    if (ret != PQCP_SUCCESS) {
+    if (ret != PQCP_SUCCESS)
+    {
         BSL_SAL_FREE(s);
         return NULL;
     }
@@ -222,8 +253,10 @@ static GFElement *SafeSyndrome(const uint8_t *r, const GFPolynomial *g, const GF
 // true if whole syndrome is zero
 static int32_t IsZeroSyndrome(const GFElement *s, const int32_t t2)
 {
-    for (int32_t i = 0; i < t2; i++) {
-        if (s[i] != 0) {    // any non-zero syndrome byte fails the all-zero test
+    for (int32_t i = 0; i < t2; i++)
+    {
+        if (s[i] != 0)
+        { // any non-zero syndrome byte fails the all-zero test
             return 0;
         }
     }
@@ -234,11 +267,13 @@ static int32_t IsZeroSyndrome(const GFElement *s, const int32_t t2)
 static CRYPT_ERROR LocateErrors(const GFElement *syn, const GFPolynomial *g, const GFElement *alpha, int32_t *pos, int32_t *cnt, const McelieceParams *p)
 {
     GFPolynomial *sigma = PolynomialCreate(p->t);
-    if (sigma == NULL) {
+    if (sigma == NULL)
+    {
         return PQCP_MEM_ALLOC_FAIL;
     }
     CRYPT_ERROR ret = BerlekampMassey(syn, sigma, p);
-    if (ret == PQCP_SUCCESS) {
+    if (ret == PQCP_SUCCESS)
+    {
         ret = ChienSearch(sigma, alpha, pos, cnt, p);
     }
     PolynomialFree(sigma);
@@ -249,9 +284,11 @@ static CRYPT_ERROR LocateErrors(const GFElement *syn, const GFPolynomial *g, con
 static void PosToBits(uint8_t *vec, const int32_t *pos, const int32_t cnt, const int32_t n)
 {
     memset_s(vec, (n + 7U) >> 3, 0, (n + 7U) >> 3);
-    for (int32_t i = 0; i < cnt; i++) {
-        if (pos[i] >= 0 && pos[i] < n) {    // Lower-bound sentinel to ignore negative (invalid) error positions
-            VectorSetBit(vec, pos[i], 1);   // Unit bit value used to mark each discovered error position
+    for (int32_t i = 0; i < cnt; i++)
+    {
+        if (pos[i] >= 0 && pos[i] < n)
+        {                                 // Lower-bound sentinel to ignore negative (invalid) error positions
+            VectorSetBit(vec, pos[i], 1); // Unit bit value used to mark each discovered error position
         }
     }
 }
@@ -260,19 +297,23 @@ static void PosToBits(uint8_t *vec, const int32_t *pos, const int32_t cnt, const
 static int32_t VerifyPattern(const uint8_t *vec, const GFElement *origSyn, const GFPolynomial *g, const GFElement *alpha, const McelieceParams *p)
 {
     GFElement *check = BSL_SAL_Malloc(2U * p->t * sizeof(GFElement));
-    if (check == NULL) {
-        return 0;   // any error occurs, clear flag
+    if (check == NULL)
+    {
+        return 0; // any error occurs, clear flag
     }
 
     CRYPT_ERROR ret = ComputeSyndrome(vec, g, alpha, check, p);
-    if (ret != PQCP_SUCCESS) {
-        return 0;   // any error occurs, clear flag
+    if (ret != PQCP_SUCCESS)
+    {
+        return 0; // any error occurs, clear flag
     }
 
     int32_t ok = 1;
-    for (int32_t i = 0; i < 2 * p->t; i++) {
-        if (origSyn[i] != check[i]) {
-            ok = 0;     // any mismatch clears the verification flag
+    for (int32_t i = 0; i < 2 * p->t; i++)
+    {
+        if (origSyn[i] != check[i])
+        {
+            ok = 0; // any mismatch clears the verification flag
         }
     }
     BSL_SAL_FREE(check);
@@ -285,36 +326,41 @@ CRYPT_ERROR DecodeGoppa(
     // basic validation
     if (received == NULL || g == NULL || alpha == NULL ||
         errorVector == NULL || decodeSuccess == NULL ||
-        errorVecLen < params->nBytes) {
+        errorVecLen < params->nBytes)
+    {
         return PQCP_NULL_INPUT;
     }
-    *decodeSuccess = 0;     // Initial failure sentinel before actual decoding is attempted
+    *decodeSuccess = 0; // Initial failure sentinel before actual decoding is attempted
 
     GFElement *syndrome = SafeSyndrome(received, g, alpha, params);
-    if (syndrome == NULL) {
+    if (syndrome == NULL)
+    {
         return PQCP_MALLOC_FAIL;
     }
-    if (IsZeroSyndrome(syndrome, 2 * params->t)) {
+    if (IsZeroSyndrome(syndrome, 2 * params->t))
+    {
         memset_s(errorVector, errorVecLen, 0, params->nBytes);
-        *decodeSuccess = 1;     // Boolean success flag when the syndrome is all-zero (no errors to correct)
+        *decodeSuccess = 1; // Boolean success flag when the syndrome is all-zero (no errors to correct)
         BSL_SAL_FREE(syndrome);
         return PQCP_SUCCESS;
     }
     int32_t *errorPos = BSL_SAL_Malloc(params->t * sizeof(int32_t));
-    if (errorPos == NULL) {
+    if (errorPos == NULL)
+    {
         BSL_SAL_FREE(syndrome);
         return PQCP_MALLOC_FAIL;
     }
     int32_t numErrors = 0;
     CRYPT_ERROR ret = LocateErrors(syndrome, g, alpha, errorPos, &numErrors, params);
-    if (ret != PQCP_SUCCESS) {
+    if (ret != PQCP_SUCCESS)
+    {
         BSL_SAL_FREE(errorPos);
         BSL_SAL_FREE(syndrome);
         return ret;
     }
     PosToBits(errorVector, errorPos, numErrors, params->n);
-    int32_t ok  = VerifyPattern(errorVector, syndrome, g, alpha, params);
-    int32_t wt  = VectorWeight(errorVector, params->nBytes);
+    int32_t ok = VerifyPattern(errorVector, syndrome, g, alpha, params);
+    int32_t wt = VectorWeight(errorVector, params->nBytes);
     *decodeSuccess = (ok && wt == params->t);
 
     BSL_SAL_FREE(errorPos);

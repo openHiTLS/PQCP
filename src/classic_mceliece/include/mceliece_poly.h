@@ -20,7 +20,8 @@
 #include "mceliece_gf.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // Polynomial creation and destruction
@@ -39,4 +40,4 @@ CRYPT_ERROR PolynomialCopy(GFPolynomial *dst, const GFPolynomial *src);
 }
 #endif
 
-#endif  // MCELIECE_POLY_H
+#endif // MCELIECE_POLY_H

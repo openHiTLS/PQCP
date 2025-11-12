@@ -27,7 +27,8 @@
 #include "crypt_eal_rand.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 CRYPT_ERROR McElieceKeygen(CMPublicKey *pk, CMPrivateKey *sk, const McelieceParams *params);

@@ -17,7 +17,6 @@
 #define MCELIECE_RNG_H
 
 #include "mceliece_shake.h"
-#include "crypt_eal_init.h"
 #include "crypt_eal_cipher.h"
 
 CRYPT_ERROR McElieceRandomBytesInit(const uint8_t *entropyInput, uint8_t *personalizationString, const int32_t securityStrength);

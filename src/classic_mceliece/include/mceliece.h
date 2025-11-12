@@ -16,7 +16,8 @@
 #ifndef MCELIECE_H
 #define MCELIECE_H
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdint.h>
@@ -26,7 +27,8 @@ extern "C" {
 #include "bsl_params.h"
 
 // Mceliece key management context
-typedef struct {
+typedef struct
+{
     McelieceParams *para;
     CMPublicKey *publicKey;
     CMPrivateKey *privateKey;
@@ -56,4 +58,4 @@ CRYPT_ERROR PQCP_MCELIECE_Decaps(
 }
 #endif
 
-#endif  // MCELIECE_H
+#endif // MCELIECE_H
