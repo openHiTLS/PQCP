@@ -56,8 +56,12 @@ EXIT:
 // McEliece PRG using SHAKE256
 void McEliecePrg(const uint8_t *seed, uint8_t *output, const size_t outputLen)
 {
-    uint8_t tempSeed[33]; // length mush be 33
-    tempSeed[0] = 64;     // the value of first element of tempSeed must be 64
+    /* tempSeed[0] is the length byte that Classic McEliece hard-codes to 64 (0x40) so that the later
+     * Expand-And-Split step produces the correct number of field elements for the public key generation;
+     * any other value would break the deterministic key schedule */
+    // Total buffer length for key-generation seed: 1-byte length prefix + 32-byte random
+    uint8_t tempSeed[33] = {0};
+    tempSeed[0] = 64; // the value of first element of tempSeed must be 64
     memcpy_s(tempSeed + 1, MCELIECE_L_BYTES, seed, MCELIECE_L_BYTES);
     McElieceShake256(output, outputLen, tempSeed, 33);
 }

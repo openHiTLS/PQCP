@@ -25,22 +25,12 @@ static CRYPT_ERROR GenDeltaFromSeed(uint8_t *delta)
     {
         return PQCP_MCELIECE_KEYGEN_FAIL;
     }
-    uint8_t kgSeed[33];                                                            // Total buffer length for key-generation seed: 1-byte length prefix + 32-byte random
     CRYPT_ERROR ret = McElieceRandomBytesInit((uint8_t *)entropyInput, NULL, 256); // Security strength (in bits) requested from the DRBG during seed generation
     if (ret != PQCP_SUCCESS)
     {
         return ret;
     }
-    /* kgSeed[0] is the length byte that Classic McEliece hard-codes to 64 (0x40) so that the later Expand-And-Split step
-     * produces the correct number of field elements for the public key generation; any other value would break the
-     * deterministic key schedule */
-    kgSeed[0] = 64; // the value of first element must be 64
-    ret = McElieceRandomBytes(kgSeed + 1, MCELIECE_L_BYTES);
-    if (ret != PQCP_SUCCESS)
-    {
-        return ret;
-    }
-    memcpy_s(delta, MCELIECE_L_BYTES, kgSeed + 1, MCELIECE_L_BYTES);
+    ret = McElieceRandomBytes(delta, MCELIECE_L_BYTES);
     return PQCP_SUCCESS;
 }
 

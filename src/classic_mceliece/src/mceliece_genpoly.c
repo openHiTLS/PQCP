@@ -15,11 +15,6 @@
 
 #include "mceliece_genpoly.h"
 
-// Reference-aligned minimal connection polynomial (Berlekamp-Massey form)
-// We build the (t+1) x t matrix M whose rows are 1, f, f^2, ..., f^t
-// over GF(2^m) and perform the same elimination as the reference to recover
-// the connection polynomial coefficients in the last row.
-
 // Vector multiply in GF((2^m)^t) with reference reduction: x^t + x^7 + x^2 + x + 1
 // Matches reference gf mul used in GenpolyOverGF
 static void GFVecMul(GFElement *out, const GFElement *in0, const GFElement *in1, const int32_t t)

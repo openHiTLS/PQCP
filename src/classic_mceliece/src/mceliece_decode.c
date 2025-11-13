@@ -314,6 +314,7 @@ static int32_t VerifyPattern(const uint8_t *vec, const GFElement *origSyn, const
         if (origSyn[i] != check[i])
         {
             ok = 0; // any mismatch clears the verification flag
+            break;
         }
     }
     BSL_SAL_FREE(check);

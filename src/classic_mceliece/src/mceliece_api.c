@@ -32,12 +32,7 @@ static CRYPT_ERROR McelieceKeypair(const McelieceParams *params, CMPublicKey *pk
     {
         ret = McElieceKeygen(pk, sk, params);
     }
-
-    if (ret != PQCP_SUCCESS)
-    {
-        return ret;
-    }
-    return PQCP_SUCCESS;
+    return ret;
 }
 
 static CRYPT_ERROR McelieceEncaps(const McelieceParams *params, uint8_t *ss, uint8_t *ct, const CMPublicKey *pk)
@@ -51,13 +46,7 @@ static CRYPT_ERROR McelieceEncaps(const McelieceParams *params, uint8_t *ss, uin
     {
         ret = McElieceEncaps(ct, pk, ss, params);
     }
-
-    if (ret != PQCP_SUCCESS)
-    {
-        return ret;
-    }
-
-    return PQCP_SUCCESS;
+    return ret;
 }
 
 static CRYPT_ERROR McelieceDecaps(const McelieceParams *params, uint8_t *ss, const uint8_t *ct, const CMPrivateKey *sk)
@@ -71,13 +60,7 @@ static CRYPT_ERROR McelieceDecaps(const McelieceParams *params, uint8_t *ss, con
     {
         ret = McElieceDecaps(ct, sk, ss, params);
     }
-
-    if (ret != PQCP_SUCCESS)
-    {
-        return ret;
-    }
-
-    return PQCP_SUCCESS;
+    return ret;
 }
 
 void *PQCP_MCELIECE_NewCtx(void)
@@ -188,7 +171,6 @@ CRYPT_ERROR PQCP_MCELIECE_SetPrvKey(Mceliece_Ctx *ctx, const BSL_Param *param)
         ctx->privateKey->g.coeffs[i] = temp;
         p += 2; // 2 bytes per step
     }
-    ctx->privateKey->g.degree = ctx->privateKey->g.degree;
     PolynomialSetCoeff(&ctx->privateKey->g, ctx->para->t, 1); // Form monic g(x), the last coeff is 1
 
     // 4. controlbits

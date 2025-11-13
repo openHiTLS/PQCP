@@ -78,7 +78,6 @@ static CRYPT_ERROR EncodeVector6688(const uint8_t *errorVector, const GFMatrix *
 
         for (int32_t j = 0; j < n64; j += 4)
         {
-            __builtin_prefetch(&w[j + 8], 1, 3); // Temporal locality hint—prefetch into L1 and mark as store
             w[j] = 0;
             w[j + 1] = 0;
             w[j + 2] = 0;
@@ -213,7 +212,6 @@ static void BuildRow8192(uint8_t *row, const uint8_t *pkPtr, int32_t rowIdx, con
 
     for (int32_t j = 0; j < n64Copy; j += 4)
     { // Quad-word (4 * 8 = 32-byte) unroll factor
-        __builtin_prefetch(&w[j + 8], 1, 3);
         w[j] = 0;
         w[j + 1] = 0;
         w[j + 2] = 0;

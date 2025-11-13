@@ -423,7 +423,7 @@ CRYPT_ERROR GenerateFieldOrdering(GFElement *alpha, int16_t *piTail, const uint8
     qsort(sortedForCheck, MCELIECE_Q, sizeof(pair_t), ComparePairs);
 
     int32_t hasDuplicates = 0;
-    for (int32_t i = 0; i < MCELIECE_Q - 1; i++)
+    for (int32_t i = 0; i < MCELIECE_Q_1; i++)
     {
         if (sortedForCheck[i].val == sortedForCheck[i + 1].val)
         {
@@ -453,7 +453,7 @@ CRYPT_ERROR GenerateFieldOrdering(GFElement *alpha, int16_t *piTail, const uint8
 
     for (int32_t i = 0; i < MCELIECE_Q; i++)
     {
-        uint16_t v = pi[i] & (MCELIECE_Q - 1U);
+        uint16_t v = pi[i] & (uint16_t)MCELIECE_Q_1;
         alpha[i] = (GFElement)BitrevU16(v, m);
     }
     // tail of pi

@@ -59,7 +59,6 @@ static void RadixSortI32(uint32_t *ua, uint32_t *tmp, const int64_t n)
         ua = tmp;
         tmp = swap;
     }
-    // 4 passes -> data back in original array pointer
 }
 
 // 32-bit le sort
@@ -385,7 +384,7 @@ static CRYPT_ERROR BenesNetControlbits(
     pos = posOut;
     pos += (2 * w - 3) * step * (n / 2); // Coefficient 2 – total control-bit skew factor for first-half emission offset
 
-    pos = EmitSecondHalf(&posOut, out, pos, step, areaA, areaB, n);
+    ret = EmitSecondHalf(&posOut, out, pos, step, areaA, areaB, n);
     if (ret != PQCP_SUCCESS)
     {
         return ret;

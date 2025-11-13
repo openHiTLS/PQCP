@@ -72,7 +72,7 @@ GFElement PolynomialEval(const GFPolynomial *poly, GFElement x)
     }
 
     // Use Horner's method: start with highest degree coefficient
-    GFElement result = (poly->degree >= 0) ? poly->coeffs[poly->degree] : 0; // form monic poly
+    GFElement result = poly->coeffs[poly->degree];  // form monic poly
     if (result == 0)
     {
         return 0;

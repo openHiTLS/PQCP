@@ -1,3 +1,18 @@
+/*
+ * This file is part of the openHiTLS project.
+ *
+ * openHiTLS is licensed under the Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ *     http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
 #include "crypt_eal_pkey.h"
 #include "crypt_errno.h"
 #include "pqcp_types.h"
@@ -298,22 +313,7 @@ static void ProcessCurrentKAT(int32_t algID, int semi, int pkBytes, int skBytes,
         goto EXIT;
     }
 
-    CRYPT_EAL_PkeyCtx *deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_MCELIECE, CRYPT_EAL_PKEY_KEM_OPERATE,
-                                                            "provider=pqcp");
-    if (ctx == NULL)
-    {
-        printf("create deCtx failed.\n");
-        goto EXIT;
-    }
-
     ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_MCELIECE_ALG_PARAMS, &algID, sizeof(algID));
-    if (ret != CRYPT_SUCCESS)
-    {
-        printf("ctx: ctrl param failed.\n");
-        goto EXIT;
-    }
-
-    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_MCELIECE_ALG_PARAMS, &algID, sizeof(algID));
     if (ret != CRYPT_SUCCESS)
     {
         printf("ctx: ctrl param failed.\n");
@@ -343,7 +343,6 @@ static void ProcessCurrentKAT(int32_t algID, int semi, int pkBytes, int skBytes,
     }
 
     // compare pk
-    int diff;
     if (memcmp(pkBin, pubdata, pkBytes) == 0)
     {
         pkOK++;

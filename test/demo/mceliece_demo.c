@@ -86,7 +86,7 @@ static int32_t McelieceDemo(void)
                                                             "provider=pqcp");
     if (deCtx == NULL)
     {
-        printf("create ctx failed.\n");
+        printf("create deCtx failed.\n");
         goto EXIT;
     }
 
@@ -149,14 +149,14 @@ static int32_t McelieceDemo(void)
     ret = CRYPT_EAL_PkeyCmp(ctx, copyCtx);
     if (ret != CRYPT_SUCCESS)
     {
-        printf("cmp failed.\n");
+        printf("copyCtx cmp failed.\n");
         goto EXIT;
     }
 
     ret = CRYPT_EAL_PkeyCmp(ctx, deCtx);
     if (ret != CRYPT_SUCCESS)
     {
-        printf("cmp failed.\n");
+        printf("deCtx cmp failed.\n");
         goto EXIT;
     }
 

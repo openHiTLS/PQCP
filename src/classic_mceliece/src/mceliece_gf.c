@@ -21,7 +21,7 @@ static GFElement gfAntilog[MCELIECE_Q];
 
 static int32_t WrapExp(int32_t e)
 {
-    int32_t m = (int32_t)MCELIECE_Q - 1;
+    int32_t m = (int32_t)MCELIECE_Q_1;
     e %= m;
     return (e < 0) ? (e + m) : e;
 }
@@ -61,7 +61,7 @@ CRYPT_ERROR GFInitial(const int32_t m)
     const GFElement generator = 3; // primitive element used to generate the field
     GFElement p = 1;
 
-    for (int32_t i = 0; i < (int32_t)MCELIECE_Q - 1; i++)
+    for (int32_t i = 0; i < (int32_t)MCELIECE_Q_1; i++)
     {
         gfAntilog[i] = p;
         gfLog[p] = (GFElement)i;
@@ -72,7 +72,7 @@ CRYPT_ERROR GFInitial(const int32_t m)
         }
     }
     // Optional mirror so index (Q-1) maps cleanly to 1; indices are wrapped anyway
-    gfAntilog[MCELIECE_Q - 1] = 1;
+    gfAntilog[MCELIECE_Q_1] = 1;
     gfLog[0] = 0; // never used; keep defined
     return PQCP_SUCCESS;
 }
@@ -106,7 +106,7 @@ GFElement GFInverse(GFElement a)
         return 1;
     }
     int32_t la = gfLog[a];
-    int32_t idx = WrapExp(((int32_t)MCELIECE_Q - 1) - la);
+    int32_t idx = WrapExp(((int32_t)MCELIECE_Q_1) - la);
     return gfAntilog[idx];
 }
 
