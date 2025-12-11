@@ -27,6 +27,7 @@ extern "C" {
 #define CRYPT_PKEY_SCLOUDPLUS 0x88000001
 #define CRYPT_PKEY_FRODOKEM 0x88000002
 #define CRYPT_PKEY_MCELIECE 0x88000003
+#define CRYPT_PKEY_POLAR_LAC 0x88000004
 
 /* Provider initialization function */
 int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,

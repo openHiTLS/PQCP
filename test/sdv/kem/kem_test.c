@@ -27,6 +27,7 @@
 #include "crypt_errno.h"
 #include "crypt_eal_rand.h"
 #include "scloudplus_local.h"
+#include "pqcp_err.h"
 
 /* scloud+测试用例 */
 static PqcpTestResult TestScloudPlusKeygen(void)
@@ -223,6 +224,120 @@ int32_t TestClassicMcEliece(void)
     pclose(ls);
 }
 
+int32_t TestRand(uint8_t *rand, uint32_t randLen) {
+    for (uint i = 0; i < randLen; ++i) {
+        rand[i] = i;
+    }
+    return 0;
+}
+
+static PqcpTestResult TestPolarlac(void)
+{
+    CRYPT_EAL_SetRandCallBack(TestRand);
+    int32_t ret = -1;
+    CRYPT_EAL_PkeyCtx *deCtx = NULL;
+    
+    // Polarlac算法参数 - 需要根据实际算法调整这些值
+    int32_t cipherLen = 4096;  // 假设的密文长度，请根据实际调整
+    int8_t cipher[4096] = {0};
+    int32_t sharekeyLen = 32;  // 共享密钥长度
+    int8_t sharekey[32] = {0};
+    int8_t sharekey2[32] = {0};
+    int32_t val = PQCP_POLAR_LAC_LIGHT;         // 密钥位数
+    
+    // 公钥数据缓冲区 - 大小需要根据实际算法调整
+    uint8_t pubdata[8192];
+    uint8_t prvdata[8192];
+    // Polarlac参数结构 - 需要根据实际定义调整
+    
+    BSL_Param pub[2] = {
+        {CRYPT_PARAM_POLAR_LAC_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        BSL_PARAM_END
+    };
+    BSL_Param prv[2] = {
+        {CRYPT_PARAM_POLAR_LAC_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
+        BSL_PARAM_END
+    };
+    // 创建加密封装上下文
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+        "provider=pqcp");
+    ASSERT_TRUE(ctx != NULL, "create ctx failed.");
+    
+    // 创建解封装上下文
+    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+        "provider=pqcp");
+    ASSERT_TRUE(deCtx != NULL, "create ctx failed.");
+    
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, pub);
+    ASSERT_EQ(ret, PQCP_NULL_INPUT, "get pub key error code incorrect");
+    
+    ret = CRYPT_EAL_PkeyGetPrvEx(ctx, prv);
+    ASSERT_EQ(ret, PQCP_NULL_INPUT, "get prv key error code incorrect");
+    // 设置密钥位数
+    ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, PQCP_POLAR_LAC_KEYINFO_NOT_SET, "gen key error code incorrect");
+
+    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ASSERT_EQ(ret, 0, "ctrl set key failed.");
+    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ASSERT_EQ(ret, 0, "ctrl set key failed.");
+
+
+    // 生成密钥对
+    ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, 0, "gen key failed.");
+
+    // 初始化封装操作
+    ret = CRYPT_EAL_PkeyEncapsInit(ctx, NULL);
+    ASSERT_EQ(ret, 0, "encaps init failed.");
+
+    uint32_t realCipherLen = cipherLen;
+    // 执行封装
+    ret = CRYPT_EAL_PkeyEncaps(ctx, cipher, &realCipherLen, sharekey, &sharekeyLen);
+    ASSERT_EQ(ret, 0, "encaps failed.");
+
+    // 获取公钥
+    ret = CRYPT_EAL_PkeyGetPrvEx(ctx, prv);
+    ASSERT_EQ(ret, 0, "get decaps key failed.");
+
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, pub);
+    ASSERT_EQ(ret, 0, "get encaps key failed.");
+    // 设置公钥到解封装上下文
+    ret = CRYPT_EAL_PkeySetPrvEx(deCtx, prv);
+    ASSERT_EQ(ret, 0, "set encaps key failed.");
+
+    // 初始化解封装操作
+    ret = CRYPT_EAL_PkeyDecapsInit(deCtx, NULL);  // 注意：这里应该是deCtx而不是ctx
+    ASSERT_EQ(ret, 0, "decaps init failed.");
+
+    // 执行解封装
+    ret = CRYPT_EAL_PkeyDecaps(deCtx, cipher, realCipherLen, sharekey2, &sharekeyLen);
+    ASSERT_EQ(ret, 0, "decaps failed.");
+
+    // 验证共享密钥是否匹配
+    ret = memcmp(sharekey, sharekey2, sharekeyLen);
+    ASSERT_EQ(ret, 0, "memcmp failed.");
+
+    int8_t cipher2[4096] = {0};
+    uint8_t ss2[32] = {0};
+    CRYPT_EAL_PkeyCtx *dumpCtx = CRYPT_EAL_PkeyDupCtx(ctx);
+    ASSERT_TRUE(dumpCtx != NULL, "create ctx failed.");
+
+    ret = CRYPT_EAL_PkeyEncaps(dumpCtx, cipher2, &realCipherLen, ss2, &sharekeyLen);
+    ASSERT_EQ(ret, 0, "encaps failed.");
+    
+    ret = memcmp(sharekey, ss2, sharekeyLen);
+    ASSERT_EQ(ret, 0, "memcmp ss2 and sharekey failed.");
+
+    ret = memcmp(cipher, cipher2, realCipherLen);
+    ASSERT_EQ(ret, 0, "memcmp ss2 and sharekey failed.");
+EXIT:
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    CRYPT_EAL_PkeyFreeCtx(deCtx);
+    return (ret == 0) ? PQCP_TEST_SUCCESS : PQCP_TEST_FAILURE;
+}
+
+
 /* 初始化KEM测试套件 */
 int32_t PQCP_InitKemTestSuite(void)
 {
@@ -250,7 +365,7 @@ int32_t PQCP_InitKemTestSuite(void)
 
     PQCP_TestAddCase(suite, "FrodoKem all test KAT", "all kat", TestFrodoKem);
     PQCP_TestAddCase(suite, "ClassicMcEliece all test KAT", "all kat", TestClassicMcEliece);
-
+    PQCP_TestAddCase(suite, "Polarlac Api test", "all kat", TestPolarlac);
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);
 }

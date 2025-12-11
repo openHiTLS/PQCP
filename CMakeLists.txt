@@ -31,9 +31,16 @@ if(ENABLE_ASAN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
-# Find OpenHiTLS
-# find_package(OpenHiTLS REQUIRED)
-
+set(POLAR_LAC_SRC
+    src/polarlac/src/polarlac.c
+    src/polarlac/src/polarlac_poly.c
+    src/polarlac/src/polarlac_pke.c
+    src/polarlac/src/polarlac_kem.c
+    src/polarlac/src/polarlac_ntt1024.c
+    src/polarlac/src/polarlac_ntt.c
+    src/polarlac/src/polarlac_polar.c
+    src/polarlac/src/polarlac_rand.c
+)
 # Set source files
 set(PROVIDER_SOURCES
     src/provider/pqcp_provider.c
@@ -61,7 +68,9 @@ set(PROVIDER_SOURCES
     src/classic_mceliece/src/mceliece_encode.c
     src/classic_mceliece/src/mceliece_decode.c
     src/classic_mceliece/src/mceliece_controlbits.c
+    ${POLAR_LAC_SRC}
 )
+
 
 # 添加链接目录
 if(PQCP_LIB_DIR)
@@ -79,6 +88,7 @@ target_include_directories(pqcp_provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scloudplus/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/classic_mceliece/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/frodokem/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/polarlac/include
         ${OPENHITLS_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/bsl

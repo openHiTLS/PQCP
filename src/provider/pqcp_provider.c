@@ -32,6 +32,7 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
     {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKeyMgmtScloudPlus, PQCP_PROVIDER_NAME},
     {CRYPT_PKEY_FRODOKEM, g_pqcpKeyMgmtFrodoKem, PQCP_PROVIDER_NAME},
     {CRYPT_PKEY_MCELIECE, g_pqcpKeyMgmtMceliece, PQCP_PROVIDER_NAME},
+    {CRYPT_PKEY_POLAR_LAC, g_pqcpKeyMgmtPolarLac, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
 
@@ -39,6 +40,7 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
     {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKemScloudPlus, PQCP_PROVIDER_NAME},
     {CRYPT_PKEY_FRODOKEM, g_pqcpKemFrodoKem, PQCP_PROVIDER_NAME},
     {CRYPT_PKEY_MCELIECE, g_pqcpKemMceliece, PQCP_PROVIDER_NAME},
+    {CRYPT_PKEY_POLAR_LAC, g_pqcpKemPolarLac, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
 

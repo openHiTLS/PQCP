@@ -27,4 +27,7 @@ extern const CRYPT_EAL_Func g_pqcpKemFrodoKem[];
 extern const CRYPT_EAL_Func g_pqcpKeyMgmtMceliece[];
 extern const CRYPT_EAL_Func g_pqcpKemMceliece[];
 
+extern const CRYPT_EAL_Func g_pqcpKeyMgmtPolarLac[];
+extern const CRYPT_EAL_Func g_pqcpKemPolarLac[];
+
 #endif /* PQCP_PROVIDER_IMPL_H */
