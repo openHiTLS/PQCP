@@ -19,7 +19,6 @@
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
 #include "securec.h"
-#include <immintrin.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -144,7 +144,7 @@ static void CommitCurrentBlock(int pkBytes, int skBytes, int ctBytes)
 }
 
 static void ObtainMcElieceBytes(
-    PQC_Mceliece_AlgWithParamId algID, size_t *pkBytes, size_t *skBytes, size_t *ctBytes)
+    PQC_Mceliece_AlgWithParamId algID, int *pkBytes, int *skBytes, int *ctBytes)
 {
     switch (algID)
     {

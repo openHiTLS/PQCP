@@ -19,7 +19,6 @@
 //  this file provides the detailed implementation of polar code encoding and decoding
 
 #include "polarlac_local.h"
-#include <immintrin.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
