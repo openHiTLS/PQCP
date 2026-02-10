@@ -29,8 +29,19 @@ typedef struct {
     int32_t verbose;              /* 详细模式 */
 } PqcpTestContext;
 
+typedef struct {
+    const char *name;
+    const char *description;
+    int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile);
+} PerfTestGroup;
+
 /* 全局测试上下文 */
 static PqcpTestContext g_testCtx = {0};
+static PerfTestGroup *g_testGroups = NULL;
+static int32_t g_numGroups = 0;
+static int32_t g_maxGroups = 0;
+uint32_t g_duration = 3;
+PerfResult g_perfRes = { 0 };
 
 /**
  * 获取当前时间（毫秒）
@@ -681,3 +692,99 @@ int32_t PQCP_TestSaveReport(const PqcpTestReport *report, const char *filename)
     
     return 0;
 } 
+
+
+void WriteCsvHeader(FILE *csvFile)
+{
+    if (csvFile) {
+        fprintf(csvFile, "Algorithm,Operation,AvgTime(ms),MinTime(ms),MaxTime(ms),Iterations,DataSize(bytes)\n");
+    }
+}
+
+void WriteCsvResult(FILE *csvFile, const PerfResult *result)
+{
+    if (csvFile && result) {
+        fprintf(csvFile, "%s,%s,%.4f,%.4f,%.4f,%u,%zu\n",
+                result->algorithm, result->operation,
+                result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
+                result->iterations, result->dataSize);
+    }
+}
+
+
+/* 添加测试组 */
+int32_t PQCP_AddPerfTestGroup(const char *name, const char *description, 
+                             int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile))
+{
+    if (g_numGroups >= g_maxGroups) {
+        int32_t newMax = g_maxGroups == 0 ? 8 : g_maxGroups * 2;
+        PerfTestGroup *newGroups = realloc(g_testGroups, newMax * sizeof(PerfTestGroup));
+        if (!newGroups) return -1;
+        g_testGroups = newGroups;
+        g_maxGroups = newMax;
+    }
+    
+    g_testGroups[g_numGroups].name = name;
+    g_testGroups[g_numGroups].description = description;
+    g_testGroups[g_numGroups].runTest = runTest;
+    g_numGroups++;
+    
+    return 0;
+}
+
+/* 列出所有测试组 */
+void PQCP_ListPerfTestGroups(void)
+{
+    printf("可用的性能测试组:\n");
+    for (int32_t i = 0; i < g_numGroups; i++) {
+        printf("  %-20s - %s\n", g_testGroups[i].name, g_testGroups[i].description);
+    }
+}
+
+/* 运行指定的测试组 */
+int32_t PQCP_RunPerfTestGroup(const char *name, int32_t iterations, int32_t verbose, FILE *csvFile)
+{
+    for (int32_t i = 0; i < g_numGroups; i++) {
+        if (strcmp(g_testGroups[i].name, name) == 0) {
+            printf("运行性能测试组: %s (%s)\n", name, g_testGroups[i].description);
+            return g_testGroups[i].runTest(iterations, verbose, csvFile);
+        }
+    }
+    printf("错误: 未找到测试组 '%s'\n", name);
+    return -1;
+}
+
+/* 运行所有测试组 */
+int32_t PQCP_RunAllPerfTests(int32_t iterations, int32_t verbose, const char *csvPath) {
+    FILE *csvFile = fopen(csvPath, "w");
+    if (!csvFile) {
+        fprintf(stderr, "无法创建CSV文件: %s\n", csvPath);
+    }
+    int32_t result = 0;
+    for (int32_t i = 0; i < g_numGroups; i++) {
+        if (g_testGroups[i].runTest(iterations, verbose, csvFile) != 0) {
+            result = -1;
+        }
+    }
+    if (csvFile) {
+        fclose(csvFile);
+        csvFile = NULL;
+    }
+    return result;
+}
+
+double GetTimeMs(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
+}
+
+void PrintResult(const PerfResult *result, int32_t verbose)
+{
+    (void)verbose;
+    printf("%-15s %-15s Avg: %.4f ms, Min: %.4f ms, Max: %.4f ms, %.4f ops/s\n",
+           result->algorithm, result->operation,
+           result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
+           result->opsPerSec);
+}

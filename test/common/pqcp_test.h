@@ -61,6 +61,18 @@ typedef struct {
     double totalTime;          /* 总执行时间（毫秒） */
 } PqcpTestReport;
 
+typedef struct {
+    const char *algorithm;
+    const char *operation;
+    double avgTimeMs;
+    double opsPerSec;
+    double minTimeMs;
+    double maxTimeMs;
+    double totalTimeMs;
+    int32_t iterations;
+    size_t dataSize;
+} PerfResult;
+
 /* 测试框架初始化和清理 */
 int32_t PQCP_TestInit(void);
 void PQCP_TestCleanup(void);
@@ -92,4 +104,13 @@ double PQCP_TestGetTimeMs(void);
 void PQCP_TestSetOutputDir(const char *dir);
 const char* PQCP_TestGetOutputDir(void);
 
+int32_t PQCP_AddPerfTestGroup(const char *name, const char *description, 
+                             int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile));
+void PQCP_ListPerfTestGroups(void);
+int32_t PQCP_RunPerfTestGroup(const char *name, int32_t iterations, int32_t verbose, FILE *csvFile);
+int32_t PQCP_RunAllPerfTests(int32_t iterations, int32_t verbose, const char *csvPath);
+double GetTimeMs(void);
+void PrintResult(const PerfResult *result, int32_t verbose);
+void WriteCsvHeader(FILE *csvFile);
+void WriteCsvResult(FILE *csvFile, const PerfResult *result);
 #endif /* PQCP_TEST_H */ 

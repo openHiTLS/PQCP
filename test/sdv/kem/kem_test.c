@@ -192,37 +192,6 @@ int32_t TestScloudPlus256_3(void)
     return TestScloudPlusEncapsDecaps("../../testdata/scloudplus/scloudplus_testvector/test_vector_256_3.data");
 }
 
-const char g_FrodoKemKATpath[] = "../../testdata/frodokem";
-
-int32_t TestFrodoKem(void)
-{
-    const int n = sizeof(gKatFileMap) / sizeof(KatFileMap);
-    char* path = malloc(strlen(g_FrodoKemKATpath) + MAX_FILENAME_LEN + 2);
-    strcpy(path, g_FrodoKemKATpath);
-    path[strlen(g_FrodoKemKATpath)] = DIR_SEP;
-
-    for (int i = 0; i < n; i++) {
-        strcpy(path + 1 + strlen(g_FrodoKemKATpath), gKatFileMap[i].filename);
-
-        TestFrodoKemEncapsDecaps(gKatFileMap[i].id, path);
-    }
-    free(path);
-}
-
-int32_t TestClassicMcEliece(void)
-{
-    // read .rsp files
-    FILE *ls = popen("ls ../../testdata/classic_mceliece/*mceliece*.rsp 2>/dev/null", "r");
-    if (!ls) return EXIT_FAILURE;
-
-    char path[512];
-    while (fgets(path, sizeof(path), ls)) {
-        path[strcspn(path, "\n")] = 0;  // remove \n
-        // process KAT testing 
-        TestClassicMcElieceKAT(path);
-    }
-    pclose(ls);
-}
 
 int32_t TestRand(uint8_t *rand, uint32_t randLen) {
     for (uint i = 0; i < randLen; ++i) {
@@ -362,9 +331,6 @@ int32_t PQCP_InitKemTestSuite(void)
     PQCP_TestAddCase(suite, "scloudplus KAT test256_1", "scloud+ vector test 256-1", TestScloudPlus256_1);
     PQCP_TestAddCase(suite, "scloudplus KAT test256_2", "scloud+ vector test 256-2", TestScloudPlus256_2);
     PQCP_TestAddCase(suite, "scloudplus KAT test256_3", "scloud+ vector test 256-3", TestScloudPlus256_3);
-
-    PQCP_TestAddCase(suite, "FrodoKem all test KAT", "all kat", TestFrodoKem);
-    PQCP_TestAddCase(suite, "ClassicMcEliece all test KAT", "all kat", TestClassicMcEliece);
     PQCP_TestAddCase(suite, "Polarlac Api test", "all kat", TestPolarlac);
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);

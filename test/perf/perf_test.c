@@ -19,273 +19,97 @@
 #include <string.h>
 #include <time.h>
 #include <getopt.h>
+#include <linux/limits.h>
 
-/* 性能测试结果结构 */
+#include "perf_kem.h"
+#include "crypt_eal_pkey.h"
+#include "pqcp_types.h"
+#include "pqcp_test.h"
+#include "pqcp_provider.h"
+#include "pqcp_err.h"
+#include "crypt_errno.h"
+
+extern uint32_t g_duration;
+extern PerfResult g_perfRes;
+
 typedef struct {
-    const char *algorithm;
-    const char *operation;
-    double avgTimeMs;
-    double minTimeMs;
-    double maxTimeMs;
-    int32_t iterations;
-    size_t dataSize;
-} PerfResult;
+    char *algName;
+    int32_t algId;
+    int32_t setParaCmd;
+    int32_t algParaId;
+    int32_t getCipherLenCmd;
+} BenchTestSuite;
 
-/* 性能测试组结构 */
-typedef struct {
-    const char *name;
-    const char *description;
-    int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile);
-} PerfTestGroup;
+BenchTestSuite g_benchmark[] = {
+};
 
-/* 全局变量 */
-static PerfTestGroup *g_testGroups = NULL;
-static int32_t g_numGroups = 0;
-static int32_t g_maxGroups = 0;
+static void SetDuration(uint32_t time) {
+    if (time >= 100) {
+        printf("Duration is too long");
+        return;
+    }
+    g_duration = time;
+}
 
-/* 辅助函数 */
-static double GetTimeMs(void)
+static int32_t RunKemPerfTest(int32_t iterations, int32_t verbose, FILE *csvFile)
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
+    int32_t ret = 0;
+    uint32_t testSuiteCnt = sizeof(g_benchmark) / sizeof(g_benchmark[0]);
+    for (int i = 0; i < testSuiteCnt; ++i) {
+        PQCP_BENCHMARK_KEM_KeyGen(g_benchmark[i].algName, g_benchmark[i].algId, g_benchmark[i].setParaCmd, g_benchmark[i].algParaId, g_duration);
+        PQCP_BENCHMARK_KEM_Encaps(g_benchmark[i].algName, g_benchmark[i].algId, g_benchmark[i].setParaCmd, g_benchmark[i].algParaId, g_benchmark[i].getCipherLenCmd, g_duration);
+        PQCP_BENCHMARK_KEM_Decaps(g_benchmark[i].algName, g_benchmark[i].algId, g_benchmark[i].setParaCmd, g_benchmark[i].algParaId, g_benchmark[i].getCipherLenCmd, g_duration);
+    }
+    
 }
 
-static void WriteCsvHeader(FILE *csvFile)
+int32_t InitDefaultProvider()
 {
-    if (csvFile) {
-        fprintf(csvFile, "Algorithm,Operation,AvgTime(ms),MinTime(ms),MaxTime(ms),Iterations,DataSize(bytes)\n");
+    char basePath[PATH_MAX] = {0};
+    char fullPath[PATH_MAX] = {0};
+
+    if (readlink("/proc/self/exe", basePath, sizeof(basePath) - 1) == -1)
+    {
+        perror("get realpath failed.\n");
+        return PQCP_TEST_FAILURE;
     }
+    printf("basePath: %s\n", basePath);
+
+    dirname(basePath);
+    snprintf(fullPath, sizeof(fullPath), "%s/../../../build", basePath);
+    printf("fullPath: %s\n", fullPath);
+
+    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, fullPath);
+    if (ret != 0)
+    {
+        printf("set provider path failed.\n");
+        return PQCP_TEST_FAILURE;
+    }
+
+    ret = CRYPT_EAL_ProviderLoad(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider", NULL, NULL);
+    if (ret != 0)
+    {
+        printf("load provider failed: 0x%x.\n", ret);
+        return PQCP_TEST_FAILURE;
+    }
+
+    return PQCP_TEST_SUCCESS;
 }
-
-static void WriteCsvResult(FILE *csvFile, const PerfResult *result)
-{
-    if (csvFile && result) {
-        fprintf(csvFile, "%s,%s,%.4f,%.4f,%.4f,%u,%zu\n",
-                result->algorithm, result->operation,
-                result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
-                result->iterations, result->dataSize);
-    }
-}
-
-static void PrintResult(const PerfResult *result, int32_t verbose)
-{
-    (void)verbose;
-    printf("%-15s %-15s Avg: %.4f ms, Min: %.4f ms, Max: %.4f ms, Iterations: %u, Data: %zu bytes\n",
-           result->algorithm, result->operation,
-           result->avgTimeMs, result->minTimeMs, result->maxTimeMs,
-           result->iterations, result->dataSize);
-}
-
-/* 添加测试组 */
-int32_t PQCP_AddPerfTestGroup(const char *name, const char *description, 
-                             int32_t (*runTest)(int32_t iterations, int32_t verbose, FILE *csvFile))
-{
-    if (g_numGroups >= g_maxGroups) {
-        int32_t newMax = g_maxGroups == 0 ? 8 : g_maxGroups * 2;
-        PerfTestGroup *newGroups = realloc(g_testGroups, newMax * sizeof(PerfTestGroup));
-        if (!newGroups) return -1;
-        g_testGroups = newGroups;
-        g_maxGroups = newMax;
-    }
-    
-    g_testGroups[g_numGroups].name = name;
-    g_testGroups[g_numGroups].description = description;
-    g_testGroups[g_numGroups].runTest = runTest;
-    g_numGroups++;
-    
-    return 0;
-}
-
-/* 列出所有测试组 */
-void PQCP_ListPerfTestGroups(void)
-{
-    printf("可用的性能测试组:\n");
-    for (int32_t i = 0; i < g_numGroups; i++) {
-        printf("  %-20s - %s\n", g_testGroups[i].name, g_testGroups[i].description);
-    }
-}
-
-/* 运行指定的测试组 */
-int32_t PQCP_RunPerfTestGroup(const char *name, int32_t iterations, int32_t verbose, FILE *csvFile)
-{
-    for (int32_t i = 0; i < g_numGroups; i++) {
-        if (strcmp(g_testGroups[i].name, name) == 0) {
-            printf("运行性能测试组: %s (%s)\n", name, g_testGroups[i].description);
-            return g_testGroups[i].runTest(iterations, verbose, csvFile);
-        }
-    }
-    printf("错误: 未找到测试组 '%s'\n", name);
-    return -1;
-}
-
-/* 运行所有测试组 */
-int32_t PQCP_RunAllPerfTests(int32_t iterations, int32_t verbose, const char *csvPath) {
-    FILE *csvFile = fopen(csvPath, "w");
-    if (!csvFile) {
-        fprintf(stderr, "无法创建CSV文件: %s\n", csvPath);
-        return -1;
-    }
-    
-    WriteCsvHeader(csvFile);
-    
-    int32_t result = 0;
-    for (int32_t i = 0; i < g_numGroups; i++) {
-        if (g_testGroups[i].runTest(iterations, verbose, csvFile) != 0) {
-            result = -1;
-        }
-    }
-    
-    fclose(csvFile);
-    return result;
-}
-
-/* 示例测试组实现 */
-
-/* Scloudplus性能测试 */
-static int32_t RunScloudplusPerfTest(int32_t iterations, int32_t verbose, FILE *csvFile)
-{
-    PerfResult results[3][3] = {0};
-    const char *variants[] = {"Scloudplus-512", "Scloudplus-768", "Scloudplus-1024"};
-    const char *operations[] = {"KeyGen", "Encaps", "Decaps"};
-    
-    /* 设置默认迭代次数 */
-    if (iterations <= 0) {
-        iterations = 1000;
-    }
-    
-    /* 为每个变体和操作执行测试 */
-    for (int32_t v = 0; v < 3; v++) {
-        for (int32_t op = 0; op < 3; op++) {
-            double start, end, total = 0, min_time = 1e9, max_time = 0;
-            
-            /* 初始化结果结构 */
-            results[v][op].algorithm = variants[v];
-            results[v][op].operation = operations[op];
-            results[v][op].iterations = iterations;
-            
-            /* 根据变体设置数据大小（示例值） */
-            switch (v) {
-                case 0: results[v][op].dataSize = 1632; break;  /* Scloudplus-512 */
-                case 1: results[v][op].dataSize = 2400; break;  /* Scloudplus-768 */
-                case 2: results[v][op].dataSize = 3168; break;  /* Scloudplus-1024 */
-            }
-            
-            if (verbose) {
-                printf("测试 %s %s (%d 次迭代)...\n", variants[v], operations[op], iterations);
-            }
-            
-            /* 执行测试迭代 */
-            for (int32_t i = 0; i < iterations; i++) {
-                start = GetTimeMs();
-                
-                /* 这里应该调用实际的Scloudplus函数 */
-                /* 目前只是模拟延迟 */
-                struct timespec ts;
-                ts.tv_sec = 0;
-                ts.tv_nsec = (v + 1) * (op + 1) * 100000; /* 模拟不同操作的不同延迟 */
-                nanosleep(&ts, NULL);
-                
-                end = GetTimeMs();
-                double elapsed = end - start;
-                
-                total += elapsed;
-                if (elapsed < min_time) min_time = elapsed;
-                if (elapsed > max_time) max_time = elapsed;
-            }
-            
-            /* 计算平均时间 */
-            results[v][op].avgTimeMs = total / iterations;
-            results[v][op].minTimeMs = min_time;
-            results[v][op].maxTimeMs = max_time;
-            
-            /* 输出结果 */
-            PrintResult(&results[v][op], verbose);
-            WriteCsvResult(csvFile, &results[v][op]);
-        }
-    }
-    
-    return 0;
-}
-
-/* pqcdsa性能测试 */
-static int32_t RunPqcdsaPerfTest(int32_t iterations, int32_t verbose, FILE *csvFile)
-{
-    PerfResult results[3][3] = {0};
-    const char *variants[] = {"pqcdsa-2", "pqcdsa-3", "pqcdsa-5"};
-    const char *operations[] = {"KeyGen", "Sign", "Verify"};
-    
-    /* 设置默认迭代次数 */
-    if (iterations <= 0) {
-        iterations = 1000;
-    }
-    
-    /* 为每个变体和操作执行测试 */
-    for (int32_t v = 0; v < 3; v++) {
-        for (int32_t op = 0; op < 3; op++) {
-            double start, end, total = 0, min_time = 1e9, max_time = 0;
-            
-            /* 初始化结果结构 */
-            results[v][op].algorithm = variants[v];
-            results[v][op].operation = operations[op];
-            results[v][op].iterations = iterations;
-            
-            /* 根据变体设置数据大小（示例值） */
-            switch (v) {
-                case 0: results[v][op].dataSize = 2528; break;  /* pqcdsa-2 */
-                case 1: results[v][op].dataSize = 3504; break;  /* pqcdsa-3 */
-                case 2: results[v][op].dataSize = 4595; break;  /* pqcdsa-5 */
-            }
-            
-            if (verbose) {
-                printf("测试 %s %s (%d 次迭代)...\n", variants[v], operations[op], iterations);
-            }
-            
-            /* 执行测试迭代 */
-            for (int32_t i = 0; i < iterations; i++) {
-                start = GetTimeMs();
-                
-                /* 这里应该调用实际的pqcdsa函数 */
-                /* 目前只是模拟延迟 */
-                struct timespec ts;
-                ts.tv_sec = 0;
-                ts.tv_nsec = (v + 1) * (op + 1) * 200000; /* 模拟不同操作的不同延迟 */
-                nanosleep(&ts, NULL);
-                
-                end = GetTimeMs();
-                double elapsed = end - start;
-                
-                total += elapsed;
-                if (elapsed < min_time) min_time = elapsed;
-                if (elapsed > max_time) max_time = elapsed;
-            }
-            
-            /* 计算平均时间 */
-            results[v][op].avgTimeMs = total / iterations;
-            results[v][op].minTimeMs = min_time;
-            results[v][op].maxTimeMs = max_time;
-            
-            /* 输出结果 */
-            PrintResult(&results[v][op], verbose);
-            WriteCsvResult(csvFile, &results[v][op]);
-        }
-    }
-    
-    return 0;
-}
-
 /* 初始化性能测试 */
 int32_t InitPerfTests(void)
 {
-    /* 添加测试组 */
-    if (PQCP_AddPerfTestGroup("Scloudplus", "Scloudplus密钥封装机制性能测试", RunScloudplusPerfTest) != 0) {
+    if (InitDefaultProvider() != PQCP_TEST_SUCCESS) {
+        printf("Load Provider failed\n");
         return -1;
     }
-    
-    if (PQCP_AddPerfTestGroup("pqcdsa", "pqcdsa数字签名性能测试", RunPqcdsaPerfTest) != 0) {
-        return -1;
+    int32_t ret = CRYPT_EAL_RandInit(CRYPT_RAND_SHA256, NULL, NULL, NULL, 0);
+    if (ret != PQCP_SUCCESS) {
+        printf("RandInit failed: %x", ret);
+        return ret;
     }
-    
+    if (PQCP_AddPerfTestGroup("PQCP", "PQCP密钥封装机制性能测试", RunKemPerfTest) != 0) {
+         return -1;
+    }
     return 0;
 }
 
@@ -299,19 +123,20 @@ int32_t main(int32_t argc, char *argv[])
     char *outputDir = "output/perf";
     char *csvFilePath = "perf_results.csv";
     FILE *csvFile = NULL;
-    
+    char *full_csv_path = NULL;
+
     struct option long_options[] = {
-        {"help",       no_argument,       0, 'h'},
+        {"help", no_argument, 0, 'h'},
         {"output-dir", required_argument, 0, 'o'},
-        {"csv",        required_argument, 0, 'c'},
+        {"csv", required_argument, 0, 'c'},
         {"iterations", required_argument, 0, 'i'},
-        {"verbose",    no_argument,       0, 'v'},
-        {"list",       no_argument,       0, 'l'},
-        {0, 0, 0, 0}
-    };
-    
+        {"verbose", no_argument, 0, 'v'},
+        {"list", no_argument, 0, 'l'},
+        {"time", required_argument, 0, 't'},
+        {0, 0, 0, 0}};
+
     /* 解析命令行参数 */
-    while ((opt = getopt_long(argc, argv, "ho:c:i:vl", long_options, &optionIndex)) != -1) {
+    while ((opt = getopt_long(argc, argv, "ho:c:i:vlt:", long_options, &optionIndex)) != -1) {
         switch (opt) {
             case 'h':
                 printf("用法: %s [选项] [测试组...]\n", argv[0]);
@@ -322,6 +147,7 @@ int32_t main(int32_t argc, char *argv[])
                 printf("  -i, --iterations=NUM    设置迭代次数 (默认: 算法特定)\n");
                 printf("  -v, --verbose           显示详细输出\n");
                 printf("  -l, --list              列出可用的测试组\n");
+                printf("  -t, --time              设置单个用例运行时间\n");
                 return 0;
             case 'o':
                 outputDir = optarg;
@@ -337,6 +163,9 @@ int32_t main(int32_t argc, char *argv[])
                 break;
             case 'l':
                 listOnly = 1;
+                break;
+            case 't':
+                SetDuration(atoi(optarg));
                 break;
             default:
                 fprintf(stderr, "尝试 '%s --help' 获取更多信息。\n", argv[0]);
@@ -361,19 +190,7 @@ int32_t main(int32_t argc, char *argv[])
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "mkdir -p %s", outputDir);
     (void)system(cmd);
-    
-    /* 打开CSV文件 */
-    char full_csv_path[512];
-    snprintf(full_csv_path, sizeof(full_csv_path), "%s/%s", outputDir, csvFilePath);
-    csvFile = fopen(full_csv_path, "w");
-    if (!csvFile) {
-        fprintf(stderr, "无法创建CSV文件: %s\n", full_csv_path);
-        return 1;
-    }
-    
-    /* 写入CSV头 */
-    WriteCsvHeader(csvFile);
-    
+
     /* 运行测试 */
     int32_t result = 0;
     if (optind < argc) {
@@ -389,9 +206,10 @@ int32_t main(int32_t argc, char *argv[])
             result = 1;
         }
     }
-    
     /* 关闭CSV文件 */
-    fclose(csvFile);
-    
+    if (csvFile) {
+        fclose(csvFile);
+        csvFile = NULL;
+    }
     return result;
 } 
