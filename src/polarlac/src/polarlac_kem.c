@@ -61,7 +61,7 @@ static int32_t PolarLacKemEncFo(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *k, uint
         return ret;
     }
     // encrypt m with seed
-    POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, c, &cLen, seed);
+    PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, c, &cLen, seed);
 
     // compute k=hash(m|c)
     memcpy_s(buf + msgLen, ctLen, c, ctLen);
@@ -85,7 +85,7 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     uint8_t verifyCt[ctLen]; // re-encrypt ciphertext for verification
 
     // compute m from c
-    POLAR_LAC_PkeDecrypt(ctx, c, ctLen, buf, &mLen);
+    PQCP_POLAR_LAC_PkeDecrypt(ctx, c, ctLen, buf, &mLen);
     // compute k=hash(m|c)
     memcpy_s(buf + msgLen, ctLen, c, ctLen);
     int32_t ret = SHA3_256(buf, msgLen + ctLen, k, 32);
@@ -99,7 +99,7 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     if (ret != PQCP_SUCCESS) {
         return ret;
     }
-    POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, verifyCt, &cLen, seed);
+    PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, verifyCt, &cLen, seed);
 
     // verify
     if (memcmp(c, verifyCt, ctLen) != 0) {
@@ -115,17 +115,17 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     return 0;
 }
 
-int32_t POLAR_LAC_EncapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ct, uint8_t *ss)
+int32_t PQCP_POLAR_LAC_EncapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ct, uint8_t *ss)
 {
     return PolarLacKemEncFo(ctx, ss, ct);
 }
 
-int32_t POLAR_LAC_DeapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ss, const uint8_t *ct)
+int32_t PQCP_POLAR_LAC_DeapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ss, const uint8_t *ct)
 {
     return PolarLacKemDecFo(ctx, ct, ss);
 }
 
-int32_t POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx)
+int32_t PQCP_POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx)
 {
     uint32_t seedLen = ctx->info->seedLen;
     uint8_t seed[seedLen];
@@ -133,6 +133,6 @@ int32_t POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx)
     // generate seed
     RETURN_RET_IF(CRYPT_EAL_Randbytes(seed, seedLen), ret);
     // key generation with seed
-    POLAR_LAC_PkeKeyGen(ctx, seed);
+    PQCP_POLAR_LAC_PkeKeyGen(ctx, seed);
     return 0;
 }

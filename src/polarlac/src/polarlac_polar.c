@@ -198,7 +198,7 @@ static struct polarControl g_polar_256 = {.N = 512, .n = 9, .K = 256, .eccBytes 
  * Algorithm idea inspired by:
  * https://github.com/sravan-ankireddy/polar_codes (Repository does not specify a license)
  */
-void POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId)
+void PQCP_POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId)
 {
     struct polarControl *polar = NULL;
     switch (algId) {
@@ -239,7 +239,7 @@ void POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId)
  * Algorithm idea inspired by:
  * https://github.com/YuYongRun/PolarCodeDecodersInMatlab (Repository does not specify a license)
  */
-void POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
+void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
 {
     struct polarControl *polar = NULL;
     int32_t *lambdaOffset = NULL;

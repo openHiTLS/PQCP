@@ -18,6 +18,20 @@
 #include "securec.h"
 #include "pqcp_err.h"
 #include "crypt_polarlac.h"
+#include "crypt_types.h"
+
+#define CHECK_CTX_INFO_AND_UINT32_LEN(ctx, len)    \
+    do                                             \
+    {                                              \
+        if (ctx->info == NULL)                     \
+        {                                          \
+            return PQCP_POLAR_LAC_KEYINFO_NOT_SET; \
+        }                                          \
+        if (len != sizeof(int32_t))                \
+        {                                          \
+            return PQCP_INVALID_ARG;               \
+        }                                          \
+    } while (0)
 
 static const CRYPT_Lac2Info g_polarLacParams[] = {
     // LAC_LIGHT
@@ -120,7 +134,7 @@ int32_t PQCP_LAC2_SetPrvKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx->sk != NULL || ctx->pk != NULL) {
         return PQCP_POLAR_LAC_KEY_REPEATED_SET;
     }
-    const BSL_Param *prv = BSL_PARAM_FindConstParam(param, CRYPT_PARAM_POLAR_LAC_PRVKEY);
+    const BSL_Param *prv = BSL_PARAM_FindConstParam(param, PQCP_PARAM_POLAR_LAC_PRVKEY);
     if (prv == NULL || prv->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -148,7 +162,7 @@ int32_t PQCP_LAC2_SetPubKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx->sk != NULL || ctx->pk != NULL) {
         return PQCP_POLAR_LAC_KEY_REPEATED_SET;
     }
-    const BSL_Param *pub = BSL_PARAM_FindConstParam(param, CRYPT_PARAM_POLAR_LAC_PUBKEY);
+    const BSL_Param *pub = BSL_PARAM_FindConstParam(param, PQCP_PARAM_POLAR_LAC_PUBKEY);
     if (pub == NULL || pub->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -202,7 +216,7 @@ int32_t PQCP_LAC2_Encaps(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ciphertext, uint32_t
     }
     *ssLen = ctx->info->sharedLen;
     *ctLen = ctx->info->ctLen;
-    return POLAR_LAC_EncapsInternal(ctx, ciphertext, sharedSecret);
+    return PQCP_POLAR_LAC_EncapsInternal(ctx, ciphertext, sharedSecret);
 }
 static int32_t DecapsInputCheck(CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *ciphertext, uint32_t ctLen,
                                 uint8_t *sharedSecret, uint32_t *ssLen)
@@ -228,7 +242,7 @@ int32_t PQCP_LAC2_Decaps(CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *ciphertext, ui
         return PQCP_INVALID_ARG;
     }
     *ssLen = ctx->info->sharedLen;
-    return POLAR_LAC_DeapsInternal(ctx, sharedSecret, ciphertext);
+    return PQCP_POLAR_LAC_DeapsInternal(ctx, sharedSecret, ciphertext);
 }
 
 int32_t PQCP_LAC2_Gen(CRYPT_POLAR_LAC_Ctx *ctx)
@@ -250,7 +264,7 @@ int32_t PQCP_LAC2_Gen(CRYPT_POLAR_LAC_Ctx *ctx)
         BSL_SAL_FREE(ctx->sk);
         return PQCP_MALLOC_FAIL;
     }
-    return POLAR_LAC_KeyGenInternal(ctx);
+    return PQCP_POLAR_LAC_KeyGenInternal(ctx);
 }
 
 int32_t PQCP_LAC2_Ctrl(CRYPT_POLAR_LAC_Ctx *ctx, int32_t cmd, void *val, uint32_t valLen)
@@ -259,33 +273,18 @@ int32_t PQCP_LAC2_Ctrl(CRYPT_POLAR_LAC_Ctx *ctx, int32_t cmd, void *val, uint32_
         return PQCP_NULL_INPUT;
     }
     switch (cmd) {
-        case PQCP_POLAR_LAC_SET_PARAMS_BY_ID:
+        case CRYPT_CTRL_SET_PARA_BY_ID:
             return PolarLacSetAlgInfo(ctx, val, valLen);
-        case PQCP_POLAR_LAC_GET_CIPHER_LEN:
-            if (ctx->info == NULL) {
-                return PQCP_POLAR_LAC_KEYINFO_NOT_SET;
-            }
-            if (valLen != sizeof(int32_t)) {
-                return PQCP_INVALID_ARG;
-            }
+        case CRYPT_CTRL_GET_CIPHERTEXT_LEN:
+            CHECK_CTX_INFO_AND_UINT32_LEN(ctx, valLen);
             *(int32_t *)val = ctx->info->ctLen;
             break;
-        case PQCP_POLAR_LAC_GET_PRVKEY_LEN:
-            if (ctx->info == NULL) {
-                return PQCP_POLAR_LAC_KEYINFO_NOT_SET;
-            }
-            if (valLen != sizeof(int32_t)) {
-                return PQCP_INVALID_ARG;
-            }
+        case CRYPT_CTRL_GET_PRVKEY_LEN:
+            CHECK_CTX_INFO_AND_UINT32_LEN(ctx, valLen);
             *(int32_t *)val = ctx->info->skLen;
             break;
-        case PQCP_POLAR_LAC_GET_PUBKEY_LEN:
-            if (ctx->info == NULL) {
-                return PQCP_POLAR_LAC_KEYINFO_NOT_SET;
-            }
-            if (valLen != sizeof(int32_t)) {
-                return PQCP_INVALID_ARG;
-            }
+        case CRYPT_CTRL_GET_PUBKEY_LEN:
+            CHECK_CTX_INFO_AND_UINT32_LEN(ctx, valLen);
             *(int32_t *)val = ctx->info->pkLen;
             break;
         default:
@@ -358,7 +357,7 @@ int32_t PQCP_LAC2_GetPrvKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->info == NULL || param == NULL || ctx->sk == NULL) {
         return PQCP_NULL_INPUT;
     }
-    BSL_Param *prv = BSL_PARAM_FindParam(param, CRYPT_PARAM_POLAR_LAC_PRVKEY);
+    BSL_Param *prv = BSL_PARAM_FindParam(param, PQCP_PARAM_POLAR_LAC_PRVKEY);
     if (prv == NULL || prv->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -375,7 +374,7 @@ int32_t PQCP_LAC2_GetPubKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->info == NULL || param == NULL || ctx->pk == NULL) {
         return PQCP_NULL_INPUT;
     }
-    BSL_Param *pub = BSL_PARAM_FindParam(param, CRYPT_PARAM_POLAR_LAC_PUBKEY);
+    BSL_Param *pub = BSL_PARAM_FindParam(param, PQCP_PARAM_POLAR_LAC_PUBKEY);
     if (pub == NULL || pub->value == NULL) {
         return PQCP_NULL_INPUT;
     }

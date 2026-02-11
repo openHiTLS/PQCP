@@ -34,7 +34,7 @@ static PqcpTestResult TestScloudPlusKeygen(void)
 {
     /* 示例实现 */
     printf("执行scloud+密钥生成测试...\n");
-    CRYPT_EAL_PkeyCtx* ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx* ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
                                                           "provider=pqcp");
     if (ctx == NULL)
     {
@@ -59,11 +59,11 @@ static PqcpTestResult TestScloudPlusKeygen(void)
     uint8_t pubdata[37520/2];
     uint8_t prvdata[43808/2];
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
     BSL_Param prv[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
         BSL_PARAM_END
     };
     ret = CRYPT_EAL_PkeyGetPubEx(ctx, &pub);
@@ -97,13 +97,13 @@ static PqcpTestResult TestScloudPlus(void)
     uint8_t pubdata[37520/2];
     SCLOUDPLUS_Para tmpParm = {0};
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     ASSERT_TRUE(ctx != NULL, "create ctx failed.");
-    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     ASSERT_TRUE(deCtx != NULL, "create ctx failed.");
     ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_SCLOUDPLUS_KEY_BITS, &val, sizeof(val));
@@ -220,20 +220,20 @@ static PqcpTestResult TestPolarlac(void)
     // Polarlac参数结构 - 需要根据实际定义调整
     
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_POLAR_LAC_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_POLAR_LAC_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
     BSL_Param prv[2] = {
-        {CRYPT_PARAM_POLAR_LAC_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
+        {PQCP_PARAM_POLAR_LAC_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
         BSL_PARAM_END
     };
     // 创建加密封装上下文
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     ASSERT_TRUE(ctx != NULL, "create ctx failed.");
     
     // 创建解封装上下文
-    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     ASSERT_TRUE(deCtx != NULL, "create ctx failed.");
     
@@ -246,9 +246,9 @@ static PqcpTestResult TestPolarlac(void)
     ret = CRYPT_EAL_PkeyGen(ctx);
     ASSERT_EQ(ret, PQCP_POLAR_LAC_KEYINFO_NOT_SET, "gen key error code incorrect");
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &val, sizeof(val));
     ASSERT_EQ(ret, 0, "ctrl set key failed.");
-    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeyCtrl(deCtx, CRYPT_CTRL_SET_PARA_BY_ID, &val, sizeof(val));
     ASSERT_EQ(ret, 0, "ctrl set key failed.");
 
 

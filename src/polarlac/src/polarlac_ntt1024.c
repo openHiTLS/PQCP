@@ -166,7 +166,7 @@ const int32_t Mn_1024[1024] = {
     16826, 6940,  9460,  4156,  16595, 4095,  16578, 4524,  5542,  7610,  14198, 9285,  10468, 1489,  4367,  13407,
     13154, 7439,  4350,  13836, 6832,  6501,  5090,  10342, 14902, 1278,  839,   13525, 6801,  6199,  15940, 5444};
 
-void POLAR_LAC_NttLazy1024(int16_t *a)
+void PQCP_PQCP_POLAR_LAC_NttLazy1024(int16_t *a)
 {
     int32_t t; // Step size, distance between elements in butterfly operations
     int32_t m; // Current stage number in NTT
@@ -238,7 +238,7 @@ void POLAR_LAC_NttLazy1024(int16_t *a)
     }
 }
 
-void POLAR_LAC_InttLazy1024(int16_t *a)
+void PQCP_PQCP_POLAR_LAC_InttLazy1024(int16_t *a)
 {
     int32_t t; // Step size, starting from 1 and doubling at each stage
     int32_t m; // Current stage size in INTT

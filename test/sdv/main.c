@@ -144,7 +144,7 @@ int32_t main(int32_t argc, char *argv[])
     
     /* 初始化测试套件 */
     PQCP_InitKemTestSuite();
-    // PQCP_InitSignTestSuite();
+    PQCP_InitSignTestSuite();
     // PQCP_InitIntegrationTestSuite();
     
     /* 列出所有测试 */

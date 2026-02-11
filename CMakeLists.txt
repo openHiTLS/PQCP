@@ -41,13 +41,19 @@ set(POLAR_LAC_SRC
     src/polarlac/src/polarlac_polar.c
     src/polarlac/src/polarlac_rand.c
 )
+
+set(COMPOSITE_SIGN_SRC
+    src/composite_sign/src/crypt_composite_sign_encdec.c
+    src/composite_sign/src/crypt_composite_sign.c
+)
 # Set source files
 set(PROVIDER_SOURCES
     src/provider/pqcp_provider.c
-    src/provider/pqcp_kem.c
+    src/provider/pqcp_pkey.c
     src/scloudplus/src/scloudplus.c
     src/scloudplus/src/scloudplus_util.c
     ${POLAR_LAC_SRC}
+    ${COMPOSITE_SIGN_SRC}
 )
 
 
@@ -66,10 +72,31 @@ target_include_directories(pqcp_provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scloudplus/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/polarlac/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/composite_sign/include
         ${OPENHITLS_INCLUDE_DIRS}
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/bsl
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/bsl/err/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/config/macro_config
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/crypto/eal/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/crypto/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/bsl/sal/include
+)
+
+
+
+foreach(src ${PROVIDER_SOURCES})
+    get_filename_component(filename ${src} NAME)
+    set_source_files_properties(${src} PROPERTIES
+        COMPILE_DEFINITIONS "__FILENAME__=\"${filename}\""
+    )
+endforeach()
+
+target_compile_definitions(pqcp_provider PRIVATE
+    HITLS_CRYPTO_EAL
+    HITLS_CRYPTO_PKEY
+    HITLS_CRYPTO_MD
 )
 
 # 新增：目标链接目录
@@ -98,7 +125,7 @@ add_custom_target(clean-all
         *.bak
     COMMENT "Cleaning all build artifacts and temporary files"
 )
-
+set_target_properties(pqcp_provider PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # 可选：添加文档说明
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
     "*.log"

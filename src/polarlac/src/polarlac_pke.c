@@ -88,7 +88,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
     uint8_t code[codeLen]; // codeword sequence(each element stores 8 bits)
     memset_s(u, sizeof(u), 0, sizeof(u));
     memset_s(code, sizeof(code), 0, sizeof(code));
-    uint8_t *eccInfoNodes = NULL;
+    const int8_t *eccInfoNodes = NULL;
     switch (algId) {
         case PQCP_POLAR_LAC_LIGHT:
             eccInfoNodes = g_eccInfoNodesLight;
@@ -110,7 +110,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
             }
         }
     }
-    POLAR_LAC_EncodePolar(u, algId);
+    PQCP_POLAR_LAC_EncodePolar(u, algId);
 
     // Convert from bit array to byte array
     for (int32_t i = 0; i < codeLen; i++) {
@@ -131,7 +131,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
 }
 
 // key generation with seed
-int32_t POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
+int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
 {
     uint8_t *pk = ctx->pk;
     uint8_t *sk = ctx->sk;
@@ -149,14 +149,14 @@ int32_t POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
     uint8_t hPk[HASHLEN];
     uint8_t randBuf[seedLen * 3];
     int32_t ret = 0;
-    RETURN_RET_IF(POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
-    RETURN_RET_IF(POLAR_LAC_SamplePolyA(NULL, Q, randBuf, seedLen, a, dimN), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SamplePolyA(NULL, Q, randBuf, seedLen, a, dimN), ret);
     // Copy the seed to the first part of pk: pk = seed | as+e;
     memcpy_s(pk, pkLen, randBuf, seedLen);
     // generate random vector r
-    RETURN_RET_IF(POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, sk, dimN, algId), ret);
-    RETURN_RET_IF(POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen * 2, seedLen, e, dimN, algId), ret);
-    POLAR_LAC_PolyAff(a, sk, e, pk + seedLen, dimN, algId);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, sk, dimN, algId), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen * 2, seedLen, e, dimN, algId), ret);
+    PQCP_POLAR_LAC_PolyAff(a, sk, e, pk + seedLen, dimN, algId);
     // copy pk=as+e to the second part of sk, now sk=s|pk
     memcpy_s(sk + skLen - pkLen, pkLen, pk, pkLen);
     return PQCP_SUCCESS;
@@ -165,7 +165,7 @@ int32_t POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
 // key generation
 
 // encryption with seed
-int32_t POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
+int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
                              unsigned long long *clen, uint8_t *seed)
 {
     const uint8_t *pk = ctx->pk;
@@ -181,48 +181,48 @@ int32_t POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, u
     int32_t c2Len;
     int32_t ret = 0;
     // gen_a(a,pk);
-    RETURN_RET_IF(POLAR_LAC_SamplePolyA(NULL, Q, pk, seedLen, a, dimN), ret);
-    RETURN_RET_IF(POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
-    RETURN_RET_IF(POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf, seedLen, r, dimN, ctx->algId), ret);
-    RETURN_RET_IF(POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, e1, dimN, ctx->algId), ret);
-    RETURN_RET_IF(POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + 2 * seedLen, seedLen, e2, dimN, ctx->algId),
+    RETURN_RET_IF(PQCP_POLAR_LAC_SamplePolyA(NULL, Q, pk, seedLen, a, dimN), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf, seedLen, r, dimN, ctx->algId), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, e1, dimN, ctx->algId), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + 2 * seedLen, seedLen, e2, dimN, ctx->algId),
                   ret);
     EncodeToE2(e2, m, mlen, &c2Len, ctx->algId);
     if (ctx->algId == PQCP_POLAR_LAC_LIGHT) {
         uint8_t c1[dimN];
         // generate c1: c1=a*r+e1
-        POLAR_LAC_PolyAff(a, r, e1, c1, dimN, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(a, r, e1, c1, dimN, ctx->algId);
         // compress c1
-        POLAR_LAC_PolyCompress(c1, c, dimN, 7);
+        PQCP_POLAR_LAC_PolyCompress(c1, c, dimN, 7);
         // generate c2: c2=b*r+e2+m*[q/2]
-        POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
         // compress c2
-        POLAR_LAC_PolyCompress(c2, c + dimN * 7 / 8, c2Len, 4);
+        PQCP_POLAR_LAC_PolyCompress(c2, c + dimN * 7 / 8, c2Len, 4);
         *clen = dimN * 7 / 8 + c2Len / 2;
     } else if (ctx->algId == PQCP_POLAR_LAC_128) {
         uint8_t c1[dimN];
         // generate c1: c1=a*r+e1
-        POLAR_LAC_PolyAff(a, r, e1, c1, dimN, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(a, r, e1, c1, dimN, ctx->algId);
         // compress c1
-        POLAR_LAC_PolyCompress(c1, c, dimN, 7);
+        PQCP_POLAR_LAC_PolyCompress(c1, c, dimN, 7);
         // generate c2: c2=b*r+e2+m*[q/2]
-        POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
         // compress c2
-        POLAR_LAC_PolyCompress(c2, c + dimN * 7 / 8, c2Len, 3);
+        PQCP_POLAR_LAC_PolyCompress(c2, c + dimN * 7 / 8, c2Len, 3);
         *clen = dimN * 7 / 8 + c2Len * 3 / 8;
     } else if (ctx->algId == PQCP_POLAR_LAC_256) {
         // generate c1: c1=a*r+e1
-        POLAR_LAC_PolyAff(a, r, e1, c, dimN, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(a, r, e1, c, dimN, ctx->algId);
         // generate c2: c2=b*r+e2+m*[q/2]
-        POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyAff(pk + seedLen, r, e2, c2, c2Len, ctx->algId);
         // compress c2
-        POLAR_LAC_PolyCompress(c2, c + dimN, c2Len, 4);
+        PQCP_POLAR_LAC_PolyCompress(c2, c + dimN, c2Len, 4);
         *clen = dimN + c2Len / 2;
     }
     return PQCP_SUCCESS;
 }
 
-int32_t POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
+int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
                              unsigned long long *mlen)
 {
     uint8_t *sk = ctx->sk;
@@ -245,26 +245,26 @@ int32_t POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, u
         uint8_t c1[dimN];
         c2Len = (clen - dimN * 7 / 8) * 2;
         // c1 decompress
-        POLAR_LAC_PolyDecompress(c, c1, dimN, 7);
+        PQCP_POLAR_LAC_PolyDecompress(c, c1, dimN, 7);
         // c2 decompress
-        POLAR_LAC_PolyDecompress(c + dimN * 7 / 8, c2, c2Len, 4);
+        PQCP_POLAR_LAC_PolyDecompress(c + dimN * 7 / 8, c2, c2Len, 4);
         // c1*sk
-        POLAR_LAC_PolyMul(c1, sk, out, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyMul(c1, sk, out, c2Len, ctx->algId);
     } else if (ctx->algId == PQCP_POLAR_LAC_128) {
         uint8_t c1[dimN];
         c2Len = (clen - dimN * 7 / 8) / 3 * 8;
         // c1 decompress
-        POLAR_LAC_PolyDecompress(c, c1, dimN, 7);
+        PQCP_POLAR_LAC_PolyDecompress(c, c1, dimN, 7);
         // c2 decompress
-        POLAR_LAC_PolyDecompress(c + dimN * 7 / 8, c2, c2Len, 3);
+        PQCP_POLAR_LAC_PolyDecompress(c + dimN * 7 / 8, c2, c2Len, 3);
         // c1*sk
-        POLAR_LAC_PolyMul(c1, sk, out, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyMul(c1, sk, out, c2Len, ctx->algId);
     } else {
         c2Len = (clen - dimN) * 2;
         // c2 decompress
-        POLAR_LAC_PolyDecompress(c + dimN, c2, c2Len, 4);
+        PQCP_POLAR_LAC_PolyDecompress(c + dimN, c2, c2Len, 4);
         // c1*sk
-        POLAR_LAC_PolyMul(c, sk, out, c2Len, ctx->algId);
+        PQCP_POLAR_LAC_PolyMul(c, sk, out, c2Len, ctx->algId);
     }
 
     uint32_t dataLen = ctx->algId == PQCP_POLAR_LAC_256 ? 32 : 16;
@@ -283,7 +283,7 @@ int32_t POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, u
     }
 
     // polar decode to recover m
-    POLAR_LAC_DecodePolar(mCap, llr, ctx->algId);
+    PQCP_POLAR_LAC_DecodePolar(mCap, llr, ctx->algId);
     // each element stores 1 binary value -> each element stores 8 binary values
     memset_s(mBuf, msgLen, 0, msgLen);
     for (int32_t i = 0; i < msgLen; i++) {

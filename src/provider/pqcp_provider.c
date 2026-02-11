@@ -29,14 +29,20 @@ typedef struct {
 
 
 static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
-    {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKeyMgmtScloudPlus, PQCP_PROVIDER_NAME},
-    {CRYPT_PKEY_POLAR_LAC, g_pqcpKeyMgmtPolarLac, PQCP_PROVIDER_NAME},
+    {PQCP_PKEY_SCLOUDPLUS, g_pqcpKeyMgmtScloudPlus, PQCP_PROVIDER_NAME},
+    {PQCP_PKEY_POLAR_LAC, g_pqcpKeyMgmtPolarLac, PQCP_PROVIDER_NAME},
+    {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpKeyMgmtCompositeSign, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
 
 static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
-    {CRYPT_PKEY_SCLOUDPLUS, g_pqcpKemScloudPlus, PQCP_PROVIDER_NAME},
-    {CRYPT_PKEY_POLAR_LAC, g_pqcpKemPolarLac, PQCP_PROVIDER_NAME},
+    {PQCP_PKEY_SCLOUDPLUS, g_pqcpKemScloudPlus, PQCP_PROVIDER_NAME},
+    {PQCP_PKEY_POLAR_LAC, g_pqcpKemPolarLac, PQCP_PROVIDER_NAME},
+    CRYPT_EAL_ALGINFO_END
+};
+
+static CRYPT_EAL_AlgInfo g_pqcpKeySign[] = {
+    {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpCompositeSign, PQCP_PROVIDER_NAME},
     CRYPT_EAL_ALGINFO_END
 };
 
@@ -54,6 +60,8 @@ static int32_t PQCP_ProviderQuery(void *provCtx, int32_t operaId, CRYPT_EAL_AlgI
             *algInfos = g_pqcpKeyKem;
             break;
         case CRYPT_EAL_OPERAID_SIGN:
+            *algInfos = g_pqcpKeySign;
+            break;
         default:
             return CRYPT_NOT_SUPPORT;
     }

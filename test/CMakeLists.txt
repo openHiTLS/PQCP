@@ -89,6 +89,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/bsl
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/crypto
     ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/include
+    ${CMAKE_SOURCE_DIR}/../src/hybrid_env/include
+    ${CMAKE_SOURCE_DIR}/../src/hybrid_env/src
+    ${CMAKE_SOURCE_DIR}/../src/composite_sign/include
+    ${CMAKE_SOURCE_DIR}/../src/composite_sign/src
 )
 
 # 添加公共测试框架源文件

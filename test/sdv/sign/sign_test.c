@@ -18,37 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pqcp_test.h"
+#include "sign_test.h"
 
-/* 签名测试用例 */
-
-static PqcpTestResult TestDsaKeygen(void)
-{
-    /* 示例实现 */
-    printf("DSA密钥生成测试...\n");
-    
-    /* 模拟测试通过 */
-    return PQCP_TEST_SUCCESS;
-}
-
-static PqcpTestResult TestDsaSign(void)
-{
-    
-    /* 示例实现 */
-    printf("DSA签名测试...\n");
-    
-    /* 模拟测试通过 */
-    return PQCP_TEST_SUCCESS;
-}
-
-static PqcpTestResult TestDsaVerify(void)
-{
-    
-    /* 示例实现 */
-    printf("DSA验证测试...\n");
-    
-    /* 模拟测试通过 */
-    return PQCP_TEST_SUCCESS;
-}
 
 /* 初始化签名测试套件 */
 int32_t PQCP_InitSignTestSuite(void)
@@ -58,12 +29,23 @@ int32_t PQCP_InitSignTestSuite(void)
     if (suite == NULL) {
         return -1;
     }
-    
-    /* 添加pqc-dsa测试用例 */
-    PQCP_TestAddCase(suite, "dsa_keygen", "DSA密钥生成测试", TestDsaKeygen);
-    PQCP_TestAddCase(suite, "dsa_sign", "DSA签名测试", TestDsaSign);
-    PQCP_TestAddCase(suite, "dsa_verify", "DSA验证测试", TestDsaVerify);
-    
+    /* Composite Sign API Tests */
+    PQCP_TestAddCase(suite, "CompositeSign KeyGen Normal", "composite_sign key generation", TestCompositeKeyGenNormal);
+    PQCP_TestAddCase(suite, "CompositeSign Get PrvKey", "composite_sign get private key", TestCompositeGetPrvKey);
+    PQCP_TestAddCase(suite, "CompositeSign Get PubKey", "composite_sign get public key", TestCompositeGetPubKey);
+    PQCP_TestAddCase(suite, "CompositeSign Set PrvKey", "composite_sign set private key", TestCompositeSetPrvKey);
+    PQCP_TestAddCase(suite, "CompositeSign Set PubKey", "composite_sign set public key", TestCompositeSetPubKey);
+    PQCP_TestAddCase(suite, "CompositeSign Sign Verify", "composite_sign sign and verify", TestCompositeSignVerify);
+    PQCP_TestAddCase(suite, "CompositeSign Err NullCtx", "composite_sign error handling", TestCompositeErrNullCtx);
+    PQCP_TestAddCase(suite, "CompositeSign Err AlgNotSet", "composite_sign error handling", TestCompositeErrAlgNotSet);
+    PQCP_TestAddCase(suite, "CompositeSign Err InvalidParams", "composite_sign error handling", TestCompositeErrInvalidParams);
+    PQCP_TestAddCase(suite, "CompositeSign Err BufferTooSmall", "composite_sign error handling", TestCompositeErrBufferTooSmall);
+    PQCP_TestAddCase(suite, "CompositeSign Err InvalidAlgId", "composite_sign error handling", TestCompositeErrInvalidAlgId);
+    PQCP_TestAddCase(suite, "CompositeSign GetSignLen", "composite_sign get signature length", TestCompositeGetSignLen);
+    PQCP_TestAddCase(suite, "CompositeSign DupCtx", "composite_sign duplicate context", TestCompositeDupCtx);
+    PQCP_TestAddCase(suite, "CompositeSign KeyEx", "composite_sign Ex versions of Set/Get", TestCompositeKeyEx);
+    PQCP_TestAddCase(suite, "CompositeSign GetSeparateKeyLen", "composite_sign get separate key length", TestCompositeGetSeparateKeyLen);
+    PQCP_TestAddCase(suite, "CompositeSign GetSeparateSignLen", "composite_sign get separate sign length", TestCompositeGetSeparateSignLen);
     /* 添加测试套件到测试框架 */
     return PQCP_TestAddSuite(suite);
 } 

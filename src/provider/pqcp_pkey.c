@@ -15,27 +15,31 @@
 
 #include "scloudplus.h"
 #include "crypt_polarlac.h"
+#include "crypt_composite_sign.h"
 #include "pqcp_provider.h"
 #include "crypt_eal_provider.h"
 #include "crypt_eal_implprovider.h"
 #include "crypt_errno.h"
+
 
 void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 {
     (void) provCtx;
     void *pkeyCtx = NULL;
     switch (algId) {
-        case CRYPT_PKEY_SCLOUDPLUS:
+        case PQCP_PKEY_SCLOUDPLUS:
             pkeyCtx = PQCP_SCLOUDPLUS_NewCtx();
             break;
-        case CRYPT_PKEY_POLAR_LAC:
+        case PQCP_PKEY_POLAR_LAC:
             pkeyCtx = PQCP_LAC2_NewCtx();
+            break;
+        case PQCP_PKEY_COMPOSITE_SIGN:
+            pkeyCtx = CRYPT_COMPOSITE_NewCtx();
             break;
         default:
             break;
     }
     if (pkeyCtx == NULL) {
-        // BSL_ERR_PUSH_ERROR(CRYPT_PROVIDER_NOT_SUPPORT);
         return NULL;
     }
     return pkeyCtx;
@@ -84,5 +88,25 @@ const CRYPT_EAL_Func g_pqcpKemPolarLac[] = {
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE_INIT, (CRYPT_EAL_ImplPkeyDecapsInit)PQCP_LAC2_DecapsInit},
     {CRYPT_EAL_IMPLPKEYKEM_ENCAPSULATE, (CRYPT_EAL_ImplPkeyKemEncapsulate)PQCP_LAC2_Encaps},
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE, (CRYPT_EAL_ImplPkeyKemDecapsulate)PQCP_LAC2_Decaps},
+    CRYPT_EAL_FUNC_END,
+};
+
+
+const CRYPT_EAL_Func g_pqcpKeyMgmtCompositeSign[] = {
+    {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)CRYPT_COMPOSITE_GenKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPRV, (CRYPT_EAL_ImplPkeyMgmtSetPrv)CRYPT_COMPOSITE_SetPrvKeyEx},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPUB, (CRYPT_EAL_ImplPkeyMgmtSetPub)CRYPT_COMPOSITE_SetPubKeyEx},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPRV, (CRYPT_EAL_ImplPkeyMgmtGetPrv)CRYPT_COMPOSITE_GetPrvKeyEx},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPUB, (CRYPT_EAL_ImplPkeyMgmtGetPub)CRYPT_COMPOSITE_GetPubKeyEx},
+    {CRYPT_EAL_IMPLPKEYMGMT_DUPCTX, (CRYPT_EAL_ImplPkeyMgmtDupCtx)CRYPT_COMPOSITE_DupCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_CTRL, (CRYPT_EAL_ImplPkeyMgmtCtrl)CRYPT_COMPOSITE_Ctrl},
+    {CRYPT_EAL_IMPLPKEYMGMT_FREECTX, (CRYPT_EAL_ImplPkeyMgmtFreeCtx)CRYPT_COMPOSITE_FreeCtx},
+    CRYPT_EAL_FUNC_END,
+};
+
+const CRYPT_EAL_Func g_pqcpCompositeSign[] = {
+    {CRYPT_EAL_IMPLPKEYSIGN_SIGN, (CRYPT_EAL_ImplPkeySign)CRYPT_COMPOSITE_Sign},
+    {CRYPT_EAL_IMPLPKEYSIGN_VERIFY, (CRYPT_EAL_ImplPkeyVerify)CRYPT_COMPOSITE_Verify},
     CRYPT_EAL_FUNC_END,
 };

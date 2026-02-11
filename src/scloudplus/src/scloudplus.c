@@ -18,7 +18,7 @@
 #include "bsl_sal.h"
 #include "crypt_eal_md.h"
 #include "crypt_eal_rand.h" // 随机数头文件
-#include "../../../platform/Secure_C/include/securec.h"
+#include "securec.h"
 #include "pqcp_err.h"
 #include "pqcp_types.h"
 #include "scloudplus_local.h"
@@ -296,7 +296,7 @@ int32_t PQCP_SCLOUDPLUS_SetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->para == NULL || param == NULL) {
         return PQCP_NULL_INPUT;
     }
-    const BSL_Param *prv = BSL_PARAM_FindConstParam(param, CRYPT_PARAM_SCLOUDPLUS_PRVKEY);
+    const BSL_Param *prv = BSL_PARAM_FindConstParam(param, PQCP_PARAM_SCLOUDPLUS_PRVKEY);
     if (prv == NULL || prv->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -320,7 +320,7 @@ int32_t PQCP_SCLOUDPLUS_SetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->para == NULL || param == NULL) {
         return PQCP_NULL_INPUT;
     }
-    const BSL_Param *pub = BSL_PARAM_FindConstParam(param, CRYPT_PARAM_SCLOUDPLUS_PUBKEY);
+    const BSL_Param *pub = BSL_PARAM_FindConstParam(param, PQCP_PARAM_SCLOUDPLUS_PUBKEY);
     if (pub == NULL || pub->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -344,7 +344,7 @@ int32_t PQCP_SCLOUDPLUS_GetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->para == NULL || param == NULL) {
         return PQCP_NULL_INPUT;
     }
-    BSL_Param *prv = BSL_PARAM_FindParam(param, CRYPT_PARAM_SCLOUDPLUS_PRVKEY);
+    BSL_Param *prv = BSL_PARAM_FindParam(param, PQCP_PARAM_SCLOUDPLUS_PRVKEY);
     if (prv == NULL || prv->value == NULL) {
         return PQCP_NULL_INPUT;
     }
@@ -365,7 +365,7 @@ int32_t PQCP_SCLOUDPLUS_GetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     if (ctx == NULL || ctx->para == NULL || param == NULL) {
         return PQCP_NULL_INPUT;
     }
-    BSL_Param *pub = BSL_PARAM_FindParam(param, CRYPT_PARAM_SCLOUDPLUS_PUBKEY);
+    BSL_Param *pub = BSL_PARAM_FindParam(param, PQCP_PARAM_SCLOUDPLUS_PUBKEY);
     if (pub == NULL || pub->value == NULL) {
         return PQCP_NULL_INPUT;
     }

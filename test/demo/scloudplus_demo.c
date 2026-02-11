@@ -68,16 +68,16 @@ static int32_t ScloudplusDemo(void)
     int32_t val = 256;
     uint8_t pubdata[37520/2];
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     if (ctx == NULL) {
         printf("create ctx failed.\n");
         goto EXIT;
     }
-    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     if (deCtx == NULL) {
         printf("create ctx failed.\n");

@@ -24,7 +24,7 @@
 #define POLAR_LAC_256_DIM 1024
 #define POLAR_LAC_LIGHT_128_DIM 512
 
-static void POLAR_LAC_PolyMulNttLazy(const uint16_t *a, const uint16_t *s, uint16_t *b)
+static void PQCP_POLAR_LAC_PolyMulNttLazy(const uint16_t *a, const uint16_t *s, uint16_t *b)
 {
     int32_t i;
     int16_t aBuf[POLAR_LAC_LIGHT_128_DIM], sBuf[POLAR_LAC_LIGHT_128_DIM], bBuf[POLAR_LAC_LIGHT_128_DIM];
@@ -35,8 +35,8 @@ static void POLAR_LAC_PolyMulNttLazy(const uint16_t *a, const uint16_t *s, uint1
     }
 
     // NTT form
-    POLAR_LAC_NttLazy(aBuf);
-    POLAR_LAC_NttLazy(sBuf);
+    PQCP_POLAR_LAC_NttLazy(aBuf);
+    PQCP_POLAR_LAC_NttLazy(sBuf);
 
     // point mul
     for (i = 0; i < POLAR_LAC_LIGHT_128_DIM; i++) {
@@ -46,7 +46,7 @@ static void POLAR_LAC_PolyMulNttLazy(const uint16_t *a, const uint16_t *s, uint1
     }
 
     // INTT form
-    POLAR_LAC_InttLazy(bBuf);
+    PQCP_POLAR_LAC_InttLazy(bBuf);
 
     // mod Q
     for (i = 0; i < POLAR_LAC_LIGHT_128_DIM; i++) {
@@ -54,7 +54,7 @@ static void POLAR_LAC_PolyMulNttLazy(const uint16_t *a, const uint16_t *s, uint1
     }
 }
 
-static void POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t *s, uint16_t *b)
+static void PQCP_POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t *s, uint16_t *b)
 {
     int32_t i;
     int16_t aBuf[POLAR_LAC_256_DIM], sBuf[POLAR_LAC_256_DIM], bBuf[POLAR_LAC_256_DIM];
@@ -65,8 +65,8 @@ static void POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t *s, u
     }
 
     // NTT form
-    POLAR_LAC_NttLazy1024(aBuf);
-    POLAR_LAC_NttLazy1024(sBuf);
+    PQCP_PQCP_POLAR_LAC_NttLazy1024(aBuf);
+    PQCP_PQCP_POLAR_LAC_NttLazy1024(sBuf);
 
     // point mul
     for (i = 0; i < POLAR_LAC_256_DIM; i++) {
@@ -74,7 +74,7 @@ static void POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t *s, u
     }
 
     // INTT form
-    POLAR_LAC_InttLazy1024(bBuf);
+    PQCP_PQCP_POLAR_LAC_InttLazy1024(bBuf);
 
     // mod Q
     for (i = 0; i < POLAR_LAC_256_DIM; i++) {
@@ -82,7 +82,7 @@ static void POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t *s, u
     }
 }
 // b=as using compact lift multiplication with constant time.
-void POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t vecNum, int32_t algId)
+void PQCP_POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t vecNum, int32_t algId)
 {
     int32_t i;
     uint32_t dimN = algId == PQCP_POLAR_LAC_256 ? 1024 : 512;
@@ -105,9 +105,9 @@ void POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t 
         s2[i] = (s1 & (-mask)) | (s2Tmp & (~(-mask)));
     }
     if (algId == PQCP_POLAR_LAC_128 || algId == PQCP_POLAR_LAC_LIGHT) {
-        POLAR_LAC_PolyMulNttLazy(a2, s2, b2);
+        PQCP_POLAR_LAC_PolyMulNttLazy(a2, s2, b2);
     } else {
-        POLAR_LAC_PolyMulNttLazy1024(a2, s2, b2);
+        PQCP_POLAR_LAC_PolyMulNttLazy1024(a2, s2, b2);
     }
     // step 3: map back to the original ring with Q as the modulus
     for (i = 0; i < vecNum; i++) {
@@ -120,7 +120,7 @@ void POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t 
 }
 
 // b=as+e using compact lift multiplication with constant time.
-void POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *b, uint32_t vecNum, int32_t algId)
+void PQCP_POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *b, uint32_t vecNum, int32_t algId)
 {
     int32_t i;
     uint32_t dimN = algId == PQCP_POLAR_LAC_256 ? 1024 : 512;
@@ -142,9 +142,9 @@ void POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *
         s2[i] = (s1 & (-mask)) | (s2Tmp & (~(-mask)));
     }
     if (algId == PQCP_POLAR_LAC_LIGHT || algId == PQCP_POLAR_LAC_128) {
-        POLAR_LAC_PolyMulNttLazy(a2, s2, b2);
+        PQCP_POLAR_LAC_PolyMulNttLazy(a2, s2, b2);
     } else {
-        POLAR_LAC_PolyMulNttLazy1024(a2, s2, b2);
+        PQCP_POLAR_LAC_PolyMulNttLazy1024(a2, s2, b2);
     }
 
     for (i = 0; i < vecNum; i++) {
@@ -255,7 +255,7 @@ static void PolarLacPolyDecompressC2FiveBit(const uint8_t *in, uint8_t *out, con
     }
 }
 
-int32_t POLAR_LAC_PolyCompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits)
+int32_t PQCP_POLAR_LAC_PolyCompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits)
 {
     switch (bits) {
         case 7:
@@ -273,7 +273,7 @@ int32_t POLAR_LAC_PolyCompress(const uint8_t *in, uint8_t *out, const uint32_t v
     return PQCP_SUCCESS;
 }
 
-int32_t POLAR_LAC_PolyDecompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits)
+int32_t PQCP_POLAR_LAC_PolyDecompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits)
 {
     switch (bits) {
         case 7:

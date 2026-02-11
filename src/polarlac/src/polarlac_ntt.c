@@ -107,7 +107,7 @@ static int16_t Mn[512] = {
  * @return Returns an integer status code. Typically, 0 indicates success,
  *         while other values may indicate errors or specific conditions.
  */
-void POLAR_LAC_NttLazy(int16_t *a)
+void PQCP_POLAR_LAC_NttLazy(int16_t *a)
 {
     int32_t t; // Step size, distance between elements in butterfly operations
     int32_t m; // Current stage number in NTT
@@ -216,7 +216,7 @@ void POLAR_LAC_NttLazy(int16_t *a)
  * So modular reduction must be performed explicitly at each layer of the inverse transform.
  *
  */
-void POLAR_LAC_InttLazy(int16_t *a)
+void PQCP_POLAR_LAC_InttLazy(int16_t *a)
 {
     int32_t t; // Step size, starting from 1 and doubling at each stage
     int32_t m; // Current stage size in INTT
@@ -255,7 +255,7 @@ void POLAR_LAC_InttLazy(int16_t *a)
 
     // Multiply each coefficient by the scaling factor N^(-1)*β mod NTTQ
     // The β is used to emliminate the Montgomery factor introduced in the point-mul stage in the fucntion
-    // POLAR_LAC_PolyMulNttLazy
+    // PQCP_POLAR_LAC_PolyMulNttLazy
     for (i = 0; i < POLAR_LAC_LIGHT_128_DIM; i++) {
         a[i] = (a[i] * INVERSE_N_BETA) % NTTQ;
     }

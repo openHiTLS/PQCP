@@ -84,39 +84,39 @@ static inline int32_t MontgomeryMapFull(int32_t a)
 }
 
 // Polar encode and decode functions
-void POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId);
-void POLAR_LAC_DecodePolar(uint8_t *mCap, const float *llr, int32_t algId);
+void PQCP_POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId);
+void PQCP_POLAR_LAC_DecodePolar(uint8_t *mCap, const float *llr, int32_t algId);
 
 // Poly functions
-// POLAR_LAC_PolyMul  b=[as]
-void POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t vecNum, int32_t algId);
-// POLAR_LAC_PolyAff  b=as+e
-void POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *b, uint32_t vecNum, int32_t algId);
-int32_t POLAR_LAC_PolyCompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits);
-int32_t POLAR_LAC_PolyDecompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits);
+// PQCP_POLAR_LAC_PolyMul  b=[as]
+void PQCP_POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t vecNum, int32_t algId);
+// PQCP_POLAR_LAC_PolyAff  b=as+e
+void PQCP_POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *b, uint32_t vecNum, int32_t algId);
+int32_t PQCP_POLAR_LAC_PolyCompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits);
+int32_t PQCP_POLAR_LAC_PolyDecompress(const uint8_t *in, uint8_t *out, const uint32_t vecNum, const uint32_t bits);
 
 // NTT functions
-void POLAR_LAC_NttLazy1024(int16_t *a);
-void POLAR_LAC_InttLazy1024(int16_t *a);
-void POLAR_LAC_NttLazy(int16_t *a);
-void POLAR_LAC_InttLazy(int16_t *a);
+void PQCP_PQCP_POLAR_LAC_NttLazy1024(int16_t *a);
+void PQCP_PQCP_POLAR_LAC_InttLazy1024(int16_t *a);
+void PQCP_POLAR_LAC_NttLazy(int16_t *a);
+void PQCP_POLAR_LAC_InttLazy(int16_t *a);
 
 // KEM functions
-int32_t POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx);
-int32_t POLAR_LAC_EncapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ct, uint8_t *ss);
-int32_t POLAR_LAC_DeapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ss, const uint8_t *ct);
+int32_t PQCP_POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx);
+int32_t PQCP_POLAR_LAC_EncapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ct, uint8_t *ss);
+int32_t PQCP_POLAR_LAC_DeapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ss, const uint8_t *ct);
 
 // PKE functions
-int32_t POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
+int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
                              unsigned long long *clen, uint8_t *seed);
-int32_t POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
+int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
                              unsigned long long *mlen);
-int32_t POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed);
+int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed);
 
 // Sampling functions
-int32_t POLAR_LAC_PseudoRandomBytes(void *libCtx, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen);
-int32_t POLAR_LAC_SamplePolyA(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *out,
+int32_t PQCP_POLAR_LAC_PseudoRandomBytes(void *libCtx, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen);
+int32_t PQCP_POLAR_LAC_SamplePolyA(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *out,
                               uint32_t outLen);
-int32_t POLAR_LAC_SampleSparseTernaryVector(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *e,
+int32_t PQCP_POLAR_LAC_SampleSparseTernaryVector(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *e,
                                             uint32_t eLen, int32_t algId);
 #endif

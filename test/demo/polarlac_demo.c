@@ -40,14 +40,14 @@ static int32_t PolarLacDemo(void)
     }
 
     // new ctx
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
                                                           "provider=pqcp");
     if (ctx == NULL)
     {
         printf("create ctx failed.\n");
         goto EXIT;
     }
-    CRYPT_EAL_PkeyCtx *deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
+    CRYPT_EAL_PkeyCtx *deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_POLAR_LAC, CRYPT_EAL_PKEY_KEM_OPERATE,
                                                             "provider=pqcp");
     if (deCtx == NULL)
     {
@@ -55,14 +55,14 @@ static int32_t PolarLacDemo(void)
         goto EXIT;
     }
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeySetParaById(ctx, val);
     if (ret != CRYPT_SUCCESS)
     {
-        printf("ctrl param failed.\n");
+        printf("ctrl set parr by id failed.\n");
         goto EXIT;
     }
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_GET_CIPHER_LEN, &cipherLen, sizeof(cipherLen));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_CIPHERTEXT_LEN, &cipherLen, sizeof(cipherLen));
 
     if (ret != CRYPT_SUCCESS)
     {
@@ -76,7 +76,7 @@ static int32_t PolarLacDemo(void)
         printf("Malloc cipher failed \n");
         goto EXIT;
     }
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_GET_PUBKEY_LEN, &pkLen, sizeof(pkLen));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_PUBKEY_LEN, &pkLen, sizeof(pkLen));
     if (ret != CRYPT_SUCCESS)
     {
         printf("ctrl get pk len failed.\n");
@@ -87,7 +87,7 @@ static int32_t PolarLacDemo(void)
         printf("Malloc pk failed \n");
         goto EXIT;
     }
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_POLAR_LAC_GET_PRVKEY_LEN, &skLen, sizeof(skLen));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_PRVKEY_LEN, &skLen, sizeof(skLen));
     if (ret != CRYPT_SUCCESS)
     {
         printf("ctrl get sk len failed.\n");
@@ -100,13 +100,13 @@ static int32_t PolarLacDemo(void)
     }
 
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_POLAR_LAC_PUBKEY, BSL_PARAM_TYPE_OCTETS, pk, pkLen, 0},
+        {PQCP_PARAM_POLAR_LAC_PUBKEY, BSL_PARAM_TYPE_OCTETS, pk, pkLen, 0},
         BSL_PARAM_END};
     BSL_Param prv[2] = {
-        {CRYPT_PARAM_POLAR_LAC_PRVKEY, BSL_PARAM_TYPE_OCTETS, sk, skLen, 0},
+        {PQCP_PARAM_POLAR_LAC_PRVKEY, BSL_PARAM_TYPE_OCTETS, sk, skLen, 0},
         BSL_PARAM_END};
 
-    ret = CRYPT_EAL_PkeyCtrl(deCtx, PQCP_POLAR_LAC_SET_PARAMS_BY_ID, &val, sizeof(val));
+    ret = CRYPT_EAL_PkeySetParaById(deCtx, val);
     if (ret != CRYPT_SUCCESS)
     {
         printf("ctrl param failed.\n");
@@ -125,7 +125,7 @@ static int32_t PolarLacDemo(void)
     ret = CRYPT_EAL_PkeyGetPubEx(ctx, &pub);
     if (ret != CRYPT_SUCCESS)
     {
-        printf("get pk failed.\n");
+        printf("get pk failed\n");
         goto EXIT;
     }
 

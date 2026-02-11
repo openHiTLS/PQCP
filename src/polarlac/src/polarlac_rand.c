@@ -35,7 +35,7 @@ typedef struct EAL_MdMethod EAL_MdMethod;
 #define SEC_256_HAMMING_WEIGHT_UPPER 270
 #define SEC_256_HAMMING_WEIGHT_LOWER 242
 
-int32_t POLAR_LAC_PseudoRandomBytes(void *libCtx, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
+int32_t PQCP_POLAR_LAC_PseudoRandomBytes(void *libCtx, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
 {
     (void)libCtx;
     uint32_t len = outLen;
@@ -64,7 +64,7 @@ EXIT:
     return ret;
 }
 
-int32_t POLAR_LAC_SamplePolyA(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
+int32_t PQCP_POLAR_LAC_SamplePolyA(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
 {
     uint8_t buf[SHAKE256_RATE];
     uint32_t index = 0;
@@ -241,7 +241,7 @@ static int32_t SampleSparseTernaryVector256(void *mdCtx, uint8_t q, const uint8_
     return 0;
 }
 
-int32_t POLAR_LAC_SampleSparseTernaryVector(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *e,
+int32_t PQCP_POLAR_LAC_SampleSparseTernaryVector(void *libCtx, uint8_t q, const uint8_t *in, uint32_t inLen, uint8_t *e,
                                             uint32_t eLen, int32_t algId)
 {
     uint32_t len = eLen / 2;

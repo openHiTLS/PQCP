@@ -236,11 +236,11 @@ int32_t TestGen(CRYPT_EAL_PkeyCtx *ctx, PQCP_SCLOUDPLUS_TestVector *tv)
         return ret;
     }
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
     BSL_Param prv[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvdata, sizeof(prvdata), 0},
         BSL_PARAM_END
     };
     ret = CRYPT_EAL_PkeyGetPrvEx(ctx, &prv);
@@ -266,7 +266,7 @@ int32_t TestGen(CRYPT_EAL_PkeyCtx *ctx, PQCP_SCLOUDPLUS_TestVector *tv)
 
 CRYPT_EAL_PkeyCtx *TestEncapsCtx(CRYPT_EAL_PkeyCtx *ctx, PQCP_SCLOUDPLUS_TestVector *tv)
 {
-    CRYPT_EAL_PkeyCtx *deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, 
+    CRYPT_EAL_PkeyCtx *deCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, 
         CRYPT_EAL_PKEY_KEM_OPERATE, "provider=pqcp");
     if (deCtx == NULL) {
         printf("密钥生成失败\n");
@@ -281,7 +281,7 @@ CRYPT_EAL_PkeyCtx *TestEncapsCtx(CRYPT_EAL_PkeyCtx *ctx, PQCP_SCLOUDPLUS_TestVec
     }
     uint8_t pubdata[37520/2];
     BSL_Param pub[2] = {
-        {CRYPT_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
+        {PQCP_PARAM_SCLOUDPLUS_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END
     };
 
@@ -328,7 +328,7 @@ PqcpTestResult TestScloudPlusEncapsDecaps(const char *data_path)
     if (cipher == NULL) {
         return PQCP_TEST_FAILURE;
     }
-    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, CRYPT_PKEY_SCLOUDPLUS, 
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, 
                                                         CRYPT_EAL_PKEY_KEM_OPERATE, "provider=pqcp");
     if (ctx == NULL) {
         printf("创建句柄失败\n");
