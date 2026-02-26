@@ -16,6 +16,8 @@ project(pqcp_provider C)
 
 # 新增：自定义库路径变量
 set(PQCP_LIB_DIR "" CACHE PATH "Custom library search path")
+set(PQCP_LIB_TYPE "SHARED" CACHE STRING "Library type (SHARED or STATIC)")
+set(HITLS_ROOT_PATH "" CACHE PATH "Custom HiTLS root directory")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -56,14 +58,13 @@ set(PROVIDER_SOURCES
     ${COMPOSITE_SIGN_SRC}
 )
 
-
 # 添加链接目录
 if(PQCP_LIB_DIR)
     link_directories(${PQCP_LIB_DIR})
 endif()
 
 # Create shared library
-add_library(pqcp_provider SHARED ${PROVIDER_SOURCES})
+add_library(pqcp_provider ${PQCP_LIB_TYPE} ${PROVIDER_SOURCES})
 
 target_include_directories(pqcp_provider
     PUBLIC
@@ -74,17 +75,16 @@ target_include_directories(pqcp_provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/polarlac/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/composite_sign/include
         ${OPENHITLS_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/crypto
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/include/bsl
+        ${HITLS_ROOT_PATH}/include/crypto
+        ${HITLS_ROOT_PATH}/include/bsl
         ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/bsl/err/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/config/macro_config
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/crypto/eal/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/crypto/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/bsl/sal/include
+        ${HITLS_ROOT_PATH}/bsl/err/include
+        ${HITLS_ROOT_PATH}/config/macro_config
+        ${HITLS_ROOT_PATH}/conf/macro_config
+        ${HITLS_ROOT_PATH}/crypto/eal/src
+        ${HITLS_ROOT_PATH}/crypto/include
+        ${HITLS_ROOT_PATH}/bsl/sal/include
 )
-
-
 
 foreach(src ${PROVIDER_SOURCES})
     get_filename_component(filename ${src} NAME)
@@ -97,17 +97,19 @@ target_compile_definitions(pqcp_provider PRIVATE
     HITLS_CRYPTO_EAL
     HITLS_CRYPTO_PKEY
     HITLS_CRYPTO_MD
+    HITLS_NO_CONFIG_CHECK
 )
 
 # 新增：目标链接目录
 target_link_directories(pqcp_provider PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/build
+    ${HITLS_ROOT_PATH}/build
     ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/lib
 )
 
 message(STATUS "hitls_crypto: ${HITLS_CRYPTO_LIB}")
 message(STATUS "hitls_bsl: ${HITLS_BSL_LIB}")
 message(STATUS "boundscheck: ${SECUREC_LIB}")
+message(STATUS "HITLS_ROOT_PATH: ${HITLS_ROOT_PATH}")
 
 target_link_libraries(pqcp_provider
     hitls_bsl
