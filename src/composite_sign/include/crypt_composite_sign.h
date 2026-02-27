@@ -57,10 +57,6 @@ int32_t CRYPT_COMPOSITE_Sign(CRYPT_CompositeCtx *ctx, int32_t hashId, const uint
 int32_t CRYPT_COMPOSITE_Verify(CRYPT_CompositeCtx *ctx, int32_t hashId, const uint8_t *data,
     uint32_t dataLen, uint8_t *sign, uint32_t signLen);
 
-#ifdef HITLS_CRYPTO_COMPOSITE_CHECK
-int32_t CRYPT_COMPOSITE_Check(uint32_t checkType, const CRYPT_CompositeCtx *pkey1, const CRYPT_CompositeCtx *pkey2);
-#endif 
-
 #ifdef __cplusplus
 }
 #endif
