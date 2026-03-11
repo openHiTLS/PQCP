@@ -15,11 +15,12 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
+#ifdef PQCP_POLARLAC
+#include <string.h>
 
 #include "bsl_sal.h"
 #include "polarlac_local.h"
 #include "pqcp_err.h"
-#include <string.h>
 
 #define POLAR_LAC_256_DIM 1024
 #define POLAR_LAC_LIGHT_128_DIM 512
@@ -84,7 +85,7 @@ static void PQCP_POLAR_LAC_PolyMulNttLazy1024(const uint16_t *a, const uint16_t 
 // b=as using compact lift multiplication with constant time.
 void PQCP_POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint32_t vecNum, int32_t algId)
 {
-    int32_t i;
+    uint32_t i;
     uint32_t dimN = algId == PQCP_POLAR_LAC_256 ? 1024 : 512;
     uint16_t a2[dimN], s2[dimN], b2[dimN];
     uint16_t mask;
@@ -122,7 +123,7 @@ void PQCP_POLAR_LAC_PolyMul(const uint8_t *a, const uint8_t *s, uint8_t *b, uint
 // b=as+e using compact lift multiplication with constant time.
 void PQCP_POLAR_LAC_PolyAff(const uint8_t *a, const uint8_t *s, uint8_t *e, uint8_t *b, uint32_t vecNum, int32_t algId)
 {
-    int32_t i;
+    uint32_t i;
     uint32_t dimN = algId == PQCP_POLAR_LAC_256 ? 1024 : 512;
     uint16_t a2[dimN], s2[dimN], b2[dimN];
 
@@ -290,3 +291,4 @@ int32_t PQCP_POLAR_LAC_PolyDecompress(const uint8_t *in, uint8_t *out, const uin
     }
     return PQCP_SUCCESS;
 }
+#endif // PQCP_POLARLAC

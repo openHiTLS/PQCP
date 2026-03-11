@@ -19,32 +19,36 @@
 #include "pqcp_provider.h"
 #include "crypt_eal_provider.h"
 #include "crypt_eal_implprovider.h"
-#include "crypt_errno.h"
-
+#include "pqcp_err.h"
 
 void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 {
-    (void) provCtx;
+    (void)provCtx;
     void *pkeyCtx = NULL;
-    switch (algId) {
-        case PQCP_PKEY_SCLOUDPLUS:
-            pkeyCtx = PQCP_SCLOUDPLUS_NewCtx();
-            break;
-        case PQCP_PKEY_POLAR_LAC:
-            pkeyCtx = PQCP_LAC2_NewCtx();
-            break;
-        case PQCP_PKEY_COMPOSITE_SIGN:
-            pkeyCtx = CRYPT_COMPOSITE_NewCtx();
-            break;
-        default:
-            break;
-    }
-    if (pkeyCtx == NULL) {
-        return NULL;
+    switch (algId)
+    {
+#ifdef PQCP_SCLOUDPLUS
+    case PQCP_PKEY_SCLOUDPLUS:
+        pkeyCtx = PQCP_SCLOUDPLUS_NewCtx();
+        break;
+#endif
+#ifdef PQCP_POLARLAC
+    case PQCP_PKEY_POLAR_LAC:
+        pkeyCtx = PQCP_LAC2_NewCtx();
+        break;
+#endif
+#ifdef PQCP_COMPOSITE_SIGN
+    case PQCP_PKEY_COMPOSITE_SIGN:
+        pkeyCtx = CRYPT_COMPOSITE_NewCtx();
+        break;
+#endif
+    default:
+        break;
     }
     return pkeyCtx;
 };
 
+#ifdef PQCP_SCLOUDPLUS
 const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[] = {
     {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
     {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)PQCP_SCLOUDPLUS_Gen},
@@ -53,7 +57,6 @@ const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[] = {
     {CRYPT_EAL_IMPLPKEYMGMT_GETPRV, (CRYPT_EAL_ImplPkeyMgmtGetPrv)PQCP_SCLOUDPLUS_GetPrvKey},
     {CRYPT_EAL_IMPLPKEYMGMT_GETPUB, (CRYPT_EAL_ImplPkeyMgmtGetPub)PQCP_SCLOUDPLUS_GetPubKey},
     {CRYPT_EAL_IMPLPKEYMGMT_DUPCTX, (CRYPT_EAL_ImplPkeyMgmtDupCtx)PQCP_SCLOUDPLUS_DupCtx},
-    {CRYPT_EAL_IMPLPKEYMGMT_COMPARE, (CRYPT_EAL_ImplPkeyMgmtCompare)PQCP_SCLOUDPLUS_Cmp},
     {CRYPT_EAL_IMPLPKEYMGMT_CTRL, (CRYPT_EAL_ImplPkeyMgmtCtrl)PQCP_SCLOUDPLUS_Ctrl},
     {CRYPT_EAL_IMPLPKEYMGMT_FREECTX, (CRYPT_EAL_ImplPkeyMgmtFreeCtx)PQCP_SCLOUDPLUS_FreeCtx},
     CRYPT_EAL_FUNC_END,
@@ -66,9 +69,9 @@ const CRYPT_EAL_Func g_pqcpKemScloudPlus[] = {
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE, (CRYPT_EAL_ImplPkeyKemDecapsulate)PQCP_SCLOUDPLUS_Decaps},
     CRYPT_EAL_FUNC_END,
 };
+#endif
 
-
-
+#ifdef PQCP_POLARLAC
 const CRYPT_EAL_Func g_pqcpKeyMgmtPolarLac[] = {
     {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
     {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)PQCP_LAC2_Gen},
@@ -77,7 +80,6 @@ const CRYPT_EAL_Func g_pqcpKeyMgmtPolarLac[] = {
     {CRYPT_EAL_IMPLPKEYMGMT_GETPRV, (CRYPT_EAL_ImplPkeyMgmtGetPrv)PQCP_LAC2_GetPrvKey},
     {CRYPT_EAL_IMPLPKEYMGMT_GETPUB, (CRYPT_EAL_ImplPkeyMgmtGetPub)PQCP_LAC2_GetPubKey},
     {CRYPT_EAL_IMPLPKEYMGMT_DUPCTX, (CRYPT_EAL_ImplPkeyMgmtDupCtx)PQCP_LAC2_DupCtx},
-    {CRYPT_EAL_IMPLPKEYMGMT_COMPARE, (CRYPT_EAL_ImplPkeyMgmtCompare)PQCP_LAC2_Cmp},
     {CRYPT_EAL_IMPLPKEYMGMT_CTRL, (CRYPT_EAL_ImplPkeyMgmtCtrl)PQCP_LAC2_Ctrl},
     {CRYPT_EAL_IMPLPKEYMGMT_FREECTX, (CRYPT_EAL_ImplPkeyMgmtFreeCtx)PQCP_LAC2_FreeCtx},
     CRYPT_EAL_FUNC_END,
@@ -90,8 +92,9 @@ const CRYPT_EAL_Func g_pqcpKemPolarLac[] = {
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE, (CRYPT_EAL_ImplPkeyKemDecapsulate)PQCP_LAC2_Decaps},
     CRYPT_EAL_FUNC_END,
 };
+#endif
 
-
+#ifdef PQCP_COMPOSITE_SIGN
 const CRYPT_EAL_Func g_pqcpKeyMgmtCompositeSign[] = {
     {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
     {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)CRYPT_COMPOSITE_GenKey},
@@ -110,3 +113,4 @@ const CRYPT_EAL_Func g_pqcpCompositeSign[] = {
     {CRYPT_EAL_IMPLPKEYSIGN_VERIFY, (CRYPT_EAL_ImplPkeyVerify)CRYPT_COMPOSITE_Verify},
     CRYPT_EAL_FUNC_END,
 };
+#endif

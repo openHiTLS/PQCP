@@ -12,6 +12,7 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
+#ifdef PQCP_COMPOSITE_SIGN
 #include "securec.h"
 
 #include "crypt_composite_sign_local.h"
@@ -31,13 +32,13 @@
     {                                                           \
         if (val == NULL)                                        \
         {                                                       \
-            BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);               \
-            return CRYPT_NULL_INPUT;                            \
+            BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);               \
+            return PQCP_NULL_INPUT;                            \
         }                                                       \
         if (len != sizeof(uint32_t))                            \
         {                                                       \
-            BSL_ERR_PUSH_ERROR(CRYPT_INVALID_ARG);              \
-            return CRYPT_INVALID_ARG;                           \
+            BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);              \
+            return PQCP_INVALID_ARG;                           \
         }                                                       \
         if (ctx->info == NULL)                                  \
         {                                                       \
@@ -119,20 +120,10 @@ CRYPT_CompositeCtx *CRYPT_COMPOSITE_NewCtx(void)
 {
     CRYPT_CompositeCtx *ctx = BSL_SAL_Calloc(1, sizeof(CRYPT_CompositeCtx));
     if (ctx == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
+        BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
         return NULL;
     }
     BSL_SAL_ReferencesInit(&(ctx->references));
-    return ctx;
-}
-
-CRYPT_CompositeCtx *CRYPT_COMPOSITE_NewCtxEx(void *libCtx)
-{
-    CRYPT_CompositeCtx *ctx = CRYPT_COMPOSITE_NewCtx();
-    if (ctx == NULL) {
-        return NULL;
-    }
-    ctx->libCtx = libCtx;
     return ctx;
 }
 
@@ -160,12 +151,12 @@ void CRYPT_COMPOSITE_FreeCtx(CRYPT_CompositeCtx *ctx)
 CRYPT_CompositeCtx *CRYPT_COMPOSITE_DupCtx(CRYPT_CompositeCtx *ctx)
 {
     if (ctx == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
         return NULL;
     }
     CRYPT_CompositeCtx *newCtx = CRYPT_COMPOSITE_NewCtx();
     if (newCtx == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
+        BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
         return NULL;
     }
     newCtx->info = ctx->info;
@@ -174,19 +165,19 @@ CRYPT_CompositeCtx *CRYPT_COMPOSITE_DupCtx(CRYPT_CompositeCtx *ctx)
     if (newCtx->pqcMethod != NULL && newCtx->tradMethod != NULL) {
         newCtx->pqcCtx = newCtx->pqcMethod->dupCtx(ctx->pqcCtx);
         if (newCtx->pqcCtx == NULL) {
-            BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
+            BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
             goto ERR;
         }
         newCtx->tradCtx = newCtx->tradMethod->dupCtx(ctx->tradCtx);
         if (newCtx->tradCtx == NULL) {
-            BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
+            BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
             goto ERR;
         }
     }
     if (ctx->ctxLen > 0 && ctx->ctxInfo != NULL) {
         newCtx->ctxInfo = BSL_SAL_Dump(ctx->ctxInfo, ctx->ctxLen);
         if (newCtx->ctxInfo == NULL) {
-            BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
+            BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
             goto ERR;
         }
     }
@@ -201,12 +192,12 @@ ERR:
 static int32_t CRYPT_CompositeGetSignLen(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
 {
     if (val == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     if (len != sizeof(int32_t)) {
-        BSL_ERR_PUSH_ERROR(CRYPT_INVALID_ARG);
-        return CRYPT_INVALID_ARG;
+        BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
+        return PQCP_INVALID_ARG;
     }
     if (ctx->info == NULL ||ctx->pqcCtx == NULL || ctx->tradCtx == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYINFO_NOT_SET);
@@ -215,20 +206,20 @@ static int32_t CRYPT_CompositeGetSignLen(CRYPT_CompositeCtx *ctx, void *val, uin
     uint32_t pqcSigLen = ctx->info->pqcSigLen;
     uint32_t tradSigLen = 0;
     int32_t ret = ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, &tradSigLen, sizeof(tradSigLen));
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != PQCP_SUCCESS) {
         BSL_ERR_PUSH_ERROR(ret);
         return ret;
     }
     *(int32_t *)val = pqcSigLen + tradSigLen;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 static int32_t CRYPT_CompositeSetAlgInfo(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
 {
-    int32_t ret = CRYPT_MEM_ALLOC_FAIL;
+    int32_t ret = PQCP_MEM_ALLOC_FAIL;
     if (len != sizeof(int32_t) || val == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_INVALID_ARG);
-        return CRYPT_INVALID_ARG;
+        BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
+        return PQCP_INVALID_ARG;
     }
     if (ctx->info != NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEY_INFO_ALREADY_SET);
@@ -236,24 +227,24 @@ static int32_t CRYPT_CompositeSetAlgInfo(CRYPT_CompositeCtx *ctx, void *val, uin
     }
     ctx->info = CRYPT_COMPOSITE_GetInfo(*(int32_t *)val);
     if (ctx->info == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_INVALID_ARG);
-        return CRYPT_INVALID_ARG;
+        BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
+        return PQCP_INVALID_ARG;
     }
     const EAL_PkeyMethod *pqcMethod = CRYPT_EAL_PkeyFindMethod(ctx->info->pqcAlg);
     const EAL_PkeyMethod *tradMethod = CRYPT_EAL_PkeyFindMethod(ctx->info->tradAlg);
     if (pqcMethod == NULL || tradMethod == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NOT_SUPPORT);
-        return CRYPT_NOT_SUPPORT;
+        BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
+        return PQCP_NOT_SUPPORT;
     }
     ctx->pqcCtx = pqcMethod->newCtx();
-    GOTO_ERR_IF_TRUE((ctx->pqcCtx == NULL), CRYPT_MEM_ALLOC_FAIL);
+    GOTO_ERR_IF_TRUE((ctx->pqcCtx == NULL), PQCP_MEM_ALLOC_FAIL);
     ctx->tradCtx = tradMethod->newCtx();
-    GOTO_ERR_IF_TRUE((ctx->tradCtx == NULL), CRYPT_MEM_ALLOC_FAIL);
+    GOTO_ERR_IF_TRUE((ctx->tradCtx == NULL), PQCP_MEM_ALLOC_FAIL);
     int32_t pqcParam = ctx->info->pqcParam;
     GOTO_ERR_IF(pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_PARA_BY_ID, &(pqcParam), sizeof(pqcParam)), ret);
     ctx->pqcMethod = pqcMethod;
     ctx->tradMethod = tradMethod;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 ERR:
     pqcMethod->freeCtx(ctx->pqcCtx);
     ctx->pqcCtx = NULL;
@@ -265,9 +256,9 @@ ERR:
 
 static int32_t CRYPT_CompositeSetctxInfo(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
 {
-    if (val == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+    if (len > 0 && val == NULL) {
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     if (len > COMPOSITE_MAX_CTX_BYTES) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYLEN_ERROR);
@@ -277,47 +268,40 @@ static int32_t CRYPT_CompositeSetctxInfo(CRYPT_CompositeCtx *ctx, void *val, uin
         BSL_SAL_FREE(ctx->ctxInfo);
         ctx->ctxLen = 0;
     }
+    if (val == NULL && len == 0) {
+        return PQCP_SUCCESS;
+    }
     ctx->ctxInfo = BSL_SAL_Dump((uint8_t *)val, len);
     if (ctx->ctxInfo == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
-        return CRYPT_MEM_ALLOC_FAIL;
+        BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
+        return PQCP_MEM_ALLOC_FAIL;
     }
     ctx->ctxLen = len;
-    return CRYPT_SUCCESS;
-}
-
-static int32_t CRYPT_CompositeGetParaId(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
-{
-    RETURN_RET_IF(val == NULL || len != sizeof(uint32_t), CRYPT_INVALID_ARG);
-    RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
-    *(int32_t *)val = ctx->info->paramId;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 static int32_t CRYPT_CompositeGetPubKeyLen(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
 {
-    RETURN_RET_IF(val == NULL || len != sizeof(uint32_t), CRYPT_INVALID_ARG);
+    RETURN_RET_IF(val == NULL || len != sizeof(uint32_t), PQCP_INVALID_ARG);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     *(uint32_t *)val = ctx->info->compPubKeyLen;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 static int32_t CRYPT_CompositeGetPrvKeyLen(CRYPT_CompositeCtx *ctx, void *val, uint32_t len)
 {
-    RETURN_RET_IF(val == NULL || len != sizeof(uint32_t), CRYPT_INVALID_ARG);
+    RETURN_RET_IF(val == NULL || len != sizeof(uint32_t), PQCP_INVALID_ARG);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     *(uint32_t *)val = ctx->info->compPrvKeyLen;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_Ctrl(CRYPT_CompositeCtx *ctx, int32_t opt, void *val, uint32_t len)
 {
-    RETURN_RET_IF(ctx == NULL, CRYPT_NULL_INPUT);
+    RETURN_RET_IF(ctx == NULL, PQCP_NULL_INPUT);
     switch (opt) {
         case CRYPT_CTRL_SET_PARA_BY_ID:
             return CRYPT_CompositeSetAlgInfo(ctx, val, len);
-        case CRYPT_CTRL_GET_PARAID:
-            return CRYPT_CompositeGetParaId(ctx, val, len);
         case CRYPT_CTRL_GET_SIGNLEN:
             return CRYPT_CompositeGetSignLen(ctx, val, len);
         case CRYPT_CTRL_GET_PUBKEY_LEN:
@@ -329,7 +313,7 @@ int32_t CRYPT_COMPOSITE_Ctrl(CRYPT_CompositeCtx *ctx, int32_t opt, void *val, ui
         case PQCP_CTRL_HYBRID_GET_PQC_PRVKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
             *(uint32_t *)val = MLDSA_SEED_LEN;
-            return CRYPT_SUCCESS;
+            return PQCP_SUCCESS;
         case PQCP_CTRL_HYBRID_GET_PQC_PUBKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
             return ctx->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_GET_PUBKEY_LEN, val, len);
@@ -346,15 +330,15 @@ int32_t CRYPT_COMPOSITE_Ctrl(CRYPT_CompositeCtx *ctx, int32_t opt, void *val, ui
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
             return ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, val, len);
         default:
-            BSL_ERR_PUSH_ERROR(CRYPT_NOT_SUPPORT);
-            return CRYPT_NOT_SUPPORT;
+            BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
+            return PQCP_NOT_SUPPORT;
     }
 }
 
 int32_t CRYPT_COMPOSITE_GenKey(CRYPT_CompositeCtx *ctx)
 {
     int32_t ret;
-    RETURN_RET_IF(ctx == NULL, CRYPT_NULL_INPUT);
+    RETURN_RET_IF(ctx == NULL, PQCP_NULL_INPUT);
     RETURN_RET_IF((ctx->pqcCtx == NULL || ctx->tradCtx == NULL), PQCP_COMPOSITE_KEYINFO_NOT_SET);
     RETURN_RET_IF_ERR(ctx->pqcMethod->gen(ctx->pqcCtx), ret);
     RETURN_RET_IF_ERR(ctx->tradMethod->gen(ctx->tradCtx), ret);
@@ -363,7 +347,7 @@ int32_t CRYPT_COMPOSITE_GenKey(CRYPT_CompositeCtx *ctx)
 
 int32_t CRYPT_COMPOSITE_GetPrvKey(const CRYPT_CompositeCtx *ctx, CRYPT_CompositePrv *prv)
 {
-    RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), CRYPT_NULL_INPUT);
+    RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     int32_t ret;
     BSL_Buffer pqcPrv = { 0 };
@@ -386,7 +370,7 @@ ERR:
 
 int32_t CRYPT_COMPOSITE_GetPubKey(const CRYPT_CompositeCtx *ctx, CRYPT_CompositePub *pub)
 {
-    RETURN_RET_IF((ctx == NULL || pub == NULL || pub->data == NULL), CRYPT_NULL_INPUT);
+    RETURN_RET_IF((ctx == NULL || pub == NULL || pub->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     int32_t ret;
     BSL_Buffer pqcPub = { 0 };
@@ -410,20 +394,20 @@ ERR:
 int32_t CRYPT_COMPOSITE_SetPrvKey(CRYPT_CompositeCtx *ctx, const CRYPT_CompositePrv *prv)
 {
     int32_t ret;
-    RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), CRYPT_NULL_INPUT);
+    RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     RETURN_RET_IF(prv->len < ctx->info->compPrvKeyLen, PQCP_COMPOSITE_KEYLEN_ERROR);
     BSL_Buffer pqcPrv = {prv->data, ctx->info->pqcPrvkeyLen};
     BSL_Buffer tradPrv = {prv->data + ctx->info->pqcPrvkeyLen, prv->len - ctx->info->pqcPrvkeyLen};
     RETURN_RET_IF_ERR(CRYPT_CompositeSetPqcPrvKey(ctx, &pqcPrv), ret);
     RETURN_RET_IF_ERR(CRYPT_CompositeSetTradPrvKey(ctx, &tradPrv), ret);
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_SetPubKey(CRYPT_CompositeCtx *ctx, const CRYPT_CompositePub *pub)
 {
     int32_t ret;
-    RETURN_RET_IF((ctx == NULL || pub == NULL || pub->data == NULL), CRYPT_NULL_INPUT);
+    RETURN_RET_IF((ctx == NULL || pub == NULL || pub->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
     RETURN_RET_IF(pub->len < ctx->info->compPubKeyLen, PQCP_COMPOSITE_KEYLEN_ERROR);
 
@@ -431,46 +415,46 @@ int32_t CRYPT_COMPOSITE_SetPubKey(CRYPT_CompositeCtx *ctx, const CRYPT_Composite
     BSL_Buffer tradPub = {pub->data + ctx->info->pqcPubkeyLen, pub->len - ctx->info->pqcPubkeyLen};
     RETURN_RET_IF_ERR(CRYPT_CompositeSetPqcPubKey(ctx, &pqcPub), ret);
     RETURN_RET_IF_ERR(CRYPT_CompositeSetTradPubKey(ctx, &tradPub), ret);
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_GetPrvKeyEx(const CRYPT_CompositeCtx *ctx, BSL_Param *para)
 {
     if (para == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     CRYPT_CompositePrv prv = {0};
     BSL_Param *paramPrv = GetParamValue(para, PQCP_PARAM_COMPOSITE_PRVKEY, &prv.data, &(prv.len));
     int32_t ret = CRYPT_COMPOSITE_GetPrvKey(ctx, &prv);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != PQCP_SUCCESS) {
         return ret;
     }
     paramPrv->useLen = prv.len;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_GetPubKeyEx(const CRYPT_CompositeCtx *ctx, BSL_Param *para)
 {
     if (para == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     CRYPT_CompositePub pub = {0};
     BSL_Param *paramPub = GetParamValue(para, PQCP_PARAM_COMPOSITE_PUBKEY, &pub.data, &(pub.len));
     int32_t ret = CRYPT_COMPOSITE_GetPubKey(ctx, &pub);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != PQCP_SUCCESS) {
         return ret;
     }
     paramPub->useLen = pub.len;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_SetPrvKeyEx(CRYPT_CompositeCtx *ctx, const BSL_Param *para)
 {
     if (para == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     CRYPT_CompositePrv prv = {0};
     (void)GetConstParamValue(para, PQCP_PARAM_COMPOSITE_PRVKEY, &prv.data, &prv.len);
@@ -480,8 +464,8 @@ int32_t CRYPT_COMPOSITE_SetPrvKeyEx(CRYPT_CompositeCtx *ctx, const BSL_Param *pa
 int32_t CRYPT_COMPOSITE_SetPubKeyEx(CRYPT_CompositeCtx *ctx, const BSL_Param *para)
 {
     if (para == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     CRYPT_CompositePub pub = {0};
     (void)GetConstParamValue(para, PQCP_PARAM_COMPOSITE_PUBKEY, &pub.data, &pub.len);
@@ -496,8 +480,8 @@ static int32_t CompositePreHash(int32_t hashId, const uint8_t *data, uint32_t da
     RETURN_RET_IF(hashMethod == NULL, CRYPT_EAL_ALG_NOT_SUPPORT);
     void *mdCtx = hashMethod->newCtx(NULL, hashMethod->id);
     if (mdCtx == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_MEM_ALLOC_FAIL);
-        return CRYPT_MEM_ALLOC_FAIL;
+        BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
+        return PQCP_MEM_ALLOC_FAIL;
     }
     GOTO_ERR_IF(hashMethod->init(mdCtx, NULL), ret);
     GOTO_ERR_IF(hashMethod->update(mdCtx, data, dataLen), ret);
@@ -519,7 +503,7 @@ static int32_t CompositeMsgEncode(CRYPT_CompositeCtx *ctx, int32_t hashId, const
     uint32_t labelLen = (uint32_t)strlen(label);
     msg->len = prefixLen + labelLen + 1 + ctx->ctxLen + digestLen;
     msg->data = (uint8_t *)BSL_SAL_Malloc(msg->len);
-    RETURN_RET_IF(msg->data == NULL, CRYPT_MEM_ALLOC_FAIL);
+    RETURN_RET_IF(msg->data == NULL, PQCP_MEM_ALLOC_FAIL);
     uint8_t *ptr = msg->data;
     (void)memcpy_s(ptr, msg->len, PREFIX, prefixLen);
     ptr += prefixLen;
@@ -532,7 +516,7 @@ static int32_t CompositeMsgEncode(CRYPT_CompositeCtx *ctx, int32_t hashId, const
         ptr += ctx->ctxLen;
     }
     (void)memcpy_s(ptr, digestLen, digest, digestLen);
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 int32_t CRYPT_COMPOSITE_Sign(CRYPT_CompositeCtx *ctx, int32_t algId, const uint8_t *data, uint32_t dataLen,
@@ -540,8 +524,8 @@ int32_t CRYPT_COMPOSITE_Sign(CRYPT_CompositeCtx *ctx, int32_t algId, const uint8
 {
     (void)algId;
     if (ctx == NULL || data == NULL || sign == NULL || signLen == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     if (ctx->pqcCtx == NULL || ctx->tradCtx == NULL || ctx->info == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYINFO_NOT_SET);
@@ -561,8 +545,8 @@ int32_t CRYPT_COMPOSITE_Sign(CRYPT_CompositeCtx *ctx, int32_t algId, const uint8
     int32_t pqcRet = ctx->pqcMethod->sign(ctx->pqcCtx, CRYPT_MD_MAX, msg.data, msg.len, sign, &pqcSigLen);
     int32_t tradRet = ctx->tradMethod->sign(ctx->tradCtx, ctx->info->tradHashId, msg.data, msg.len, sign + pqcSigLen,
                                            &tradSigLen);
-    if (pqcRet != CRYPT_SUCCESS || tradRet != CRYPT_SUCCESS) {
-        ret = (pqcRet != CRYPT_SUCCESS) ? pqcRet : tradRet;
+    if (pqcRet != PQCP_SUCCESS || tradRet != PQCP_SUCCESS) {
+        ret = (pqcRet != PQCP_SUCCESS) ? pqcRet : tradRet;
         BSL_ERR_PUSH_ERROR(ret);
         goto ERR;
     }
@@ -577,8 +561,8 @@ int32_t CRYPT_COMPOSITE_Verify(CRYPT_CompositeCtx *ctx, int32_t algId, const uin
 {
     (void)algId;
     if (ctx == NULL || data == NULL || sign == NULL) {
-        BSL_ERR_PUSH_ERROR(CRYPT_NULL_INPUT);
-        return CRYPT_NULL_INPUT;
+        BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
+        return PQCP_NULL_INPUT;
     }
     if (ctx->pqcCtx == NULL || ctx->tradCtx == NULL || ctx->info == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYINFO_NOT_SET);
@@ -602,3 +586,4 @@ ERR:
     BSL_SAL_FREE(msg.data);
     return ret;
 }
+#endif // PQCP_COMPOSITE_SIGN

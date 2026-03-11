@@ -12,22 +12,14 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
+#ifdef PQCP_POLARLAC
+#include <string.h>
 
 #include "crypt_eal_md.h"
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
 #include "pqcp_err.h"
 #include "securec.h"
-#include <stdio.h>
-#include <string.h>
-
-#define RETURN_RET_IF(FUNC, RET) \
-    do {                         \
-        RET = FUNC;              \
-        if (RET != 0) {          \
-            return RET;          \
-        }                        \
-    } while (0)
 
 static int32_t SHA3_256(const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
 {
@@ -40,28 +32,23 @@ static int32_t SHA3_256(const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_
 
 static int32_t PolarLacKemEncFo(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *k, uint8_t *c)
 {
+    int32_t ret;
     const uint8_t *pk = ctx->pk;
     uint32_t msgLen = ctx->info->msgLen;
     uint32_t seedLen = ctx->info->seedLen;
     uint32_t pkLen = ctx->info->pkLen;
     uint32_t ctLen = ctx->info->ctLen;
     uint8_t buf[msgLen + ctLen], seed[seedLen], seed_buf[msgLen + pkLen];
-    unsigned long long cLen;
+    uint32_t cLen;
 
     // generate random message m, stored in buf
-    int32_t ret = CRYPT_EAL_Randbytes(buf, msgLen);
-    if (ret != PQCP_SUCCESS) {
-        return ret;
-    }
+    RETURN_RET_IF(CRYPT_EAL_Randbytes(buf, msgLen), ret);
     // compute seed=hash(m|pk), add pk for multi key attack protection
     memcpy_s(seed_buf, msgLen + pkLen, buf, msgLen);
     memcpy_s(seed_buf + msgLen, pkLen, pk, pkLen);
-    ret = SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen);
-    if (ret != 0) {
-        return ret;
-    }
+    RETURN_RET_IF(SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen), ret);
     // encrypt m with seed
-    PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, c, &cLen, seed);
+    RETURN_RET_IF(PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, c, &cLen, seed), ret);
 
     // compute k=hash(m|c)
     memcpy_s(buf + msgLen, ctLen, c, ctLen);
@@ -71,6 +58,7 @@ static int32_t PolarLacKemEncFo(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *k, uint
 // decrypt of fo mode
 static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, uint8_t *k)
 {
+    int32_t ret;
     uint8_t *sk = ctx->sk;
     uint8_t *pk = ctx->sk + ctx->info->skLen - ctx->info->pkLen;
     uint32_t msgLen = ctx->info->msgLen;
@@ -79,27 +67,23 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     uint32_t ctLen = ctx->info->ctLen;
     uint32_t skLen = ctx->info->skLen;
 
-    uint8_t buf[msgLen + ctLen], seed[seedLen], seed_buf[msgLen + pkLen];
-    unsigned long long mLen;
-    unsigned long long cLen;
+    uint8_t buf[msgLen + ctLen];
+    uint8_t seed[seedLen];
+    uint8_t seed_buf[msgLen + pkLen];
+    uint32_t mLen;
+    uint32_t cLen;
     uint8_t verifyCt[ctLen]; // re-encrypt ciphertext for verification
 
     // compute m from c
-    PQCP_POLAR_LAC_PkeDecrypt(ctx, c, ctLen, buf, &mLen);
+    RETURN_RET_IF(PQCP_POLAR_LAC_PkeDecrypt(ctx, c, ctLen, buf, &mLen), ret);
     // compute k=hash(m|c)
     memcpy_s(buf + msgLen, ctLen, c, ctLen);
-    int32_t ret = SHA3_256(buf, msgLen + ctLen, k, 32);
-    if (ret != PQCP_SUCCESS) {
-        return ret;
-    }
+    RETURN_RET_IF(SHA3_256(buf, msgLen + ctLen, k, 32), ret);
     // re-encryption with seed=hash(m|pk), add pk for multi key attack protection
     memcpy_s(seed_buf, msgLen + pkLen, buf, msgLen);
     memcpy_s(seed_buf + msgLen, pkLen, pk, pkLen);
-    ret = SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen);
-    if (ret != PQCP_SUCCESS) {
-        return ret;
-    }
-    PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, msgLen, verifyCt, &cLen, seed);
+    RETURN_RET_IF(SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, verifyCt, &cLen, seed), ret);
 
     // verify
     if (memcmp(c, verifyCt, ctLen) != 0) {
@@ -136,3 +120,4 @@ int32_t PQCP_POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx)
     PQCP_POLAR_LAC_PkeKeyGen(ctx, seed);
     return 0;
 }
+#endif // PQCP_POLARLAC

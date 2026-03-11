@@ -29,35 +29,21 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 
 # ASAN配置
 if(ENABLE_ASAN)
+    message(STATUS "Enabling asan flags")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
-
-set(POLAR_LAC_SRC
-    src/polarlac/src/polarlac.c
-    src/polarlac/src/polarlac_poly.c
-    src/polarlac/src/polarlac_pke.c
-    src/polarlac/src/polarlac_kem.c
-    src/polarlac/src/polarlac_ntt1024.c
-    src/polarlac/src/polarlac_ntt.c
-    src/polarlac/src/polarlac_polar.c
-    src/polarlac/src/polarlac_rand.c
+if(ENABLE_GCOV)
+    message(STATUS "Enabling gcov code coverage flags")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov --coverage")
+endif()
+file(GLOB_RECURSE PROVIDER_SOURCES
+    src/provider/*.c
+    src/scloudplus/src/*.c
+    src/polarlac/src/*.c
+    src/composite_sign/src/*.c
 )
-
-set(COMPOSITE_SIGN_SRC
-    src/composite_sign/src/crypt_composite_sign_encdec.c
-    src/composite_sign/src/crypt_composite_sign.c
-)
-# Set source files
-set(PROVIDER_SOURCES
-    src/provider/pqcp_provider.c
-    src/provider/pqcp_pkey.c
-    src/scloudplus/src/scloudplus.c
-    src/scloudplus/src/scloudplus_util.c
-    ${POLAR_LAC_SRC}
-    ${COMPOSITE_SIGN_SRC}
-)
-
 # 添加链接目录
 if(PQCP_LIB_DIR)
     link_directories(${PQCP_LIB_DIR})
@@ -66,6 +52,11 @@ endif()
 # Create shared library
 add_library(pqcp_provider ${PQCP_LIB_TYPE} ${PROVIDER_SOURCES})
 
+if(USER_BUILD_ARGS)
+    separate_arguments(USER_BUILD_ARGS)
+    target_compile_options(pqcp_provider PRIVATE ${USER_BUILD_ARGS})
+endif()
+target_compile_options(pqcp_provider PRIVATE -Wall -Wextra -Werror)
 target_include_directories(pqcp_provider
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include

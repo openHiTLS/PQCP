@@ -15,22 +15,15 @@
 * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 * See the Mulan PSL v2 for more details.
 */
+#ifdef PQCP_POLARLAC
+#include <string.h>
 
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
 #include "securec.h"
-#include <stdio.h>
-#include <string.h>
+#include "pqcp_err.h"
 
 #define RATIO 126 // Q/2
-
-#define RETURN_RET_IF(FUNC, RET) \
-    do {                         \
-        RET = FUNC;              \
-        if (RET != 0) {          \
-            return RET;          \
-        }                        \
-    } while (0)
 
 // message bit is 1, frozen bit is 0
 static const uint8_t g_eccInfoNodesLight[] = {
@@ -76,7 +69,7 @@ static const uint8_t g_eccInfoNodes256[] = {
     1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, int32_t *c2Len, int32_t algId)
+static void EncodeToE2(uint8_t *e2, const uint8_t *m, int32_t *c2Len, int32_t algId)
 {
     int32_t i;
     int8_t message;
@@ -88,7 +81,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
     uint8_t code[codeLen]; // codeword sequence(each element stores 8 bits)
     memset_s(u, sizeof(u), 0, sizeof(u));
     memset_s(code, sizeof(code), 0, sizeof(code));
-    const int8_t *eccInfoNodes = NULL;
+    const uint8_t *eccInfoNodes = NULL;
     switch (algId) {
         case PQCP_POLAR_LAC_LIGHT:
             eccInfoNodes = g_eccInfoNodesLight;
@@ -102,7 +95,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
     }
     // fill the message m into the source sequence
     int32_t infoCnt = 0;
-    for (int32_t i = 0; i < codeLen; i++) {
+    for (uint32_t i = 0; i < codeLen; i++) {
         for (int32_t j = 0; j < 8; j++) {
             if (eccInfoNodes[8 * i + j] == 1) {
                 u[8 * i + j] = (uint8_t)(m[infoCnt / 8] >> (infoCnt % 8)) & 0x01;
@@ -113,7 +106,7 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, unsigned long long mlen, i
     PQCP_POLAR_LAC_EncodePolar(u, algId);
 
     // Convert from bit array to byte array
-    for (int32_t i = 0; i < codeLen; i++) {
+    for (uint32_t i = 0; i < codeLen; i++) {
         for (int32_t j = 0; j < 8; j++) {
             code[i] |= (u[i * 8 + j] << j);
         }
@@ -143,10 +136,8 @@ int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
     uint32_t skLen = info->skLen;
     uint32_t pkLen = info->pkLen;
 
-    uint8_t seeds[2 * seedLen];
     uint8_t a[dimN];
     uint8_t e[dimN];
-    uint8_t hPk[HASHLEN];
     uint8_t randBuf[seedLen * 3];
     int32_t ret = 0;
     RETURN_RET_IF(PQCP_POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
@@ -155,18 +146,17 @@ int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
     memcpy_s(pk, pkLen, randBuf, seedLen);
     // generate random vector r
     RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, sk, dimN, algId), ret);
-    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen * 2, seedLen, e, dimN, algId), ret);
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen * 2, seedLen, e, dimN, algId),
+                  ret);
     PQCP_POLAR_LAC_PolyAff(a, sk, e, pk + seedLen, dimN, algId);
     // copy pk=as+e to the second part of sk, now sk=s|pk
     memcpy_s(sk + skLen - pkLen, pkLen, pk, pkLen);
     return PQCP_SUCCESS;
 }
 
-// key generation
-
 // encryption with seed
-int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
-                             unsigned long long *clen, uint8_t *seed)
+int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, uint8_t *c,
+                                  uint32_t *clen, uint8_t *seed)
 {
     const uint8_t *pk = ctx->pk;
     uint32_t dimN = ctx->info->dimN;
@@ -184,10 +174,11 @@ int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t 
     RETURN_RET_IF(PQCP_POLAR_LAC_SamplePolyA(NULL, Q, pk, seedLen, a, dimN), ret);
     RETURN_RET_IF(PQCP_POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
     RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf, seedLen, r, dimN, ctx->algId), ret);
-    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, e1, dimN, ctx->algId), ret);
-    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + 2 * seedLen, seedLen, e2, dimN, ctx->algId),
+    RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, e1, dimN, ctx->algId),
                   ret);
-    EncodeToE2(e2, m, mlen, &c2Len, ctx->algId);
+    RETURN_RET_IF(
+        PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + 2 * seedLen, seedLen, e2, dimN, ctx->algId), ret);
+    EncodeToE2(e2, m, &c2Len, ctx->algId);
     if (ctx->algId == PQCP_POLAR_LAC_LIGHT) {
         uint8_t c1[dimN];
         // generate c1: c1=a*r+e1
@@ -222,8 +213,8 @@ int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t 
     return PQCP_SUCCESS;
 }
 
-int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
-                             unsigned long long *mlen)
+int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, uint32_t clen, uint8_t *m,
+                                  uint32_t *mlen)
 {
     uint8_t *sk = ctx->sk;
     uint32_t dimN = ctx->info->dimN;
@@ -286,8 +277,8 @@ int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t 
     PQCP_POLAR_LAC_DecodePolar(mCap, llr, ctx->algId);
     // each element stores 1 binary value -> each element stores 8 binary values
     memset_s(mBuf, msgLen, 0, msgLen);
-    for (int32_t i = 0; i < msgLen; i++) {
-        for (int32_t j = 0; j < 8; j++) {
+    for (uint32_t i = 0; i < msgLen; i++) {
+        for (uint32_t j = 0; j < 8; j++) {
             mBuf[i] |= (mCap[8 * i + j] << j);
         }
     }
@@ -295,3 +286,4 @@ int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t 
     memcpy_s(m, *mlen, mBuf, *mlen);
     return PQCP_SUCCESS;
 }
+#endif // PQCP_POLARLAC

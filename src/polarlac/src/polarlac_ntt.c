@@ -17,7 +17,7 @@
  */
 
 // This file implements the C-language version of 512-length NTT and NTT-based multiplication for PolarLAC128.
-
+#ifdef PQCP_POLARLAC
 #include "polarlac_local.h"
 #include <stdint.h>
 
@@ -260,3 +260,4 @@ void PQCP_POLAR_LAC_InttLazy(int16_t *a)
         a[i] = (a[i] * INVERSE_N_BETA) % NTTQ;
     }
 }
+#endif // PQCP_POLARLAC

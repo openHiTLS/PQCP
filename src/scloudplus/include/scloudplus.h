@@ -37,7 +37,6 @@ int32_t PQCP_SCLOUDPLUS_SetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param);
 int32_t PQCP_SCLOUDPLUS_GetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param);
 int32_t PQCP_SCLOUDPLUS_GetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param);
 SCLOUDPLUS_Ctx *PQCP_SCLOUDPLUS_DupCtx(SCLOUDPLUS_Ctx *src_ctx);
-int32_t PQCP_SCLOUDPLUS_Cmp(SCLOUDPLUS_Ctx *ctx1, SCLOUDPLUS_Ctx *ctx2);
 int32_t PQCP_SCLOUDPLUS_Ctrl(SCLOUDPLUS_Ctx *ctx, int32_t cmd, void *val, uint32_t valLen);
 void PQCP_SCLOUDPLUS_FreeCtx(SCLOUDPLUS_Ctx *ctx);
 

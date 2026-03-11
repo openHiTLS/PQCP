@@ -46,6 +46,14 @@
 #define INVERSE_Q   -18431
 #define B_Q         10237
 
+#define RETURN_RET_IF(FUNC, RET) \
+    do {                         \
+        RET = FUNC;              \
+        if (RET != 0) {          \
+            return RET;          \
+        }                        \
+    } while (0)
+
 typedef struct {
     uint32_t dimN;
     uint32_t seedLen;
@@ -107,10 +115,10 @@ int32_t PQCP_POLAR_LAC_EncapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *c
 int32_t PQCP_POLAR_LAC_DeapsInternal(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *ss, const uint8_t *ct);
 
 // PKE functions
-int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, unsigned long long mlen, uint8_t *c,
-                             unsigned long long *clen, uint8_t *seed);
-int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, unsigned long long clen, uint8_t *m,
-                             unsigned long long *mlen);
+int32_t PQCP_POLAR_LAC_PkeEncrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *m, uint8_t *c,
+                            uint32_t *clen, uint8_t *seed);
+int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c, uint32_t clen, uint8_t *m,
+                            uint32_t *mlen);
 int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed);
 
 // Sampling functions

@@ -25,7 +25,6 @@ int32_t PQCP_LAC2_SetPubKey(CRYPT_POLAR_LAC_Ctx* ctx, BSL_Param* param);
 int32_t PQCP_LAC2_GetPrvKey(CRYPT_POLAR_LAC_Ctx* ctx, BSL_Param* param);
 int32_t PQCP_LAC2_GetPubKey(CRYPT_POLAR_LAC_Ctx* ctx, BSL_Param* param);
 CRYPT_POLAR_LAC_Ctx* PQCP_LAC2_DupCtx(CRYPT_POLAR_LAC_Ctx* src_ctx);
-int32_t PQCP_LAC2_Cmp(CRYPT_POLAR_LAC_Ctx* ctx1, CRYPT_POLAR_LAC_Ctx* ctx2);
 int32_t PQCP_LAC2_Ctrl(CRYPT_POLAR_LAC_Ctx* ctx, int32_t cmd, void* val, uint32_t valLen);
 void PQCP_LAC2_FreeCtx(CRYPT_POLAR_LAC_Ctx* ctx);
 

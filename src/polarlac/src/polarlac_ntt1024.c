@@ -20,7 +20,7 @@
 // multiplication code for PolarLAC56. Since the method used here is exactly the
 // same as in the case of length 512, we do not provide redundant comments in
 // this file. For details, please refer to ntt.c.
-
+#ifdef PQCP_POLARLAC
 #include <stdint.h>
 #include "polarlac_local.h"
 
@@ -273,3 +273,4 @@ void PQCP_PQCP_POLAR_LAC_InttLazy1024(int16_t *a)
         a[i] = (a[i] * INVERSE_N_BETA) % NTTQ;
     }
 }
+#endif // PQCP_POLARLAC

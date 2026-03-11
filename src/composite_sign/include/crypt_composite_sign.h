@@ -31,8 +31,6 @@ typedef CRYPT_Data CRYPT_CompositePrv;
 
 CRYPT_CompositeCtx *CRYPT_COMPOSITE_NewCtx(void);
 
-CRYPT_CompositeCtx *CRYPT_COMPOSITE_NewCtxEx(void *libCtx);
-
 void CRYPT_COMPOSITE_FreeCtx(CRYPT_CompositeCtx *ctx);
 
 CRYPT_CompositeCtx *CRYPT_COMPOSITE_DupCtx(CRYPT_CompositeCtx *ctx);

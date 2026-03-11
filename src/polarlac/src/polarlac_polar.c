@@ -15,26 +15,25 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
+#ifdef PQCP_POLARLAC
 //  this file provides the detailed implementation of polar code encoding and decoding
 
 #include "polarlac_local.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define sign_macro(x) ((x > 0) - (x < 0))
-#define absl_macro(x) (((x > 0) - (x < 0)) * x)
-#define mini_macro(x, y) ((x < y) ? x : y)
-#define f_macro(L1, L2) sign_macro(L1) * sign_macro(L2) * mini_macro(absl_macro(L1), absl_macro(L2))
+#define sign_macro(x)      ((x > 0) - (x < 0))
+#define absl_macro(x)      (((x > 0) - (x < 0)) * x)
+#define mini_macro(x, y)   ((x < y) ? x : y)
+#define f_macro(L1, L2)    sign_macro(L1) * sign_macro(L2) * mini_macro(absl_macro(L1), absl_macro(L2))
 #define g_macro(u, L1, L2) (((1 - 2 * u) * L1) + L2)
 
 // polar parameter struct
 struct polarControl {
-    uint32_t N;        // code length
-    uint32_t n;        // log2(N)
-    uint32_t K;        // message length
+    uint32_t N; // code length
+    uint32_t n; // log2(N)
+    uint32_t K; // message length
     uint32_t eccBytes; // N/8
 };
 
@@ -202,19 +201,19 @@ void PQCP_POLAR_LAC_EncodePolar(uint8_t *u, int32_t algId)
 {
     struct polarControl *polar = NULL;
     switch (algId) {
-    case PQCP_POLAR_LAC_LIGHT:
-        polar = &g_polar_112;
-        break;
-    case PQCP_POLAR_LAC_128:
-        polar = &g_polar_128;
-        break;
-    case PQCP_POLAR_LAC_256:
-        polar = &g_polar_256;
-        break;
+        case PQCP_POLAR_LAC_LIGHT:
+            polar = &g_polar_112;
+            break;
+        case PQCP_POLAR_LAC_128:
+            polar = &g_polar_128;
+            break;
+        case PQCP_POLAR_LAC_256:
+            polar = &g_polar_256;
+            break;
     }
     int32_t stage_size = 1; // current butterfly size
 
-    for (int32_t level = 0; level < polar->n; level++) {
+    for (uint32_t level = 0; level < polar->n; level++) {
         int32_t groupSize = stage_size * 2;
         int32_t numGroups = (1 << polar->n) / groupSize;
 
@@ -270,11 +269,10 @@ void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
             break;
     }
     uint8_t interBit[2 * polar->N - 1][2]; // internal bit vector
-    float interLlr[polar->N - 1];          // internal llr vector, interLlr[0] used for decision
+    float interLlr[polar->N - 1]; // internal llr vector, interLlr[0] used for decision
     int32_t msgIndex = 0;
-
-    for (int32_t i = 0; i < polar->N; i++) // decode each u_i
-    {
+    // decode each u_i
+    for (uint32_t i = 0; i < polar->N; i++) {
         if (i == 0) {
             int32_t index1 = lambdaOffset[polar->n - 1];
             int32_t beta = 0;
@@ -284,7 +282,7 @@ void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
                 interLlr[beta + index1 - 1] = f_macro(llr[beta], llr[beta + index1]);
             }
 
-            for (int32_t layer = polar->n - 2; layer >= -1; layer--) {
+            for (int32_t layer = polar->n - 2; layer >= 0; layer--) {
                 int32_t index1 = lambdaOffset[layer];
                 int32_t index2 = lambdaOffset[layer + 1];
                 int32_t beta = index1 - 1;
@@ -303,7 +301,7 @@ void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
                 interLlr[beta + index1 - 1] = g_macro(interBit[beta + index1 - 1][0], llr[beta], llr[beta + index1]);
             }
 
-            for (int32_t layer = polar->n - 2; layer >= -1; layer--) {
+            for (int32_t layer = polar->n - 2; layer >= 0; layer--) {
                 int32_t index1 = lambdaOffset[layer];
                 int32_t index2 = lambdaOffset[layer + 1];
                 int32_t beta = index1 - 1;
@@ -324,7 +322,7 @@ void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
                 interLlr[beta] = g_macro(interBit[beta][0], interLlr[beta + index1], interLlr[beta + index2]);
             }
 
-            for (int32_t layer = llrLayer - 1; layer >= -1; layer--) {
+            for (int32_t layer = llrLayer - 1; layer >= 0; layer--) {
                 int32_t index1 = lambdaOffset[layer];
                 int32_t index2 = lambdaOffset[layer + 1];
                 int32_t beta = index1 - 1;
@@ -368,3 +366,4 @@ void PQCP_POLAR_LAC_DecodePolar(uint8_t *m_cap, const float *llr, int32_t algId)
         }
     }
 }
+#endif // PQCP_POLARLAC

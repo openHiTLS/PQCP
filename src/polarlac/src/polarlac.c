@@ -12,13 +12,14 @@
 * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 * See the Mulan PSL v2 for more details.
 */
-
+#ifdef PQCP_POLARLAC
 #include "polarlac_local.h"
 #include "bsl_sal.h"
 #include "securec.h"
 #include "pqcp_err.h"
 #include "crypt_polarlac.h"
 #include "crypt_types.h"
+
 
 #define CHECK_CTX_INFO_AND_UINT32_LEN(ctx, len)    \
     do                                             \
@@ -238,6 +239,9 @@ int32_t PQCP_LAC2_Decaps(CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *ciphertext, ui
                          uint32_t *ssLen)
 {
     int32_t ret = DecapsInputCheck(ctx, ciphertext, ctLen, sharedSecret, ssLen);
+    if (ret != PQCP_SUCCESS) {
+        return ret;
+    }
     if (ctLen != ctx->info->ctLen) {
         return PQCP_INVALID_ARG;
     }
@@ -262,7 +266,7 @@ int32_t PQCP_LAC2_Gen(CRYPT_POLAR_LAC_Ctx *ctx)
     if (ctx->pk == NULL || ctx->sk == NULL) {
         BSL_SAL_FREE(ctx->pk);
         BSL_SAL_FREE(ctx->sk);
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     return PQCP_POLAR_LAC_KeyGenInternal(ctx);
 }
@@ -290,31 +294,6 @@ int32_t PQCP_LAC2_Ctrl(CRYPT_POLAR_LAC_Ctx *ctx, int32_t cmd, void *val, uint32_
         default:
             return PQCP_INVALID_ARG;
             break;
-    }
-    return PQCP_SUCCESS;
-}
-
-int32_t PQCP_LAC2_Cmp(CRYPT_POLAR_LAC_Ctx *ctx1, CRYPT_POLAR_LAC_Ctx *ctx2)
-{
-    if (ctx1 == NULL || ctx2 == NULL || ctx1->info == NULL || ctx2->info == NULL) {
-        return PQCP_NULL_INPUT;
-    }
-    if (ctx1->algId != ctx2->algId) {
-        return PQCP_POLAR_LAC_KEY_CMP_FALSE;
-    }
-    if (ctx1->sk != NULL && ctx2->sk != NULL) {
-        if (memcmp(ctx1->sk, ctx2->sk, ctx1->info->skLen) != 0) {
-            return PQCP_POLAR_LAC_KEY_CMP_FALSE;
-        }
-    } else if (ctx1->sk != NULL || ctx2->sk != NULL) {
-        return PQCP_POLAR_LAC_KEY_CMP_FALSE;
-    }
-    if (ctx1->pk != NULL && ctx2->pk != NULL) {
-        if (memcmp(ctx1->pk, ctx2->pk, ctx1->info->pkLen) != 0) {
-            return PQCP_POLAR_LAC_KEY_CMP_FALSE;
-        }
-    } else if (ctx1->pk != NULL || ctx2->pk != NULL) {
-        return PQCP_POLAR_LAC_KEY_CMP_FALSE;
     }
     return PQCP_SUCCESS;
 }
@@ -385,3 +364,4 @@ int32_t PQCP_LAC2_GetPubKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     pub->useLen = ctx->info->pkLen;
     return PQCP_SUCCESS;
 }
+#endif // PQCP_POLARLAC

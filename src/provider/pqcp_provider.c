@@ -17,7 +17,7 @@
 #include "pqcp_provider_impl.h"
 #include "crypt_eal_implprovider.h"
 #include "crypt_types.h"
-#include "crypt_errno.h"
+#include "pqcp_err.h"
 #include "bsl_sal.h"
 
 /* Provider name */
@@ -29,20 +29,32 @@ typedef struct {
 
 
 static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
+#ifdef PQCP_SCLOUDPLUS
     {PQCP_PKEY_SCLOUDPLUS, g_pqcpKeyMgmtScloudPlus, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_POLARLAC
     {PQCP_PKEY_POLAR_LAC, g_pqcpKeyMgmtPolarLac, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_COMPOSITE_SIGN
     {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpKeyMgmtCompositeSign, PQCP_PROVIDER_NAME},
+#endif
     CRYPT_EAL_ALGINFO_END
 };
 
 static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
+#ifdef PQCP_SCLOUDPLUS
     {PQCP_PKEY_SCLOUDPLUS, g_pqcpKemScloudPlus, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_POLARLAC
     {PQCP_PKEY_POLAR_LAC, g_pqcpKemPolarLac, PQCP_PROVIDER_NAME},
+#endif
     CRYPT_EAL_ALGINFO_END
 };
 
 static CRYPT_EAL_AlgInfo g_pqcpKeySign[] = {
+#ifdef PQCP_COMPOSITE_SIGN
     {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpCompositeSign, PQCP_PROVIDER_NAME},
+#endif
     CRYPT_EAL_ALGINFO_END
 };
 
@@ -50,7 +62,7 @@ static CRYPT_EAL_AlgInfo g_pqcpKeySign[] = {
 static int32_t PQCP_ProviderQuery(void *provCtx, int32_t operaId, CRYPT_EAL_AlgInfo **algInfos)
 {
     if (provCtx == NULL || algInfos == NULL) {
-        return CRYPT_NULL_INPUT;
+        return PQCP_NULL_INPUT;
     }
     switch (operaId) {
         case CRYPT_EAL_OPERAID_KEYMGMT:
@@ -63,9 +75,9 @@ static int32_t PQCP_ProviderQuery(void *provCtx, int32_t operaId, CRYPT_EAL_AlgI
             *algInfos = g_pqcpKeySign;
             break;
         default:
-            return CRYPT_NOT_SUPPORT;
+            return PQCP_NOT_SUPPORT;
     }
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 static void PQCP_ProvideFree(void *provCtx)
@@ -78,8 +90,12 @@ static void PQCP_ProvideFree(void *provCtx)
 
 static int32_t PQCP_ProviderCtrl(void *provCtx, int32_t cmd, void *val, uint32_t valLen)
 {
+    (void) provCtx;
+    (void) cmd;
+    (void) val;
+    (void) valLen;
     /* Add provider control operations if needed */
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }
 
 /* Provider output functions */
@@ -103,11 +119,11 @@ int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
     /* Create provider context */
     ctx = (PQCP_ProvCtx *)BSL_SAL_Malloc(sizeof(PQCP_ProvCtx));
     if (ctx == NULL) {
-        return CRYPT_MEM_ALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
 
     ctx->handle = mgrCtx;
     *outFuncs = g_pqcpProviderFuncs;
     *provCtx = ctx;
-    return CRYPT_SUCCESS;
+    return PQCP_SUCCESS;
 }

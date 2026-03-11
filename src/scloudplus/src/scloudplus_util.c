@@ -12,11 +12,11 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
+#ifdef PQCP_SCLOUDPLUS
 #include "securec.h"
 #include "scloudplus_local.h"
 #include "bsl_sal.h"
 #include "bsl_errno.h"
-#include "crypt_errno.h"
 #include "crypt_eal_cipher.h"
 #include "crypt_eal_md.h"
 #include "pqcp_err.h"
@@ -746,7 +746,7 @@ void SCLOUDPLUS_MsgEncode(const uint8_t *msg, const SCLOUDPLUS_Para *para, uint1
     uint32_t bwNLen = SCLOUDPLUS_BW_COMPLEX_LEN << 1;
     (void)memset_s(matrixM, para->mbar * para->nbar * sizeof(uint16_t), 0, para->mbar * para->nbar * sizeof(uint16_t));
     for (int i = 0; i < para->muConut; i++) {
-        Complex v[SCLOUDPLUS_BW_COMPLEX_LEN];
+        Complex v[SCLOUDPLUS_BW_COMPLEX_LEN] = { 0 };
         LabelingComputeV(msgPtr, para->tau, v);
         LabelingComputeW(v, para->logq, para->tau, matMPtr);
         msgPtr += (para->mu >> 3);
@@ -1085,13 +1085,6 @@ int8_t SCLOUDPLUS_Verify(const uint8_t *a, const uint8_t *b, const int Len)
     return (int8_t)r;
 }
 
-void SCLOUDPLUS_CMov(uint8_t *r, const uint8_t *a, const uint8_t *b, const int Len, const int8_t bl)
-{
-    for (int i = 0; i < Len; i++) {
-        r[i] = (~bl & a[i]) | (bl & b[i]);
-    }
-}
-
 void SCLOUDPLUS_Add(const uint16_t *in0, const uint16_t *in1, const int len, uint16_t *out)
 {
     for (int i = 0; i < len; i++) {
@@ -1137,7 +1130,7 @@ int32_t SCLOUDPLUS_AS_E(const uint8_t *seedA, const uint16_t *S, const uint16_t 
     memcpy_s(B, para->m * para->nbar * 2, E, para->m * para->nbar * 2);
     CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL) {
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     uint32_t outLen = 4 * para->n * sizeof(uint16_t);
     const int blockRowLen = para->h1 * 2;
@@ -1199,7 +1192,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t *seedA, const uint16_t *S, uint16_t *E, co
 
     CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL) {
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     ret = CRYPT_EAL_CipherInit(RandCtx, seedA, 16, NULL, 0, true);
     if (ret != PQCP_SUCCESS) {
@@ -1298,12 +1291,12 @@ int32_t SCLOUDPLUS_SampleEta1(const uint8_t *seed, const SCLOUDPLUS_Para *para, 
     uint32_t hashLen = (para->m * para->nbar * 2 * para->eta1) >> 3;
     uint8_t *tmp = BSL_SAL_Malloc(hashLen);
     if (tmp == NULL) {
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     uint8_t *ptrTmp = tmp;
     uint16_t *ptrMatrix = matrixE;
     ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, seed, SCLOUDPLUS_SEED_R2_LEN, NULL, 0, tmp, &hashLen);
-    if (ret != CRYPT_SUCCESS) {
+    if (ret != PQCP_SUCCESS) {
         goto EXIT;
     }
     if (para->eta1 == 2) {
@@ -1342,7 +1335,7 @@ int32_t SCLOUDPLUS_SampleEta2(const uint8_t *seed, const SCLOUDPLUS_Para *para, 
     uint32_t hashLen = hash1Len + hash2Len;
     uint8_t *tmp = BSL_SAL_Malloc(hash1Len + hash2Len);
     if (tmp == NULL) {
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     uint8_t *ptrTmp1 = tmp;
     uint8_t *ptrTmp2 = tmp + hash1Len;
@@ -1403,7 +1396,7 @@ int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
     const int inLen = sizeof(hash);
     CRYPT_EAL_MdCTX *psiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
     if (psiCtx == NULL) {
-        ret = PQCP_MALLOC_FAIL;
+        ret = PQCP_MEM_ALLOC_FAIL;
     }
     ret = CRYPT_EAL_MdInit(psiCtx);
     if (ret != PQCP_SUCCESS) {
@@ -1453,7 +1446,7 @@ int32_t SCLOUDPLUS_SamplePhi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
     const int inLen = sizeof(hash);
     CRYPT_EAL_MdCTX *phiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
     if (phiCtx == NULL) {
-        return PQCP_MALLOC_FAIL;
+        return PQCP_MEM_ALLOC_FAIL;
     }
     ret = CRYPT_EAL_MdInit(phiCtx);
     if (ret != PQCP_SUCCESS) {
@@ -1517,4 +1510,4 @@ EXIT:
     CRYPT_EAL_MdFreeCtx(MdCtx);
     return ret;
 }
-
+#endif // PQCP_SCLOUDPLUS
