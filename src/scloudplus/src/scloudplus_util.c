@@ -692,32 +692,75 @@ static inline int32_t BDDForBWn(const Complex *t, const int32_t BWn, const uint8
     const int32_t tLen = BWn >> 1;
     const int32_t halfOftLen = tLen >> 1;
     const Complex phi = {1, 1};
-
+    int32_t ret = 0;
     if (BWn == 2) {
         y[0] = (Complex){Round(t[0].real, logq, tau), Round(t[0].imag, logq, tau)};
         return 0;
     }
-    Complex t1[halfOftLen], t2[halfOftLen], y1[halfOftLen], y2[halfOftLen];
+
+    Complex *t1 = BSL_SAL_Malloc(sizeof(Complex) * halfOftLen * 4);
+    if (t1 == NULL) {
+        return PQCP_MEM_ALLOC_FAIL;
+    }
+    Complex *t2 = t1 + halfOftLen;
+    Complex *y1 = t2 + halfOftLen;
+    Complex *y2 = y1 + halfOftLen;
+
     for (int i = 0; i < halfOftLen; i++) {
         t1[i] = t[i];
         t2[i] = t[i + halfOftLen];
     }
-    BDDForBWn(t1, tLen, logq, tau, y1);
-    BDDForBWn(t2, tLen, logq, tau, y2);
+    ret = BDDForBWn(t1, tLen, logq, tau, y1);
+    if (ret != 0) {
+        BSL_SAL_FREE(t1);
+        return ret;
+    }
+    ret = BDDForBWn(t2, tLen, logq, tau, y2);
+    if (ret != 0) {
+        BSL_SAL_FREE(t1);
+        return ret;
+    }
 
-    Complex z1[halfOftLen], z2[halfOftLen], z1in[halfOftLen], z2in[halfOftLen];
+    // Allocate memory for z1, z2, z1in, z2in (4 * halfOftLen)
+    Complex *z1 = BSL_SAL_Malloc(sizeof(Complex) * halfOftLen * 4);
+    if (z1 == NULL) {
+        BSL_SAL_FREE(t1);
+        return PQCP_MEM_ALLOC_FAIL;
+    }
+    Complex *z2 = z1 + halfOftLen;
+    Complex *z1in = z2 + halfOftLen;
+    Complex *z2in = z1in + halfOftLen;
+
     for (int i = 0; i < halfOftLen; i++) {
         z1in[i] = ComplexDivPhi(ComplexSub(t2[i], y1[i]));
         z2in[i] = ComplexDivPhi(ComplexSub(t1[i], y2[i]));
     }
-    BDDForBWn(z1in, tLen, logq, tau, z1);
-    BDDForBWn(z2in, tLen, logq, tau, z2);
+    ret = BDDForBWn(z1in, tLen, logq, tau, z1);
+    if (ret != 0) {
+        BSL_SAL_FREE(z1);
+        BSL_SAL_FREE(t1);
+        return ret;
+    }
+    ret = BDDForBWn(z2in, tLen, logq, tau, z2);
+    if (ret != 0) {
+        BSL_SAL_FREE(z1);
+        BSL_SAL_FREE(t1);
+        return ret;
+    }
 
     for (int i = 0; i < halfOftLen; i++) {
         z1[i] = ComplexMul(z1[i], phi);
         z2[i] = ComplexMul(z2[i], phi);
     }
-    Complex out1[tLen], out2[tLen];
+
+    Complex *out1 = BSL_SAL_Malloc(sizeof(Complex) * tLen * 2);
+    if (out1 == NULL) {
+        BSL_SAL_FREE(z1);
+        BSL_SAL_FREE(t1);
+        return PQCP_MEM_ALLOC_FAIL;
+    }
+    Complex *out2 = out1 + tLen;
+
     for (int i = 0; i < halfOftLen; i++) {
         out1[i] = y1[i];
         out1[halfOftLen + i] = ComplexAdd(y1[i], z1[i]);
@@ -736,6 +779,10 @@ static inline int32_t BDDForBWn(const Complex *t, const int32_t BWn, const uint8
             y[i] = out2[i];
         }
     }
+
+    BSL_SAL_FREE(out1);
+    BSL_SAL_FREE(z1);
+    BSL_SAL_FREE(t1);
     return 0;
 }
 

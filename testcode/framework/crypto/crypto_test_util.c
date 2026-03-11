@@ -210,6 +210,7 @@ int TestRandInit(void)
     if (ret != CRYPT_SUCCESS) {
         return ret;
     }
+    CRYPT_EAL_SetRandCallBack(TestSimpleRand);
     CRYPT_RandRegistEx(TestSimpleRandEx);
     return CRYPT_SUCCESS;
 }
