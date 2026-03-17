@@ -46,7 +46,7 @@ int32_t PQCP_POLAR_LAC_PseudoRandomBytes(void *libCtx, const uint8_t *in, uint32
 static int32_t Shake256Absorb(void *libCtx, const uint8_t *in, uint32_t inLen, void **mdCtx, EAL_MdMethod *method)
 {
     (void)method;
-    CRYPT_EAL_MdCTX *ctx = CRYPT_EAL_ProviderMdNewCtx(libCtx, CRYPT_MD_SHAKE256, NULL);
+    CRYPT_EAL_MdCtx *ctx = CRYPT_EAL_ProviderMdNewCtx(libCtx, CRYPT_MD_SHAKE256, NULL);
     if (ctx == NULL) {
         return PQCP_MEM_ALLOC_FAIL;
     }
