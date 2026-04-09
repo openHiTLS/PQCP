@@ -129,7 +129,7 @@ EXIT:
 static int32_t PQCP_TestLoadProvider(void)
 {
     char basePath[PATH_MAX] = {0};
-    char fullPath[PATH_MAX] = {0};
+    char fullPath[PATH_MAX + 16] = {0};
     
     // 获取当前可执行文件路径作为根路径
     if (readlink("/proc/self/exe", basePath, sizeof(basePath)-1) == -1) {

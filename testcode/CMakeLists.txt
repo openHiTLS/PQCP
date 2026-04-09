@@ -113,8 +113,11 @@ if(BUILD_DEMO)
             ${HITLS_CRYPTO_LIB}
             ${HITLS_BSL_LIB}
             ${PQCP_PROVIDER_LIB}
-            Threads::Threads
-            ${SECUREC_LIB})
+            ${SECUREC_LIB}
+            -Wl,--no-as-needed
+            -lpthread
+            -Wl,--as-needed
+            )
         install(TARGETS ${DEMO_NAME} DESTINATION ../output)
     endforeach()
 endif()
