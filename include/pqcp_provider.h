@@ -30,6 +30,10 @@ extern "C" {
 #define PQCP_PKEY_POLAR_LAC 0x88000004
 #define PQCP_PKEY_COMPOSITE_SIGN 0x88000005
 
+/* draft-pham-cfrg-hiae-05 */
+#define PQCP_CIPHER_HIAE 0x88000101
+#define PQCP_MAC_HIAE 0x88000201
+
 /* Provider initialization function */
 int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
                               BSL_Param *param,

@@ -49,6 +49,8 @@ CRYPT_EAL_ProviderLoad(libCtx, BSL_SAL_LIB_FMT_SO, "pqcp", NULL, NULL);
 
 - KEM: Scloud+
 - Digital Signatures: 
+- Symmetric Cipher (AEAD): HiAE
+- MAC: HiAE-MAC
 
 ## License
 

@@ -32,4 +32,9 @@ extern const CRYPT_EAL_Func g_pqcpKemPolarLac[];
 extern const CRYPT_EAL_Func g_pqcpKeyMgmtCompositeSign[];
 extern const CRYPT_EAL_Func g_pqcpCompositeSign[];
 #endif
+
+#ifdef PQCP_HIAE
+extern const CRYPT_EAL_Func g_pqcpCipherHiae[];
+extern const CRYPT_EAL_Func g_pqcpMacHiae[];
+#endif
 #endif /* PQCP_PROVIDER_IMPL_H */

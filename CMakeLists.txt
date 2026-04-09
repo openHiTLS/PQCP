@@ -14,6 +14,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(pqcp_provider C)
 
+include(CheckCCompilerFlag)
+
 # 新增：自定义库路径变量
 set(PQCP_LIB_DIR "" CACHE PATH "Custom library search path")
 set(PQCP_LIB_TYPE "SHARED" CACHE STRING "Library type (SHARED or STATIC)")
@@ -44,6 +46,33 @@ file(GLOB_RECURSE PROVIDER_SOURCES
     src/polarlac/src/*.c
     src/composite_sign/src/*.c
 )
+file(GLOB_RECURSE HIAE_SOURCES
+    src/hiae/src/*.c
+)
+
+set(PQCP_HIAE_SUPPORTED FALSE)
+set(PQCP_HIAE_COMPILE_OPTIONS)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+    check_c_compiler_flag("-maes" PQCP_COMPILER_SUPPORTS_MAES)
+    if(PQCP_COMPILER_SUPPORTS_MAES)
+        set(PQCP_HIAE_SUPPORTED TRUE)
+        list(APPEND PQCP_HIAE_COMPILE_OPTIONS "-maes")
+    endif()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+    check_c_compiler_flag("-march=armv8-a+crypto+aes+sha2" PQCP_COMPILER_SUPPORTS_ARMV8_CRYPTO)
+    if(PQCP_COMPILER_SUPPORTS_ARMV8_CRYPTO)
+        set(PQCP_HIAE_SUPPORTED TRUE)
+        list(APPEND PQCP_HIAE_COMPILE_OPTIONS "-march=armv8-a+crypto+aes+sha2")
+    endif()
+endif()
+
+if(PQCP_HIAE_SUPPORTED)
+    list(APPEND PROVIDER_SOURCES ${HIAE_SOURCES})
+else()
+    message(STATUS "HiAE disabled: unsupported target platform or compiler flags for ${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
 # 添加链接目录
 if(PQCP_LIB_DIR)
     link_directories(${PQCP_LIB_DIR})
@@ -65,6 +94,7 @@ target_include_directories(pqcp_provider
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scloudplus/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/polarlac/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/composite_sign/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hiae/include
         ${OPENHITLS_INCLUDE_DIRS}
         ${HITLS_ROOT_PATH}/include/crypto
         ${HITLS_ROOT_PATH}/include/bsl
@@ -88,8 +118,20 @@ target_compile_definitions(pqcp_provider PRIVATE
     HITLS_CRYPTO_EAL
     HITLS_CRYPTO_PKEY
     HITLS_CRYPTO_MD
+    HITLS_CRYPTO_CIPHER
+    HITLS_CRYPTO_MAC
     HITLS_NO_CONFIG_CHECK
 )
+
+if(NOT PQCP_HIAE_SUPPORTED)
+    target_compile_options(pqcp_provider PRIVATE -UPQCP_HIAE)
+endif()
+
+foreach(src ${HIAE_SOURCES})
+    if(PQCP_HIAE_SUPPORTED)
+        set_source_files_properties(${src} PROPERTIES COMPILE_OPTIONS "${PQCP_HIAE_COMPILE_OPTIONS}")
+    endif()
+endforeach()
 
 # 新增：目标链接目录
 target_link_directories(pqcp_provider PRIVATE

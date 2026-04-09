@@ -94,6 +94,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/../src/hybrid_env/src
     ${CMAKE_SOURCE_DIR}/../src/composite_sign/include
     ${CMAKE_SOURCE_DIR}/../src/composite_sign/src
+    ${CMAKE_SOURCE_DIR}/../src/hiae/include
+    ${CMAKE_SOURCE_DIR}/../src/hiae/src
 )
 
 # 构建Demo

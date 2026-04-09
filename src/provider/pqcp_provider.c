@@ -58,6 +58,20 @@ static CRYPT_EAL_AlgInfo g_pqcpKeySign[] = {
     CRYPT_EAL_ALGINFO_END
 };
 
+static CRYPT_EAL_AlgInfo g_pqcpCipher[] = {
+#ifdef PQCP_HIAE
+    {PQCP_CIPHER_HIAE, g_pqcpCipherHiae, PQCP_PROVIDER_NAME},
+#endif
+    CRYPT_EAL_ALGINFO_END
+};
+
+static CRYPT_EAL_AlgInfo g_pqcpMac[] = {
+#ifdef PQCP_HIAE
+    {PQCP_MAC_HIAE, g_pqcpMacHiae, PQCP_PROVIDER_NAME},
+#endif
+    CRYPT_EAL_ALGINFO_END
+};
+
 /* Provider function implementations */
 static int32_t PQCP_ProviderQuery(void *provCtx, int32_t operaId, CRYPT_EAL_AlgInfo **algInfos)
 {
@@ -73,6 +87,12 @@ static int32_t PQCP_ProviderQuery(void *provCtx, int32_t operaId, CRYPT_EAL_AlgI
             break;
         case CRYPT_EAL_OPERAID_SIGN:
             *algInfos = g_pqcpKeySign;
+            break;
+        case CRYPT_EAL_OPERAID_SYMMCIPHER:
+            *algInfos = g_pqcpCipher;
+            break;
+        case CRYPT_EAL_OPERAID_MAC:
+            *algInfos = g_pqcpMac;
             break;
         default:
             return PQCP_NOT_SUPPORT;
