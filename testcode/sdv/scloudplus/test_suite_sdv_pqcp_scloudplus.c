@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "crypt_errno.h"
-#include "securec.h"
 #include "bsl_sal.h"
 #include "crypt_algid.h"
 #include "crypt_eal_pkey.h"
@@ -38,7 +37,7 @@ uint32_t gScloudPlusRandNum = 0;
 static int32_t TEST_ScloudPlusRandom(uint8_t *randNum, uint32_t randLen)
 {
     if (gScloudPlusRandNum < 3) {
-        memcpy_s(randNum, randLen, gScloudPlusRandBuf[gScloudPlusRandNum], randLen);
+        memcpy(randNum, gScloudPlusRandBuf[gScloudPlusRandNum], randLen);
     }
     gScloudPlusRandNum++;
     if (gScloudPlusRandNum >= 3) {
@@ -514,14 +513,19 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_VECTOR_TC001(int bits, Hex *alpha, Hex *randZ, H
     uint8_t *ciphertext = NULL;
     uint8_t *sharedKey = NULL;
     uint8_t *decSharedKey = NULL;
+    CRYPT_EAL_PkeyCtx *pubKeyCtx = NULL;
+    CRYPT_EAL_PkeyCtx *prvKeyCtx = NULL;
     CRYPT_EAL_SetRandCallBack(TEST_ScloudPlusRandom);
-    memcpy_s(gScloudPlusRandBuf[1], 64, alpha->x, alpha->len);
-    memcpy_s(gScloudPlusRandBuf[0], 64, randZ->x, randZ->len);
-    memcpy_s(gScloudPlusRandBuf[2], 64, randM->x, randM->len);
-    CRYPT_EAL_PkeyCtx *pubKeyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    ASSERT_TRUE(alpha->len <= sizeof(gScloudPlusRandBuf[1]));
+    ASSERT_TRUE(randZ->len <= sizeof(gScloudPlusRandBuf[0]));
+    ASSERT_TRUE(randM->len <= sizeof(gScloudPlusRandBuf[2]));
+    memcpy(gScloudPlusRandBuf[1], alpha->x, alpha->len);
+    memcpy(gScloudPlusRandBuf[0], randZ->x, randZ->len);
+    memcpy(gScloudPlusRandBuf[2], randM->x, randM->len);
+    pubKeyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     
-    CRYPT_EAL_PkeyCtx *prvKeyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL,  PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
+    prvKeyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL,  PQCP_PKEY_SCLOUDPLUS, CRYPT_EAL_PKEY_KEM_OPERATE,
         "provider=pqcp");
     ASSERT_NE(pubKeyCtx, NULL);
     ASSERT_NE(prvKeyCtx, NULL);

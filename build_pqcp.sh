@@ -26,7 +26,6 @@ ENABLE_GCOV="OFF"
 OPENHITLS_DIR="platform/openhitls"
 LIB_TYPE="SHARED"
 CUSTOM_HITLS_DIR=""
-SECURE_C_DIR="platform/openhitls/platform/Secure_C"
 
 ENABLED_ALGORITHMS=""    # --enable 指定的算法列表
 DISABLED_ALGORITHMS=""   # --disable 指定的算法列表
@@ -173,14 +172,11 @@ cd "${PQCP_ROOT_DIR}/build" || exit
 
 build_depend_code()
 {
-    # 构建Secure_C
-    echo "构建Secure_C..."
-    if [ ! -f "${PQCP_ROOT_DIR}/${SECURE_C_DIR}/libboundscheck.a" ]; then
-        cd "${PQCP_ROOT_DIR}/${SECURE_C_DIR}"
-        make -j$(nproc)
-        cd -
+    if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
+        echo "下载OpenHiTLS..."
+        mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
+        git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
     fi
-
     # 构建OpenHiTLS
     echo "构建OpenHiTLS..."
     if [ ! -d "${PQCP_ROOT_DIR}/platform/openhitls/build" ]; then
@@ -191,18 +187,10 @@ build_depend_code()
     fi
 }
 
-# 下载依赖
-echo "检查依赖项..."
-if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
-    echo "下载OpenHiTLS..."
-    mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
-    git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
-fi
-
-build_depend_code
 if [ -n "$CUSTOM_HITLS_DIR" ]; then
     HITLS_ROOT_PATH="$CUSTOM_HITLS_DIR"
 else
+    build_depend_code
     HITLS_ROOT_PATH="${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
 fi
 
@@ -219,7 +207,6 @@ cmake .. \
     -DENABLE_GCOV=${ENABLE_GCOV} \
     -DCMAKE_C_FLAGS="${ALGO_FLAGS}" \
     -DUSER_BUILD_ARGS="${BUILD_ARGS}" \
-    -DCMAKE_PREFIX_PATH="${PQCP_ROOT_DIR}/${OPENHITLS_DIR};${PQCP_ROOT_DIR}/${SECURE_C_DIR}" \
     -DHITLS_ROOT_PATH="${HITLS_ROOT_PATH}" \
     -DPQCP_LIB_TYPE=${LIB_TYPE}
 

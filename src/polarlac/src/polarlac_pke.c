@@ -20,7 +20,6 @@
 
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
-#include "securec.h"
 #include "pqcp_err.h"
 
 #define RATIO 126 // Q/2
@@ -79,8 +78,8 @@ static void EncodeToE2(uint8_t *e2, const uint8_t *m, int32_t *c2Len, int32_t al
     /* polar encoding */
     uint8_t u[codeLen * 8]; // source sequence(each element stores 1 bits)
     uint8_t code[codeLen]; // codeword sequence(each element stores 8 bits)
-    memset_s(u, sizeof(u), 0, sizeof(u));
-    memset_s(code, sizeof(code), 0, sizeof(code));
+    memset(u, 0, sizeof(u));
+    memset(code, 0, sizeof(code));
     const uint8_t *eccInfoNodes = NULL;
     switch (algId) {
         case PQCP_POLAR_LAC_LIGHT:
@@ -143,14 +142,14 @@ int32_t PQCP_POLAR_LAC_PkeKeyGen(CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *seed)
     RETURN_RET_IF(PQCP_POLAR_LAC_PseudoRandomBytes(NULL, seed, seedLen, randBuf, seedLen * 3), ret);
     RETURN_RET_IF(PQCP_POLAR_LAC_SamplePolyA(NULL, Q, randBuf, seedLen, a, dimN), ret);
     // Copy the seed to the first part of pk: pk = seed | as+e;
-    memcpy_s(pk, pkLen, randBuf, seedLen);
+    memcpy(pk, randBuf, seedLen);
     // generate random vector r
     RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen, seedLen, sk, dimN, algId), ret);
     RETURN_RET_IF(PQCP_POLAR_LAC_SampleSparseTernaryVector(NULL, Q, randBuf + seedLen * 2, seedLen, e, dimN, algId),
                   ret);
     PQCP_POLAR_LAC_PolyAff(a, sk, e, pk + seedLen, dimN, algId);
     // copy pk=as+e to the second part of sk, now sk=s|pk
-    memcpy_s(sk + skLen - pkLen, pkLen, pk, pkLen);
+    memcpy(sk + skLen - pkLen, pk, pkLen);
     return PQCP_SUCCESS;
 }
 
@@ -276,14 +275,14 @@ int32_t PQCP_POLAR_LAC_PkeDecrypt(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t 
     // polar decode to recover m
     PQCP_POLAR_LAC_DecodePolar(mCap, llr, ctx->algId);
     // each element stores 1 binary value -> each element stores 8 binary values
-    memset_s(mBuf, msgLen, 0, msgLen);
+    memset(mBuf, 0, msgLen);
     for (uint32_t i = 0; i < msgLen; i++) {
         for (uint32_t j = 0; j < 8; j++) {
             mBuf[i] |= (mCap[8 * i + j] << j);
         }
     }
 
-    memcpy_s(m, *mlen, mBuf, *mlen);
+    memcpy(m, mBuf, *mlen);
     return PQCP_SUCCESS;
 }
 #endif // PQCP_POLARLAC

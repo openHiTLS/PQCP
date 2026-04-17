@@ -136,18 +136,15 @@ endforeach()
 # 新增：目标链接目录
 target_link_directories(pqcp_provider PRIVATE
     ${HITLS_ROOT_PATH}/build
-    ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/lib
 )
 
 message(STATUS "hitls_crypto: ${HITLS_CRYPTO_LIB}")
 message(STATUS "hitls_bsl: ${HITLS_BSL_LIB}")
-message(STATUS "boundscheck: ${SECUREC_LIB}")
 message(STATUS "HITLS_ROOT_PATH: ${HITLS_ROOT_PATH}")
 
 target_link_libraries(pqcp_provider
     hitls_bsl
     hitls_crypto
-    boundscheck
 )
 
 # 在文件末尾添加以下内容

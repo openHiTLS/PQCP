@@ -12,13 +12,10 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
-#include "securec.h"
 #include "helper.h"
 
 #define EXECUTE_BASE_FILE "../common/execute_base.c"
 #define EXECUTE_TEST_FILE "../common/execute_test.c"
-
 typedef struct {
     char suiteName[MAX_FILE_PATH_LEN];
     char dir[MAX_FILE_PATH_LEN];

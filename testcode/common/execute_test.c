@@ -90,10 +90,14 @@ static int ParseArgs(const TestArgs *arg, TestParam *info)
 static int PrintCaseNameResult(FILE *logFile, int vectorCount, int skipCount, int passCount, time_t beginTime)
 {
     char suitePrefix[OUTPUT_LINE_LENGTH] = {0};
-    (void)snprintf_truncated_s(suitePrefix, sizeof(suitePrefix), "%s", suiteName);
+    int ret = snprintf(suitePrefix, sizeof(suitePrefix), "%s", suiteName);
+    if (ret < 0 || (unsigned int)ret >= sizeof(suitePrefix)) {
+        Print("An error occurred while creating the suite prefix\n");
+        return -1;
+    }
     size_t leftSize = sizeof(suitePrefix) - 1 - strlen(suitePrefix);
     if (leftSize > 0) {
-        (void)memset_s(suitePrefix + strlen(suitePrefix), sizeof(suitePrefix) - strlen(suitePrefix), '.', leftSize);
+        memset(suitePrefix + strlen(suitePrefix), '.', leftSize);
     }
     int failCount = vectorCount - passCount - skipCount;
     if (failCount == 0) {
@@ -197,17 +201,20 @@ static int ExecuteTest(const char *fileName, bool showDetail, int targetFuncId)
     if (LoadDataFile(fileName) != 0) {
         return -1;
     }
+    int ret;
     FILE *logFile = NULL;
     char logFileName[MAX_FILE_NAME] = {0};
     if (targetFuncId == -1) {
-        if (sprintf_s(logFileName, MAX_FILE_NAME, SUITE_LOG_FORMAT, suiteName) <= 0) {
+        ret = snprintf(logFileName, MAX_FILE_NAME, SUITE_LOG_FORMAT, suiteName);
+        if (ret < 0 || ret >= MAX_FILE_NAME) {
             Print("An error occurred while creating the log file\n");
-            return (-1);
+            return -1;
         }
     } else {
-        if (sprintf_s(logFileName, MAX_FILE_NAME, FUNCTION_LOG_FORMAT, suiteName, funcName[targetFuncId]) <= 0) {
+        ret = snprintf(logFileName, MAX_FILE_NAME, FUNCTION_LOG_FORMAT, suiteName, funcName[targetFuncId]);
+        if (ret < 0 || ret >= MAX_FILE_NAME) {
             Print("An error occurred while creating the log file\n");
-            return (-1);
+            return -1;
         }
     }
     time_t rawtime = time(NULL);
@@ -286,9 +293,11 @@ int main(int argc, char **argv)
     int ret = 0;
 #ifndef PRINT_TO_TERMINAL
     char testOutputName[MAX_FILE_NAME] = {0};
-    if (sprintf_s(testOutputName, MAX_FILE_NAME, "%s.output", suiteName) <= 0) {
+    if (strlen(suiteName) + 7 >= MAX_FILE_NAME) {
         return 0;
     }
+    sprintf(testOutputName, "%s.output", suiteName);
+
     FILE *fp = fopen(testOutputName, "w");
     if (fp == NULL) {
         return 1;
@@ -297,9 +306,10 @@ int main(int argc, char **argv)
 #endif
 
     char testName[MAX_FILE_PATH_LEN];
-    if (sprintf_s(testName, MAX_FILE_PATH_LEN, "%s.datax", suiteName) <= 0) {
+    if (strlen(suiteName) + 6 >= MAX_FILE_PATH_LEN) {
         goto EXIT;
     }
+    sprintf(testName, "%s.datax", suiteName);
     if (argc == 1) {
         ret = ExecuteTest(testName, 1, -1);
     } else {

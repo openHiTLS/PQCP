@@ -23,10 +23,8 @@
 #include "crypt_types.h"
 #include "bsl_err_internal.h"
 #include "bsl_sal.h"
-
 #include "crypt_hiae.h"
 #include "hiae_impl.h"
-
 struct PQCP_HiaeMacCtx {
     DATA128b state[HIAE_STATE_NUM];
     uint8_t key[HIAE_KEY_LEN];

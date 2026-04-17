@@ -13,16 +13,16 @@
  * See the Mulan PSL v2 for more details.
  */
 #ifdef PQCP_SCLOUDPLUS
+#include <string.h>
 
 #include "scloudplus.h"
 #include "bsl_sal.h"
 #include "crypt_eal_md.h"
 #include "crypt_eal_rand.h"
-#include "securec.h"
+
 #include "pqcp_err.h"
 #include "pqcp_types.h"
 #include "scloudplus_local.h"
-
 
 // 预定义三组参数配置
 static SCLOUDPLUS_Para PRESET_PARAS[] = {
@@ -143,7 +143,7 @@ int32_t SCLOUDPLUS_PKEKeygen(const SCLOUDPLUS_Para *para, uint8_t *pk, uint8_t *
         goto EXIT;
     }
     SCLOUDPLUS_PackPK(B, para, pk);
-    (void)memcpy_s(pk + para->pkSize - SCLOUDPLUS_SEED_A_LEN, SCLOUDPLUS_SEED_A_LEN, seedA, SCLOUDPLUS_SEED_A_LEN);
+    memcpy(pk + para->pkSize - SCLOUDPLUS_SEED_A_LEN, seedA, SCLOUDPLUS_SEED_A_LEN);
     SCLOUDPLUS_PackSK(S, para, sk);
 EXIT:
     BSL_SAL_FREE(memoryPool);
@@ -234,7 +234,7 @@ void *PQCP_SCLOUDPLUS_NewCtx(void)
     if (ctx == NULL) {
         return NULL;
     }
-    (void)memset_s(ctx, sizeof(SCLOUDPLUS_Ctx), 0, sizeof(SCLOUDPLUS_Ctx));
+    memset(ctx, 0, sizeof(SCLOUDPLUS_Ctx));
 
     return ctx;
 }
@@ -248,8 +248,7 @@ int32_t PQCP_SCLOUDPLUS_Gen(SCLOUDPLUS_Ctx *ctx)
         BSL_SAL_FREE(ctx->publicKey);
     }
     if (ctx->privateKey != NULL) {
-        (void)memset_s(ctx->privateKey, ctx->para->kemSkSize, 0, ctx->para->kemSkSize);
-        BSL_SAL_FREE(ctx->privateKey);
+        BSL_SAL_ClearFree(ctx->privateKey, ctx->para->kemSkSize);
     }
     ctx->publicKey = BSL_SAL_Calloc(ctx->para->pkSize, sizeof(uint8_t));
     if (ctx->publicKey == NULL) {
@@ -269,13 +268,13 @@ int32_t PQCP_SCLOUDPLUS_Gen(SCLOUDPLUS_Ctx *ctx)
     if (ret != PQCP_SUCCESS) {
         goto EXIT;
     }
-    (void)memcpy_s(ctx->privateKey + ctx->para->pkeSkSize, ctx->para->pkSize, ctx->publicKey, ctx->para->pkSize);
+    memcpy(ctx->privateKey + ctx->para->pkeSkSize, ctx->publicKey, ctx->para->pkSize);
     ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHA3_256, ctx->publicKey, ctx->para->pkSize, NULL, 0,
                             ctx->privateKey + ctx->para->pkeSkSize + ctx->para->pkSize, &outLen);
     if (ret != PQCP_SUCCESS) {
         goto EXIT;
     }
-    (void)memcpy_s(ctx->privateKey + ctx->para->kemSkSize - SCLOUDPLUS_RAND_Z_LEN, SCLOUDPLUS_RAND_Z_LEN, z, SCLOUDPLUS_RAND_Z_LEN);
+    memcpy(ctx->privateKey + ctx->para->kemSkSize - SCLOUDPLUS_RAND_Z_LEN, z, SCLOUDPLUS_RAND_Z_LEN);
 
     return PQCP_SUCCESS;
 EXIT:
@@ -283,8 +282,7 @@ EXIT:
         BSL_SAL_FREE(ctx->publicKey);
     }
     if (ctx->privateKey != NULL) {
-        (void)memset_s(ctx->privateKey, ctx->para->kemSkSize, 0, ctx->para->kemSkSize);
-        BSL_SAL_FREE(ctx->privateKey);
+        BSL_SAL_ClearFree(ctx->privateKey, ctx->para->kemSkSize);
     }
     return ret;
 }
@@ -309,7 +307,7 @@ int32_t PQCP_SCLOUDPLUS_SetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     }
 
     uint32_t useLen = ctx->para->kemSkSize;
-    (void)memcpy_s(ctx->privateKey, useLen, prv->value, useLen);
+    memcpy(ctx->privateKey, prv->value, useLen);
     return PQCP_SUCCESS;
 }
 
@@ -333,7 +331,7 @@ int32_t PQCP_SCLOUDPLUS_SetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
     }
 
     uint32_t useLen = ctx->para->pkSize;
-    (void)memcpy_s(ctx->publicKey, useLen, pub->value, useLen);
+    memcpy(ctx->publicKey, pub->value, useLen);
     return PQCP_SUCCESS;
 }
 
@@ -353,7 +351,7 @@ int32_t PQCP_SCLOUDPLUS_GetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
         return PQCP_SCLOUDPLUS_INVALID_ARG;
     }
     uint32_t useLen = ctx->para->kemSkSize;
-    (void)memcpy_s(prv->value, useLen, ctx->privateKey, useLen);
+    memcpy(prv->value, ctx->privateKey, useLen);
     prv->useLen = useLen;
     return PQCP_SUCCESS;
 }
@@ -374,7 +372,7 @@ int32_t PQCP_SCLOUDPLUS_GetPubKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
         return PQCP_SCLOUDPLUS_INVALID_ARG;
     }
     uint32_t useLen = ctx->para->pkSize;
-    (void)memcpy_s(pub->value, useLen, ctx->publicKey, useLen);
+    memcpy(pub->value, ctx->publicKey, useLen);
     pub->useLen = useLen;
     return PQCP_SUCCESS;
 }
@@ -397,7 +395,7 @@ SCLOUDPLUS_Ctx *PQCP_SCLOUDPLUS_DupCtx(SCLOUDPLUS_Ctx *src)
             PQCP_SCLOUDPLUS_FreeCtx(ctx);
             return NULL;
         }
-        (void)memcpy_s(ctx->publicKey, ctx->para->pkSize, src->publicKey, ctx->para->pkSize);
+        memcpy(ctx->publicKey, src->publicKey, ctx->para->pkSize);
     }
     if (src->privateKey != NULL) {
         ctx->privateKey = BSL_SAL_Calloc(src->para->kemSkSize, sizeof(uint8_t));
@@ -405,7 +403,7 @@ SCLOUDPLUS_Ctx *PQCP_SCLOUDPLUS_DupCtx(SCLOUDPLUS_Ctx *src)
             PQCP_SCLOUDPLUS_FreeCtx(ctx);
             return NULL;
         }
-        (void)memcpy_s(ctx->privateKey, ctx->para->kemSkSize, src->privateKey, ctx->para->kemSkSize);
+        memcpy(ctx->privateKey, src->privateKey, ctx->para->kemSkSize);
     }
     return ctx;
 }
@@ -453,7 +451,7 @@ int32_t PQCP_SCLOUDPLUS_Ctrl(SCLOUDPLUS_Ctx *ctx, int32_t cmd, void *val, uint32
             if (ctx->para == NULL || val == NULL || valLen != sizeof(SCLOUDPLUS_Para)) {
                 return PQCP_NULL_INPUT;
             }
-            (void)memcpy_s(val, sizeof(SCLOUDPLUS_Para), ctx->para, sizeof(SCLOUDPLUS_Para));
+            memcpy(val, ctx->para, sizeof(SCLOUDPLUS_Para));
             return PQCP_SUCCESS;
         }
         case CRYPT_CTRL_GET_CIPHERTEXT_LEN: {
@@ -492,7 +490,7 @@ void PQCP_SCLOUDPLUS_FreeCtx(SCLOUDPLUS_Ctx *ctx)
     }
     if (ctx->privateKey != NULL) {
         if (ctx->para != NULL) {
-            (void)memset_s(ctx->privateKey, ctx->para->kemSkSize, 0, ctx->para->kemSkSize);
+            memset(ctx->privateKey, 0, ctx->para->kemSkSize);
         }
         BSL_SAL_FREE(ctx->privateKey);
     }

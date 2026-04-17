@@ -42,7 +42,7 @@ pqcp/testcode/
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "securec.h"
+
 #include "bsl_sal.h"
 #include "pqcp_err.h"
 #include "crypt_eal_pkey.h"
@@ -152,9 +152,9 @@ void SDV_CRYPTO_PQCP_<MODULE>_VECTOR_TC001(int bits, Hex *alpha, Hex *randZ,
     CRYPT_EAL_SetRandCallBack(TEST_<Module>Random);
 
     // 复制测试向量到全局缓冲区
-    memcpy_s(gRandBuf[1], 64, alpha->x, alpha->len);
-    memcpy_s(gRandBuf[0], 64, randZ->x, randZ->len);
-    memcpy_s(gRandBuf[2], 64, randM->x, randM->len);
+    memcpy(gRandBuf[1], alpha->x, alpha->len);
+    memcpy(gRandBuf[0], randZ->x, randZ->len);
+    memcpy(gRandBuf[2], randM->x, randM->len);
 
     // 创建上下文并测试
     CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_xxx,

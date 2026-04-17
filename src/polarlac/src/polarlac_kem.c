@@ -19,7 +19,6 @@
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
 #include "pqcp_err.h"
-#include "securec.h"
 
 static int32_t SHA3_256(const uint8_t *in, uint32_t inLen, uint8_t *out, uint32_t outLen)
 {
@@ -44,14 +43,14 @@ static int32_t PolarLacKemEncFo(const CRYPT_POLAR_LAC_Ctx *ctx, uint8_t *k, uint
     // generate random message m, stored in buf
     RETURN_RET_IF(CRYPT_EAL_Randbytes(buf, msgLen), ret);
     // compute seed=hash(m|pk), add pk for multi key attack protection
-    memcpy_s(seed_buf, msgLen + pkLen, buf, msgLen);
-    memcpy_s(seed_buf + msgLen, pkLen, pk, pkLen);
+    memcpy(seed_buf, buf, msgLen);
+    memcpy(seed_buf + msgLen, pk, pkLen);
     RETURN_RET_IF(SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen), ret);
     // encrypt m with seed
     RETURN_RET_IF(PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, c, &cLen, seed), ret);
 
     // compute k=hash(m|c)
-    memcpy_s(buf + msgLen, ctLen, c, ctLen);
+    memcpy(buf + msgLen, c, ctLen);
     return SHA3_256(buf, msgLen + ctLen, k, 32);
 }
 
@@ -77,11 +76,11 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     // compute m from c
     RETURN_RET_IF(PQCP_POLAR_LAC_PkeDecrypt(ctx, c, ctLen, buf, &mLen), ret);
     // compute k=hash(m|c)
-    memcpy_s(buf + msgLen, ctLen, c, ctLen);
+    memcpy(buf + msgLen, c, ctLen);
     RETURN_RET_IF(SHA3_256(buf, msgLen + ctLen, k, 32), ret);
     // re-encryption with seed=hash(m|pk), add pk for multi key attack protection
-    memcpy_s(seed_buf, msgLen + pkLen, buf, msgLen);
-    memcpy_s(seed_buf + msgLen, pkLen, pk, pkLen);
+    memcpy(seed_buf, buf, msgLen);
+    memcpy(seed_buf + msgLen, pk, pkLen);
     RETURN_RET_IF(SHA3_256(seed_buf, msgLen + pkLen, seed, seedLen), ret);
     RETURN_RET_IF(PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, verifyCt, &cLen, seed), ret);
 
@@ -92,7 +91,7 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
         if (ret != PQCP_SUCCESS) {
             return ret;
         }
-        memcpy_s(buf + msgLen, ctLen, c, ctLen);
+        memcpy(buf + msgLen, c, ctLen);
         return SHA3_256(buf, msgLen + ctLen, k, 32);
     }
 

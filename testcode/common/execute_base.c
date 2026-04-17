@@ -12,11 +12,9 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
 #include <signal.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include "securec.h"
 
 #define BUF_SIZE (65536 * 17)
 #define MAX_RAND_SIZE (1024 * 16)

@@ -77,7 +77,7 @@ foreach(test_suite ${TEST_FILES})
         ${HITLS_ROOT_DIR}/config/macro_config
     )
     target_link_libraries(${sdv_exe} PRIVATE TESTCASE_PRE 
-                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${SECUREC_LIB} ${PQCP_PROVIDER_LIB} pthread)
+                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${PQCP_PROVIDER_LIB} pthread)
     if(NOT MACROS)
         target_link_libraries(${sdv_exe} PRIVATE SHARED_COMPILE_DEFS)
     endif()

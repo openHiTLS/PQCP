@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include "crypt_errno.h"
-#include "securec.h"
 #include "bsl_sal.h"
 #include "bsl_params.h"
 #include "crypt_types.h"

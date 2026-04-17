@@ -14,12 +14,12 @@
 */
 #ifdef PQCP_POLARLAC
 #include <stdint.h>
+#include <string.h>
 
 #include "crypt_eal_md.h"
 #include "crypt_types.h"
 #include "pqcp_err.h"
 #include "polarlac_local.h"
-#include "securec.h"
 
 typedef struct EAL_MdMethod EAL_MdMethod;
 
@@ -129,7 +129,7 @@ static int32_t SampleSparseTernaryVector128(void *mdCtx, uint8_t q, uint8_t *e, 
     uint16_t norm;
     uint16_t e1;
     uint16_t e2;
-    memset_s(e, eLen, 0, eLen);
+    memset(e, 0, eLen);
     RETURN_RET_IF(CRYPT_EAL_MdSqueeze(mdCtx, r, 64), ret);
     t = 0;
     for (i = 0; i < 8; i++) {
@@ -186,7 +186,7 @@ static int32_t SampleSparseTernaryVector256(void *mdCtx, uint8_t q, uint8_t *e, 
     uint16_t norm;
     uint16_t e1;
     uint16_t e2;
-    memset_s(e, eLen, 0, eLen);
+    memset(e, 0, eLen);
     RETURN_RET_IF(CRYPT_EAL_MdSqueeze(mdCtx, r, SHAKE256_RATE * 2), ret);
     t = 0;
     for (i = 0; i < 8; i++) {

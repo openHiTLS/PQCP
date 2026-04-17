@@ -13,9 +13,10 @@
 * See the Mulan PSL v2 for more details.
 */
 #ifdef PQCP_POLARLAC
+#include <string.h>
+
 #include "polarlac_local.h"
 #include "bsl_sal.h"
-#include "securec.h"
 #include "pqcp_err.h"
 #include "crypt_polarlac.h"
 #include "crypt_types.h"
@@ -92,7 +93,7 @@ void *PQCP_LAC2_NewCtx()
     if (ctx == NULL) {
         return NULL;
     }
-    (void)memset_s(ctx, sizeof(CRYPT_POLAR_LAC_Ctx), 0, sizeof(CRYPT_POLAR_LAC_Ctx));
+    memset(ctx, 0, sizeof(CRYPT_POLAR_LAC_Ctx));
     return ctx;
 }
 
@@ -150,8 +151,8 @@ int32_t PQCP_LAC2_SetPrvKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
         return PQCP_MEM_ALLOC_FAIL;
     }
     uint32_t useLen = ctx->info->skLen;
-    (void)memcpy_s(ctx->sk, useLen, prv->value, useLen);
-    (void)memcpy_s(ctx->pk, ctx->info->pkLen, ctx->sk + ctx->info->skLen - ctx->info->pkLen, ctx->info->pkLen);
+    memcpy(ctx->sk, prv->value, useLen);
+    memcpy(ctx->pk, ctx->sk + ctx->info->skLen - ctx->info->pkLen, ctx->info->pkLen);
     return PQCP_SUCCESS;
 }
 
@@ -174,8 +175,7 @@ int32_t PQCP_LAC2_SetPubKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx->pk == NULL) {
         return PQCP_MEM_ALLOC_FAIL;
     }
-    uint32_t useLen = ctx->info->pkLen;
-    (void)memcpy_s(ctx->pk, useLen, pub->value, useLen);
+    memcpy(ctx->pk, pub->value, ctx->info->pkLen);
     return PQCP_SUCCESS;
 }
 
@@ -317,7 +317,7 @@ CRYPT_POLAR_LAC_Ctx *PQCP_LAC2_DupCtx(CRYPT_POLAR_LAC_Ctx *srcCtx)
             PQCP_LAC2_FreeCtx(ctx);
             return NULL;
         }
-        memcpy_s(ctx->sk, ctx->info->skLen, srcCtx->sk, srcCtx->info->skLen);
+        memcpy(ctx->sk, srcCtx->sk, srcCtx->info->skLen);
     }
     if (srcCtx->pk != NULL) {
         ctx->pk = BSL_SAL_Malloc(ctx->info->pkLen);
@@ -326,7 +326,7 @@ CRYPT_POLAR_LAC_Ctx *PQCP_LAC2_DupCtx(CRYPT_POLAR_LAC_Ctx *srcCtx)
             PQCP_LAC2_FreeCtx(ctx);
             return NULL;
         }
-        memcpy_s(ctx->pk, ctx->info->pkLen, srcCtx->pk, srcCtx->info->pkLen);
+        memcpy(ctx->pk, srcCtx->pk, srcCtx->info->pkLen);
     }
     return ctx;
 }
@@ -343,7 +343,7 @@ int32_t PQCP_LAC2_GetPrvKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx->info->skLen > prv->valueLen) {
         return PQCP_POLAR_LAC_LEN_NOT_ENOUGH;
     }
-    memcpy_s(prv->value, prv->valueLen, ctx->sk, ctx->info->skLen);
+    memcpy(prv->value, ctx->sk, ctx->info->skLen);
     prv->useLen = ctx->info->skLen;
     return PQCP_SUCCESS;
 }
@@ -360,7 +360,7 @@ int32_t PQCP_LAC2_GetPubKey(CRYPT_POLAR_LAC_Ctx *ctx, BSL_Param *param)
     if (ctx->info->pkLen > pub->valueLen) {
         return PQCP_POLAR_LAC_LEN_NOT_ENOUGH;
     }
-    memcpy_s(pub->value, pub->valueLen, ctx->pk, ctx->info->pkLen);
+    memcpy(pub->value, ctx->pk, ctx->info->pkLen);
     pub->useLen = ctx->info->pkLen;
     return PQCP_SUCCESS;
 }

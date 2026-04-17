@@ -13,7 +13,8 @@
  * See the Mulan PSL v2 for more details.
  */
 #ifdef PQCP_SCLOUDPLUS
-#include "securec.h"
+#include <string.h>
+
 #include "scloudplus_local.h"
 #include "bsl_sal.h"
 #include "bsl_errno.h"
@@ -582,7 +583,7 @@ static inline int32_t DelabelingComputeU(const Complex v[SCLOUDPLUS_BW_COMPLEX_L
         vecV[2 * i + 1] = v[i].imag;
     }
     if (tau == 3) {
-        memset_s(m, 8, 0, 8);
+        memset(m, 0, 8);
         for (int i = 5; i >= 0; i--) {
             m[7] = (m[7] << 1 | vecV[C[i]]);
         }
@@ -615,7 +616,7 @@ static inline int32_t DelabelingComputeU(const Complex v[SCLOUDPLUS_BW_COMPLEX_L
         m[0] = m[0] | (vecV[A[1]] << 3);
         m[0] = m[0] | (vecV[A[0]] << 0);
     } else if (tau == 4) {
-        memset_s(m, 12, 0, 12);
+        memset(m, 0, 12);
         m[11] = (vecV[C[5]] << 6) | (vecV[C[4]] << 4) | (vecV[C[3]] << 2) | (vecV[C[2]]);
         m[10] = (vecV[C[1]] << 6) | (vecV[C[0]] << 4) | (vecV[B[19]] << 1) | ((vecV[B[18]]) >> 2);
         m[9] = (vecV[B[18]] << 6) | (vecV[B[17]] << 3) | vecV[B[16]];
@@ -791,7 +792,7 @@ void SCLOUDPLUS_MsgEncode(const uint8_t *msg, const SCLOUDPLUS_Para *para, uint1
     uint8_t *msgPtr = (uint8_t *)msg;
     uint16_t *matMPtr = matrixM;
     uint32_t bwNLen = SCLOUDPLUS_BW_COMPLEX_LEN << 1;
-    (void)memset_s(matrixM, para->mbar * para->nbar * sizeof(uint16_t), 0, para->mbar * para->nbar * sizeof(uint16_t));
+    memset(matrixM, 0, para->mbar * para->nbar * sizeof(uint16_t));
     for (int i = 0; i < para->muConut; i++) {
         Complex v[SCLOUDPLUS_BW_COMPLEX_LEN] = { 0 };
         LabelingComputeV(msgPtr, para->tau, v);
@@ -886,7 +887,7 @@ void SCLOUDPLUS_CompressC1(const uint16_t *C, const SCLOUDPLUS_Para *para, uint1
             out[i] = ((((uint32_t)(C[i] & SCLOUDPLUS_MOD_Q) << 9) + 2048) >> 12) & 0x1FF;
         }
     } else if (para->ss == 24) {
-        memcpy_s(out, para->mbar * para->n * sizeof(uint16_t), C, para->mbar * para->n * sizeof(uint16_t));
+        memcpy(out, C, para->mbar * para->n * sizeof(uint16_t));
     } else if (para->ss == 32) {
         for (int i = 0; i < para->mbar * para->n; i++) {
             out[i] = ((((uint32_t)(C[i] & SCLOUDPLUS_MOD_Q) << 10) + 2048) >> 12) & 0x3FF;
@@ -901,7 +902,7 @@ void SCLOUDPLUS_DeCompressC1(const uint16_t *in, const SCLOUDPLUS_Para *para, ui
             C[i] = ((uint32_t)((in[i] & 0x1FF) << 12) + 256) >> 9;
         }
     } else if (para->ss == 24) {
-        memcpy_s(C, para->mbar * para->n * sizeof(uint16_t), in, para->mbar * para->n * sizeof(uint16_t));
+        memcpy(C, in, para->mbar * para->n * sizeof(uint16_t));
     } else if (para->ss == 32) {
         for (int i = 0; i < para->mbar * para->n; i++) {
             C[i] = ((uint32_t)((in[i] & 0x3FF) << 12) + 512) >> 10;
@@ -1148,7 +1149,7 @@ void SCLOUDPLUS_Sub(const uint16_t *in0, const uint16_t *in1, const int len, uin
 
 void SCLOUDPLUS_CS(const uint16_t *C, const uint16_t *S, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
-    memset_s(out, para->mbar * para->nbar * 2, 0, para->mbar * para->nbar * 2);
+    memset(out, 0, para->mbar * para->nbar * 2);
     for (int i = 0; i < para->mbar; i++) {
         for (int j = 0; j < para->nbar; j++) {
             for (int k = 0; k < para->n; k++) {
@@ -1160,7 +1161,7 @@ void SCLOUDPLUS_CS(const uint16_t *C, const uint16_t *S, const SCLOUDPLUS_Para *
 
 void SCLOUDPLUS_SB_E(const uint16_t *S, const uint16_t *B, const uint16_t *E, const SCLOUDPLUS_Para *para, uint16_t *out)
 {
-    memcpy_s(out, para->mbar * para->nbar * 2, E, para->mbar * para->nbar * 2);
+    memcpy(out, E, para->mbar * para->nbar * 2);
     for (int i = 0; i < para->mbar; i++) {
         for (int j = 0; j < para->nbar; j++) {
             for (int k = 0; k < para->m; k++) {
@@ -1174,7 +1175,7 @@ int32_t SCLOUDPLUS_AS_E(const uint8_t *seedA, const uint16_t *S, const uint16_t 
                         uint16_t *B)
 {
     int32_t ret = 0;
-    memcpy_s(B, para->m * para->nbar * 2, E, para->m * para->nbar * 2);
+    memcpy(B, E, para->m * para->nbar * 2);
     CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL) {
         return PQCP_MEM_ALLOC_FAIL;
@@ -1184,7 +1185,7 @@ int32_t SCLOUDPLUS_AS_E(const uint8_t *seedA, const uint16_t *S, const uint16_t 
     const int blockNumber = para->h1 >> 1;
     uint32_t aRowIn[4 * blockRowLen];
     uint16_t aRowOut[4 * para->n];
-    memset_s(aRowIn, 4 * blockRowLen * sizeof(uint32_t), 0, 4 * blockRowLen * sizeof(uint32_t));
+    memset(aRowIn, 0, 4 * blockRowLen * sizeof(uint32_t));
     ret = CRYPT_EAL_CipherInit(RandCtx, seedA, 16, NULL, 0, true);
     if (ret != PQCP_SUCCESS) {
         goto EXIT;
@@ -1235,7 +1236,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t *seedA, const uint16_t *S, uint16_t *E, co
     const int blockNumber = para->h1 >> 1;
     uint32_t aRowIn[8 * blockRowLen];
     uint16_t aRowOut[8 * para->n];
-    memset_s(aRowIn, 8 * blockRowLen * sizeof(uint32_t), 0, 8 * blockRowLen * sizeof(uint32_t));
+    memset(aRowIn, 0, 8 * blockRowLen * sizeof(uint32_t));
 
     CRYPT_EAL_CipherCtx *RandCtx = CRYPT_EAL_CipherNewCtx(CRYPT_CIPHER_AES128_ECB);
     if (RandCtx == NULL) {
@@ -1277,7 +1278,7 @@ int32_t SCLOUDPLUS_SA_E(const uint8_t *seedA, const uint16_t *S, uint16_t *E, co
             }
         }
     }
-    (void)memcpy_s((unsigned char *)C, 2 * para->mbar * para->n, (unsigned char *)E, 2 * para->mbar * para->n);
+    memcpy((unsigned char *)C, (unsigned char *)E, 2 * para->mbar * para->n);
 
 EXIT:
     CRYPT_EAL_CipherFreeCtx(RandCtx);
@@ -1333,7 +1334,7 @@ static inline void CBD7(const uint64_t in, uint16_t *out)
 
 int32_t SCLOUDPLUS_SampleEta1(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixE)
 {
-    memset_s(matrixE, para->m * para->nbar * sizeof(uint16_t), 0, para->m * para->nbar * sizeof(uint16_t));
+    memset(matrixE, 0, para->m * para->nbar * sizeof(uint16_t));
     int32_t ret = PQCP_SUCCESS;
     uint32_t hashLen = (para->m * para->nbar * 2 * para->eta1) >> 3;
     uint8_t *tmp = BSL_SAL_Malloc(hashLen);
@@ -1374,8 +1375,8 @@ EXIT:
 
 int32_t SCLOUDPLUS_SampleEta2(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixE1, uint16_t *matrixE2)
 {
-    memset_s(matrixE1, para->mbar * para->n * 2, 0, para->mbar * para->n * 2);
-    memset_s(matrixE2, para->mbar * para->nbar * 2, 0, para->mbar * para->nbar * 2);
+    memset(matrixE1, 0, para->mbar * para->n * 2);
+    memset(matrixE2, 0, para->mbar * para->nbar * 2);
     int32_t ret = 0;
     const uint32_t hash1Len = ((para->mbar * para->n) * (2 * para->eta2)) >> 3;
     const uint32_t hash2Len = ((para->mbar * para->nbar) * (2 * para->eta2) + 7) >> 3;
@@ -1436,7 +1437,7 @@ EXIT:
 int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixS)
 {
     int32_t ret;
-    (void)memset_s(matrixS, para->n * para->nbar * sizeof(uint16_t), 0, para->n * para->nbar * sizeof(uint16_t));
+    memset(matrixS, 0, para->n * para->nbar * sizeof(uint16_t));
     uint8_t hash[680] = {0}; // 5*136 shake256_rate
     uint16_t tmp[para->mnout];
     int outLen, k = 0;
@@ -1486,7 +1487,7 @@ EXIT:
 int32_t SCLOUDPLUS_SamplePhi(const uint8_t *seed, const SCLOUDPLUS_Para *para, uint16_t *matrixs)
 {
     int32_t ret = 0;
-    memset_s(matrixs, para->m * para->mbar * 2, 0, para->m * para->mbar * 2);
+    memset(matrixs, 0, para->m * para->mbar * 2);
     uint8_t hash[680] = {0}; // 5*136 shake256_rate
     uint16_t tmp[para->mnout];
     int outLen, k = 0;

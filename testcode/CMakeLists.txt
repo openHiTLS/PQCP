@@ -18,7 +18,6 @@ project(pqcp_test C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(PQCP_ROOT "${PROJECT_SOURCE_DIR}/..")
-set(HITLS_ROOT_DIR "${PQCP_ROOT}/platform/openhitls")
 # 设置输出目录
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -46,9 +45,9 @@ if(ENABLE_GCOV)
 endif()
 
 # 设置依赖库搜索路径
+message(STATUS "HITLS_ROOT_DIR: ${HITLS_ROOT_DIR}")
 set(PQCP_DEPENDENCY_DIRS
-        ${CMAKE_SOURCE_DIR}/../platform/openhitls/build
-        ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/lib
+        ${HITLS_ROOT_DIR}/build
         ${CMAKE_SOURCE_DIR}/../build
     CACHE STRING "PQCP dependency library paths")
 
@@ -59,9 +58,6 @@ find_library(HITLS_CRYPTO_LIB hitls_crypto
 find_library(HITLS_BSL_LIB hitls_bsl 
     PATHS ${PQCP_DEPENDENCY_DIRS}
     NO_DEFAULT_PATH)
-find_library(SECUREC_LIB boundscheck
-    PATHS ${PQCP_DEPENDENCY_DIRS}
-    NO_DEFAULT_PATH)
 find_library(PQCP_PROVIDER_LIB pqcp_provider
     PATHS ${PQCP_DEPENDENCY_DIRS}
     NO_DEFAULT_PATH)
@@ -70,7 +66,6 @@ find_library(PQCP_PROVIDER_LIB pqcp_provider
 foreach(LIB IN ITEMS 
     HITLS_CRYPTO_LIB 
     HITLS_BSL_LIB 
-    SECUREC_LIB
     PQCP_PROVIDER_LIB)
     if(NOT ${LIB})
         message(FATAL_ERROR "Required library ${LIB} not found in: ${PQCP_DEPENDENCY_DIRS}")
@@ -79,19 +74,12 @@ endforeach()
 add_compile_options(-Wall -Wextra -Werror)
 # 包含目录
 include_directories(
+    ${HITLS_ROOT_DIR}/include/bsl
+    ${HITLS_ROOT_DIR}/include/crypto
     ${CMAKE_SOURCE_DIR}/common
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/include
     ${CMAKE_SOURCE_DIR}/../src/scloudplus/src
-    ${CMAKE_SOURCE_DIR}/../src/classic_mceliece/include
-    ${CMAKE_SOURCE_DIR}/../src/classic_mceliece/src
-    ${CMAKE_SOURCE_DIR}/../src/frodokem/include
-    ${CMAKE_SOURCE_DIR}/../src/frodokem/src
-    ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/bsl
-    ${CMAKE_SOURCE_DIR}/../platform/openhitls/include/crypto
-    ${CMAKE_SOURCE_DIR}/../platform/openhitls/platform/Secure_C/include
-    ${CMAKE_SOURCE_DIR}/../src/hybrid_env/include
-    ${CMAKE_SOURCE_DIR}/../src/hybrid_env/src
     ${CMAKE_SOURCE_DIR}/../src/composite_sign/include
     ${CMAKE_SOURCE_DIR}/../src/composite_sign/src
     ${CMAKE_SOURCE_DIR}/../src/hiae/include
@@ -113,7 +101,6 @@ if(BUILD_DEMO)
             ${HITLS_CRYPTO_LIB}
             ${HITLS_BSL_LIB}
             ${PQCP_PROVIDER_LIB}
-            ${SECUREC_LIB}
             -Wl,--no-as-needed
             -lpthread
             -Wl,--as-needed
@@ -130,7 +117,8 @@ ExternalProject_Add(gen_testcase
     BINARY_DIR            ${PQCP_ROOT}/testcode/framework/gen_test/build/
     INSTALL_DIR           ""
     UPDATE_COMMAND        ""
-    CONFIGURE_COMMAND     cmake -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DPRINT_TO_TERMINAL=${ENABLE_PRINT} ..
+    CONFIGURE_COMMAND     cmake -DHITLS_ROOT_DIR=${HITLS_ROOT_DIR}
+                         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DPRINT_TO_TERMINAL=${ENABLE_PRINT} ..
     BUILD_COMMAND         make
     INSTALL_COMMAND       ""
     BUILD_ALWAYS          FALSE

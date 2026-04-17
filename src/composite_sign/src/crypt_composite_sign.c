@@ -13,7 +13,7 @@
  * See the Mulan PSL v2 for more details.
  */
 #ifdef PQCP_COMPOSITE_SIGN
-#include "securec.h"
+#include <string.h>
 
 #include "crypt_composite_sign_local.h"
 #include "crypt_utils.h"
@@ -359,8 +359,8 @@ int32_t CRYPT_COMPOSITE_GetPrvKey(const CRYPT_CompositeCtx *ctx, CRYPT_Composite
         ret = PQCP_COMPOSITE_LEN_NOT_ENOUGH;
         goto ERR;
     }
-    (void)memcpy_s(prv->data, prv->len, pqcPrv.data, pqcPrv.dataLen);
-    (void)memcpy_s(prv->data + pqcPrv.dataLen, prv->len - pqcPrv.dataLen, tradPrv.data, tradPrv.dataLen);
+    memcpy(prv->data, pqcPrv.data, pqcPrv.dataLen);
+    memcpy(prv->data + pqcPrv.dataLen, tradPrv.data, tradPrv.dataLen);
     prv->len = pqcPrv.dataLen + tradPrv.dataLen;
 ERR:
     BSL_SAL_ClearFree(pqcPrv.data, pqcPrv.dataLen);
@@ -382,8 +382,8 @@ int32_t CRYPT_COMPOSITE_GetPubKey(const CRYPT_CompositeCtx *ctx, CRYPT_Composite
         ret = PQCP_COMPOSITE_LEN_NOT_ENOUGH;
         goto ERR;
     }
-    (void)memcpy_s(pub->data, pub->len, pqcPub.data, pqcPub.dataLen);
-    (void)memcpy_s(pub->data + pqcPub.dataLen, pub->len - pqcPub.dataLen, tradPub.data, tradPub.dataLen);
+    memcpy(pub->data, pqcPub.data, pqcPub.dataLen);
+    memcpy(pub->data + pqcPub.dataLen, tradPub.data, tradPub.dataLen);
     pub->len = pqcPub.dataLen + tradPub.dataLen;
 ERR:
     BSL_SAL_FREE(pqcPub.data);
@@ -505,17 +505,17 @@ static int32_t CompositeMsgEncode(CRYPT_CompositeCtx *ctx, int32_t hashId, const
     msg->data = (uint8_t *)BSL_SAL_Malloc(msg->len);
     RETURN_RET_IF(msg->data == NULL, PQCP_MEM_ALLOC_FAIL);
     uint8_t *ptr = msg->data;
-    (void)memcpy_s(ptr, msg->len, PREFIX, prefixLen);
+    memcpy(ptr, PREFIX, prefixLen);
     ptr += prefixLen;
-    (void)memcpy_s(ptr, msg->len - prefixLen, label, labelLen);
+    memcpy(ptr, label, labelLen);
     ptr += labelLen;
     *ptr = ctx->ctxLen;
     ptr++;
     if (ctx->ctxInfo != NULL && ctx->ctxLen > 0) {
-        (void)memcpy_s(ptr, msg->len - (prefixLen + labelLen + 1), ctx->ctxInfo, ctx->ctxLen);
+        memcpy(ptr, ctx->ctxInfo, ctx->ctxLen);
         ptr += ctx->ctxLen;
     }
-    (void)memcpy_s(ptr, digestLen, digest, digestLen);
+    memcpy(ptr, digest, digestLen);
     return PQCP_SUCCESS;
 }
 

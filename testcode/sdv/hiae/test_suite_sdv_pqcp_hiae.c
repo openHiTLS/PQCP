@@ -21,7 +21,6 @@
 #include <time.h>
 
 #include "crypt_errno.h"
-#include "securec.h"
 #include "bsl_sal.h"
 #include "crypt_types.h"
 #include "crypt_eal_cipher.h"
@@ -221,18 +220,18 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_AEAD_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aa
 
     ASSERT_EQ(plainLen, cipherLen);
 
-    (void)memcpy_s(key, sizeof(key), keyHex->x, keyLen);
-    (void)memcpy_s(iv, sizeof(iv), ivHex->x, ivLen);
+    memcpy(key, keyHex->x, keyLen);
+    memcpy(iv, ivHex->x, ivLen);
     if (aadLen > 0) {
-        (void)memcpy_s(aad, sizeof(aad), aadHex->x, aadLen);
+        memcpy(aad, aadHex->x, aadLen);
     }
     if (plainLen > 0) {
-        (void)memcpy_s(plain, sizeof(plain), plainHex->x, plainLen);
+        memcpy(plain, plainHex->x, plainLen);
     }
     if (cipherLen > 0) {
-        (void)memcpy_s(cipherExp, sizeof(cipherExp), cipherHex->x, cipherLen);
+        memcpy(cipherExp, cipherHex->x, cipherLen);
     }
-    (void)memcpy_s(tagExp, sizeof(tagExp), tagHex->x, tagLen);
+    memcpy(tagExp, tagHex->x, tagLen);
 
     ret = CRYPT_EAL_CipherInit(encCtx, key, keyLen, iv, ivLen, true);
     ASSERT_EQ(ret, PQCP_SUCCESS);
@@ -307,12 +306,12 @@ void SDV_CRYPTO_PQCP_HIAE_MAC_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aadHex, He
     ivLen = ivHex->len;
     aadLen = aadHex->len;
     tagLen = tagHex->len;
-    (void)memcpy_s(key, sizeof(key), keyHex->x, keyLen);
-    (void)memcpy_s(iv, sizeof(iv), ivHex->x, ivLen);
+    memcpy(key, keyHex->x, keyLen);
+    memcpy(iv, ivHex->x, ivLen);
     if (aadLen > 0) {
-        (void)memcpy_s(aad, sizeof(aad), aadHex->x, aadLen);
+        memcpy(aad, aadHex->x, aadLen);
     }
-    (void)memcpy_s(tagExp, sizeof(tagExp), tagHex->x, tagLen);
+    memcpy(tagExp, tagHex->x, tagLen);
 
     ret = CRYPT_EAL_MacInit(mac, key, sizeof(key));
     ASSERT_EQ(ret, PQCP_SUCCESS);

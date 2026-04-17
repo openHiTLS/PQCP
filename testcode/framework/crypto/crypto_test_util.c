@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "hitls_build.h"
 #include "bsl_sal.h"
@@ -35,7 +36,6 @@
 #include "helper.h"
 #include "crypto_test_util.h"
 
-#include "securec.h"
 #include "crypt_util_rand.h"
 #include "bsl_err_internal.h"
 

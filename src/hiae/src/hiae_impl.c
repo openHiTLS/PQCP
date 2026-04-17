@@ -22,7 +22,6 @@
  * - ePrint paper: https://eprint.iacr.org/2025/377
  *   (version 20250604:080522).
  */
-
 #include <string.h>
 
 #include "pqcp_err.h"
