@@ -33,7 +33,6 @@ testcase_array=()
 # Build library path with all necessary library paths (cross-platform)
 # Start with build directory (no leading colon)
 LIB_PATHS="$(realpath ${PQCP_ROOT_DIR}/build)"
-LIB_PATHS="${LIB_PATHS}:$(realpath ${PQCP_ROOT_DIR}/platform/openhitls/platform/Secure_C/lib)"
 
 # Set library path based on platform
 if [[ "$(uname)" == "Darwin" ]]; then

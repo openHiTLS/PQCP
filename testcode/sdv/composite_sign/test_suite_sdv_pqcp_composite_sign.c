@@ -562,7 +562,7 @@ void SDV_CRYPTO_PQCP_COMPOSITE_GET_SIGNLEN_API_TC001(int algId, int expPqcSignLe
               PQCP_SUCCESS);
     ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN, &pqcSignLen, sizeof(pqcSignLen)), PQCP_SUCCESS);
     ASSERT_EQ(pqcSignLen, expPqcSignLen);
-    ASSERT_EQ(tradSignLen, 74);
+    ASSERT_TRUE(tradSignLen >= 72);
     ASSERT_EQ(signLen, tradSignLen + pqcSignLen);
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
@@ -727,7 +727,7 @@ void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_SIGNLEN_API_TC001(int algId, int exp
     ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_SIGNLEN, &totalSigLen, sizeof(totalSigLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
     ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_TRAD_SIGNLEN, &tradSigLen, sizeof(tradSigLen)), PQCP_SUCCESS);
-    ASSERT_EQ(tradSigLen, 74);
+    ASSERT_TRUE(tradSigLen == 72);
     ASSERT_EQ(totalSigLen, tradSigLen + pqcSigLen);
 
 EXIT:

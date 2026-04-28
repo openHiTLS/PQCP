@@ -21,7 +21,7 @@ set(PQCP_ROOT "${PROJECT_SOURCE_DIR}/..")
 # 设置输出目录
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-
+set(SECUREC_LIB "" CACHE STRING "Path to the securec library")
 find_package(Threads REQUIRED)
 
 # 设置编译选项
@@ -71,7 +71,7 @@ foreach(LIB IN ITEMS
         message(FATAL_ERROR "Required library ${LIB} not found in: ${PQCP_DEPENDENCY_DIRS}")
     endif()
 endforeach()
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall -Wextra -Werror -Wno-enum-conversion)
 # 包含目录
 include_directories(
     ${HITLS_ROOT_DIR}/include/bsl
@@ -101,6 +101,7 @@ if(BUILD_DEMO)
             ${HITLS_CRYPTO_LIB}
             ${HITLS_BSL_LIB}
             ${PQCP_PROVIDER_LIB}
+            ${SECUREC_LIB}
             -Wl,--no-as-needed
             -lpthread
             -Wl,--as-needed

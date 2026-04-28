@@ -11,6 +11,7 @@ target_include_directories(TESTCASE_PRE PRIVATE
     ${PQCP_ROOT}/testcode/framework/include
     ${PQCP_ROOT}/testcode/framework/crypto
     ${HITLS_ROOT_DIR}/config/macro_config
+    ${HITLS_ROOT_DIR}/conf/macro_config
     ${HITLS_ROOT_DIR}/crypto/include
     ${HITLS_ROOT_DIR}/include/crypto
     ${HITLS_ROOT_DIR}/include/bsl
@@ -75,9 +76,10 @@ foreach(test_suite ${TEST_FILES})
         ${HITLS_ROOT_DIR}/include/crypto
         ${HITLS_ROOT_DIR}/include/bsl
         ${HITLS_ROOT_DIR}/config/macro_config
+        ${HITLS_ROOT_DIR}/conf/macro_config
     )
     target_link_libraries(${sdv_exe} PRIVATE TESTCASE_PRE 
-                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${PQCP_PROVIDER_LIB} pthread)
+                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${SECUREC_LIB} ${PQCP_PROVIDER_LIB} pthread)
     if(NOT MACROS)
         target_link_libraries(${sdv_exe} PRIVATE SHARED_COMPILE_DEFS)
     endif()

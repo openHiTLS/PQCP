@@ -29,6 +29,8 @@ usage()
     printf "%-50s %-30s\n" "* run-tests    : Run specific test suites."        "bash ${BASH_SOURCE[0]} run-tests=suite1|suite2"
     printf "%-50s %-30s\n" "* list-suites  : List available PQCP test suites." "bash ${BASH_SOURCE[0]} list-suites"
     printf "%-50s %-30s\n" "* clean        : Clean build artifacts."           "bash ${BASH_SOURCE[0]} clean"
+    printf "%-50s %-30s\n" "* securec_path : Pass the path of securec lib."    "bash ${BASH_SOURCE[0]} securec_path=<absolute path to securec lib>"
+    printf "\n"
 }
 
 # 设置环境变量
@@ -61,6 +63,7 @@ export_env()
     BUILD_DEMO="ON"
     RUN_TESTS=""
     BUILD_OPTIONS=""
+    SECURE_C_LIB_PATH=""
 }
 
 # 检查依赖
@@ -169,6 +172,7 @@ build_pqcp_sdv()
     echo "Find test suites: ${all_suites}"
     cmake -DGEN_TEST_FILES="${all_suites}" -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} \
           -DPRINT_TO_TERMINAL=ON -g -O0" -DBUILD_DEMO=${BUILD_DEMO} -DENABLE_ASAN=${ENABLE_ASAN} \
+          -DSECUREC_LIB="${SECURE_C_LIB_PATH}" \
           -DENABLE_GCOV=${ENABLE_GCOV} -DHITLS_ROOT_DIR=${HITLS_ROOT_DIR} -DMACROS="${MACROS}" \
           ..
     make -j$(nproc)
@@ -211,6 +215,9 @@ parse_options()
                 ;;
             run-tests)
                 RUN_TESTS=${value}
+                ;;
+            securec_path)
+                SECURE_C_LIB_PATH=${value}
                 ;;
             list-suites)
                 list_test_suites

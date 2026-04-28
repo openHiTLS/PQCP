@@ -28,6 +28,7 @@ include_directories(
     ${HITLS_SRC}/testcode/framework/include
     ${HITLS_SRC}/testcode/framework/crypto
     ${HITLS_ROOT_DIR}/config/macro_config
+    ${HITLS_ROOT_DIR}/conf/macro_config
     ${HITLS_ROOT_DIR}/crypto/include
     ${HITLS_ROOT_DIR}/include/crypto
     ${HITLS_ROOT_DIR}/include/bsl

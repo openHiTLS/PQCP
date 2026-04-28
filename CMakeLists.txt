@@ -98,7 +98,6 @@ target_include_directories(pqcp_provider
         ${OPENHITLS_INCLUDE_DIRS}
         ${HITLS_ROOT_PATH}/include/crypto
         ${HITLS_ROOT_PATH}/include/bsl
-        ${CMAKE_CURRENT_SOURCE_DIR}/platform/openhitls/platform/Secure_C/include
         ${HITLS_ROOT_PATH}/bsl/err/include
         ${HITLS_ROOT_PATH}/config/macro_config
         ${HITLS_ROOT_PATH}/conf/macro_config
