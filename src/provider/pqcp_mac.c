@@ -20,22 +20,8 @@
 #include "crypt_eal_implprovider.h"
 #include "crypt_hiae.h"
 
-static void *CRYPT_PQCP_HIAE_MacNewCtx(void *provCtx, int32_t algId)
-{
-    void *ctx = NULL;
-
-    switch (algId) {
-        case PQCP_MAC_HIAE:
-            ctx = PQCP_HIAE_MacNewCtx(provCtx, algId);
-            break;
-        default:
-            break;
-    }
-    return ctx;
-}
-
 const CRYPT_EAL_Func g_pqcpMacHiae[] = {
-    {CRYPT_EAL_IMPLMAC_NEWCTX, (CRYPT_EAL_ImplMacNewCtx)CRYPT_PQCP_HIAE_MacNewCtx},
+    {CRYPT_EAL_IMPLMAC_NEWCTX, (CRYPT_EAL_ImplMacNewCtx)PQCP_HIAE_MacNewCtx},
     {CRYPT_EAL_IMPLMAC_INIT, (CRYPT_EAL_ImplMacInit)PQCP_HIAE_MacInit},
     {CRYPT_EAL_IMPLMAC_UPDATE, (CRYPT_EAL_ImplMacUpdate)PQCP_HIAE_MacUpdate},
     {CRYPT_EAL_IMPLMAC_FINAL, (CRYPT_EAL_ImplMacFinal)PQCP_HIAE_MacFinal},

@@ -20,22 +20,8 @@
 #include "crypt_eal_implprovider.h"
 #include "crypt_hiae.h"
 
-static void *CRYPT_PQCP_HIAE_CipherNewCtx(void *provCtx, int32_t algId)
-{
-    void *ctx = NULL;
-
-    switch (algId) {
-        case PQCP_CIPHER_HIAE:
-            ctx = PQCP_HIAE_CipherNewCtx(provCtx, algId);
-            break;
-        default:
-            break;
-    }
-    return ctx;
-}
-
 const CRYPT_EAL_Func g_pqcpCipherHiae[] = {
-    {CRYPT_EAL_IMPLCIPHER_NEWCTX, (CRYPT_EAL_ImplCipherNewCtx)CRYPT_PQCP_HIAE_CipherNewCtx},
+    {CRYPT_EAL_IMPLCIPHER_NEWCTX, (CRYPT_EAL_ImplCipherNewCtx)PQCP_HIAE_CipherNewCtx},
     {CRYPT_EAL_IMPLCIPHER_INITCTX, (CRYPT_EAL_ImplCipherInitCtx)PQCP_HIAE_CipherInitCtx},
     {CRYPT_EAL_IMPLCIPHER_UPDATE, (CRYPT_EAL_ImplCipherUpdate)PQCP_HIAE_CipherUpdate},
     {CRYPT_EAL_IMPLCIPHER_FINAL, (CRYPT_EAL_ImplCipherFinal)PQCP_HIAE_CipherFinal},

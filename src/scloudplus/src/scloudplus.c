@@ -103,7 +103,7 @@ static SCLOUDPLUS_Para PRESET_PARAS[] = {
     }
 };
 
-int32_t SCLOUDPLUS_PKEKeygen(const SCLOUDPLUS_Para *para, uint8_t *pk, uint8_t *sk)
+static int32_t SCLOUDPLUS_PKEKeygen(const SCLOUDPLUS_Para *para, uint8_t *pk, uint8_t *sk)
 {
     if (para->ss == 0 || pk == NULL || sk == NULL) {
         return PQCP_NULL_INPUT;
@@ -150,7 +150,7 @@ EXIT:
     return ret;
 }
 
-int32_t SCLOUDPLUS_PKEEncrypt(const uint8_t *pk, const uint8_t *m, const uint8_t *r, const SCLOUDPLUS_Para *para,
+static int32_t SCLOUDPLUS_PKEEncrypt(const uint8_t *pk, const uint8_t *m, const uint8_t *r, const SCLOUDPLUS_Para *para,
     uint8_t *ctx)
 {
     if (para->ss == 0 || pk == NULL || m == NULL || ctx == NULL) {
@@ -203,7 +203,7 @@ EXIT:
     return ret;
 }
 
-int32_t SCLOUDPLUS_PKEDecrypt(const uint8_t *sk, const uint8_t *ctx, const SCLOUDPLUS_Para *para, uint8_t *m)
+static int32_t SCLOUDPLUS_PKEDecrypt(const uint8_t *sk, const uint8_t *ctx, const SCLOUDPLUS_Para *para, uint8_t *m)
 {
     if (para->ss == 0 || sk == NULL || ctx == NULL || m == NULL) {
         return PQCP_NULL_INPUT;
@@ -514,7 +514,8 @@ int32_t PQCP_SCLOUDPLUS_DecapsInit(SCLOUDPLUS_Ctx *ctx, const BSL_Param *params)
 int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx, uint8_t *ciphertext, uint32_t *ctLen, uint8_t *sharedSecret,
     uint32_t *ssLen)
 {
-    if (ctx == NULL || ctx->para == NULL || ctx->publicKey == NULL || ciphertext == NULL || sharedSecret == NULL) {
+    if (ctx == NULL || ctx->para == NULL || ctx->publicKey == NULL || ciphertext == NULL || sharedSecret == NULL
+        || ctLen == NULL || ssLen == NULL) {
         return PQCP_NULL_INPUT;
     }
     uint8_t in[ctx->para->ss + SCLOUDPLUS_HPK_LEN + SCLOUDPLUS_RAND_R_LEN + SCLOUDPLUS_SEED_K_LEN];
@@ -553,7 +554,8 @@ int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx, uint8_t *ciphertext, uint32_
 int32_t PQCP_SCLOUDPLUS_Decaps(SCLOUDPLUS_Ctx *ctx, const uint8_t *ciphertext, uint32_t ctLen, uint8_t *sharedSecret,
     uint32_t *ssLen)
 {
-    if (ctx == NULL || ctx->para == NULL || ctx->privateKey == NULL || ciphertext == NULL || sharedSecret == NULL) {
+    if (ctx == NULL || ctx->para == NULL || ctx->privateKey == NULL || ciphertext == NULL || sharedSecret == NULL
+        || ssLen == NULL) {
         return PQCP_NULL_INPUT;
     }
     if (ctLen != ctx->para->ctxSize) {

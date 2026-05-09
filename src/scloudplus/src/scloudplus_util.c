@@ -829,7 +829,9 @@ void SCLOUDPLUS_PackPK(const uint16_t *B, const SCLOUDPLUS_Para *para, uint8_t *
     for (int i = 0; i < para->m * para->nbar; i = i + 2) {
         temp = U16ToU32(ptrIn);
         temp = (temp & 0xFFF) ^ ((temp >> 4) & 0xFFF000);
-        *(uint32_t *)ptrOut = temp;
+        ptrOut[0] = temp & 0xFF;
+        ptrOut[1] = (temp >> 8) & 0xFF;
+        ptrOut[2] = (temp >> 16) & 0xFF;
         ptrIn = ptrIn + 2;
         ptrOut = ptrOut + 3;
     }
@@ -1445,6 +1447,7 @@ int32_t SCLOUDPLUS_SamplePsi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
     CRYPT_EAL_MdCtx *psiCtx = CRYPT_EAL_MdNewCtx(CRYPT_MD_SHAKE256);
     if (psiCtx == NULL) {
         ret = PQCP_MEM_ALLOC_FAIL;
+        goto EXIT;
     }
     ret = CRYPT_EAL_MdInit(psiCtx);
     if (ret != PQCP_SUCCESS) {
@@ -1513,7 +1516,10 @@ int32_t SCLOUDPLUS_SamplePhi(const uint8_t *seed, const SCLOUDPLUS_Para *para, u
         int j = 0;
         while (j < para->h2 * 2) {
             if (k == outLen) {
-                CRYPT_EAL_MdSqueeze(phiCtx, hash, inLen);
+                ret = CRYPT_EAL_MdSqueeze(phiCtx, hash, inLen);
+                if (ret != PQCP_SUCCESS) {
+                    goto EXIT;
+                }
                 U8ToM(hash, para->mnin, para, tmp, &outLen);
                 k = 0;
             }

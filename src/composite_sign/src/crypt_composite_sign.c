@@ -163,6 +163,10 @@ CRYPT_CompositeCtx *CRYPT_COMPOSITE_DupCtx(CRYPT_CompositeCtx *ctx)
     newCtx->pqcMethod = ctx->pqcMethod;
     newCtx->tradMethod = ctx->tradMethod;
     if (newCtx->pqcMethod != NULL && newCtx->tradMethod != NULL) {
+        if (newCtx->pqcMethod->dupCtx == NULL || newCtx->tradMethod->dupCtx == NULL) {
+            BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
+            goto ERR;
+        }
         newCtx->pqcCtx = newCtx->pqcMethod->dupCtx(ctx->pqcCtx);
         if (newCtx->pqcCtx == NULL) {
             BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
@@ -264,18 +268,21 @@ static int32_t CRYPT_CompositeSetctxInfo(CRYPT_CompositeCtx *ctx, void *val, uin
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYLEN_ERROR);
         return PQCP_COMPOSITE_KEYLEN_ERROR;
     }
-    if (ctx->ctxInfo != NULL) {
-        BSL_SAL_FREE(ctx->ctxInfo);
-        ctx->ctxLen = 0;
-    }
     if (val == NULL && len == 0) {
+        if (ctx->ctxInfo != NULL) {
+            BSL_SAL_FREE(ctx->ctxInfo);
+            ctx->ctxInfo = NULL;
+            ctx->ctxLen = 0;
+        }
         return PQCP_SUCCESS;
     }
-    ctx->ctxInfo = BSL_SAL_Dump((uint8_t *)val, len);
-    if (ctx->ctxInfo == NULL) {
+    uint8_t *newCtxInfo = BSL_SAL_Dump((uint8_t *)val, len);
+    if (newCtxInfo == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
         return PQCP_MEM_ALLOC_FAIL;
     }
+    BSL_SAL_FREE(ctx->ctxInfo);
+    ctx->ctxInfo = newCtxInfo;
     ctx->ctxLen = len;
     return PQCP_SUCCESS;
 }
