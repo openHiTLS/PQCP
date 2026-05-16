@@ -30,6 +30,7 @@
 #include "hiae_local.h"
 /* END_HEADER */
 
+#ifdef PQCP_HIAE
 static void FillSeq(uint8_t *buf, uint32_t len, uint8_t seed)
 {
     uint32_t i;
@@ -162,7 +163,7 @@ static int32_t HiaeMacUpdateByChunks(CRYPT_EAL_MacCtx *ctx, const uint8_t *data,
     }
     return (offset == dataLen) ? PQCP_SUCCESS : PQCP_INVALID_ARG;
 }
-
+#endif
 /* @
 * @test  SDV_CRYPTO_PQCP_HIAE_CIPHER_AEAD_API_TC001
 * @spec  -
@@ -177,6 +178,7 @@ static int32_t HiaeMacUpdateByChunks(CRYPT_EAL_MacCtx *ctx, const uint8_t *data,
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_AEAD_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aadHex, Hex *plainHex, Hex *cipherHex,
                                                 Hex *tagHex)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_CipherCtx *encCtx = NULL;
     CRYPT_EAL_CipherCtx *decCtx = NULL;
     uint8_t key[32] = {0};
@@ -265,6 +267,16 @@ EXIT:
     CRYPT_EAL_CipherFreeCtx(encCtx);
     CRYPT_EAL_CipherFreeCtx(decCtx);
     return;
+#else 
+    SKIP_TEST();
+    (void)keyHex;
+    (void)ivHex;
+    (void)aadHex;
+    (void)plainHex;
+    (void)cipherHex;
+    (void)tagHex;
+    return;
+#endif
 }
 /* END_CASE */
 
@@ -281,6 +293,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_MAC_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aadHex, Hex *tagHex)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_MacCtx *mac = NULL;
     uint8_t key[32] = {0};
     uint8_t iv[16] = {0};
@@ -331,6 +344,14 @@ void SDV_CRYPTO_PQCP_HIAE_MAC_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aadHex, He
 EXIT:
     CRYPT_EAL_MacFreeCtx(mac);
     return;
+#else 
+    SKIP_TEST();
+    (void)keyHex;
+    (void)ivHex;
+    (void)aadHex;
+    (void)tagHex;
+    return;
+#endif
 }
 /* END_CASE */
 
@@ -347,6 +368,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_AEAD_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     uint8_t key[HIAE_KEY_LEN];
     uint8_t iv[HIAE_IV_LEN];
     uint8_t aad[33];
@@ -375,6 +397,9 @@ void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_AEAD_API_TC001(void)
 
 EXIT:
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -391,6 +416,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_MAC_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     uint8_t key[HIAE_KEY_LEN];
     uint8_t iv[HIAE_IV_LEN];
     uint8_t msg[77];
@@ -411,6 +437,9 @@ void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_MAC_API_TC001(void)
 
 EXIT:
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -427,6 +456,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_TAMPER_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_CipherCtx *encCtx = NULL;
     CRYPT_EAL_CipherCtx *decCtx = NULL;
     uint8_t key[HIAE_KEY_LEN];
@@ -500,6 +530,9 @@ EXIT:
     CRYPT_EAL_CipherFreeCtx(encCtx);
     CRYPT_EAL_CipherFreeCtx(decCtx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -516,6 +549,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_MAC_TAMPER_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_MacCtx *mac = NULL;
     uint8_t key[HIAE_KEY_LEN];
     uint8_t iv[HIAE_IV_LEN];
@@ -567,6 +601,9 @@ void SDV_CRYPTO_PQCP_HIAE_MAC_TAMPER_API_TC001(void)
 EXIT:
     CRYPT_EAL_MacFreeCtx(mac);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -583,6 +620,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_ERROR_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_CipherCtx *ctx = NULL;
     CRYPT_EAL_CipherCtx *dupProbe = NULL;
     uint8_t key[HIAE_KEY_LEN];
@@ -689,6 +727,9 @@ EXIT:
     CRYPT_EAL_CipherFreeCtx(dupProbe);
     CRYPT_EAL_CipherFreeCtx(ctx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -705,6 +746,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_MAC_ERROR_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_MacCtx *ctx = NULL;
     CRYPT_EAL_MacCtx *dup = NULL;
     uint8_t key[HIAE_KEY_LEN];
@@ -787,6 +829,9 @@ EXIT:
     CRYPT_EAL_MacFreeCtx(dup);
     CRYPT_EAL_MacFreeCtx(ctx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -803,6 +848,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_ERROR_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     uint8_t key[HIAE_KEY_LEN];
     uint8_t iv[HIAE_IV_LEN];
     uint8_t ad[8];
@@ -856,6 +902,9 @@ void SDV_CRYPTO_PQCP_HIAE_LOWLEVEL_ERROR_API_TC001(void)
 
 EXIT:
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -872,6 +921,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_RANDOM_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     const uint32_t roundsPerGroup = 200U;
     CRYPT_EAL_CipherCtx *encCtx = NULL;
     CRYPT_EAL_CipherCtx *decCtx = NULL;
@@ -940,6 +990,9 @@ EXIT:
     CRYPT_EAL_CipherFreeCtx(encCtx);
     CRYPT_EAL_CipherFreeCtx(decCtx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -956,6 +1009,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_STREAMING_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     const uint32_t aadLen = 37U;
     const uint32_t msgLen = 52U;
     const uint32_t msgSplitB[] = {16U, 16U, 8U, 12U};
@@ -1160,6 +1214,9 @@ EXIT:
     CRYPT_EAL_CipherFreeCtx(encCtx);
     CRYPT_EAL_CipherFreeCtx(decCtx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -1176,6 +1233,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_CIPHER_AAD_ONCE_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     CRYPT_EAL_CipherCtx *ctx = NULL;
     uint8_t key[32];
     uint8_t iv[16];
@@ -1215,6 +1273,9 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_AAD_ONCE_API_TC001(void)
 EXIT:
     CRYPT_EAL_CipherFreeCtx(ctx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -1231,6 +1292,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_HIAE_MAC_STREAMING_API_TC001(void)
 {
+#ifdef PQCP_HIAE
     const uint32_t dataLen = 77U;
     const uint32_t splitB[] = {16U, 16U, 8U, 21U, 16U};
     const uint32_t splitD[] = {15U, 2U, 14U, 3U, 1U, 17U, 25U};
@@ -1306,5 +1368,8 @@ void SDV_CRYPTO_PQCP_HIAE_MAC_STREAMING_API_TC001(void)
 EXIT:
     CRYPT_EAL_MacFreeCtx(mac);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */

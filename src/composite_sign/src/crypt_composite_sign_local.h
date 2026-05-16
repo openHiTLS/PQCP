@@ -48,28 +48,28 @@ typedef struct {
     uint32_t pqcPubkeyLen;
     uint32_t pqcPrvkeyLen;
     uint32_t pqcSigLen;
-} COMPOSITE_ALG_INFO;
+} PQCP_COMPOSITE_ALG_INFO;
 
 struct CompositeCtx {
     void *pqcCtx;
     void *tradCtx;
     const EAL_PkeyMethod *pqcMethod;
     const EAL_PkeyMethod *tradMethod;
-    const COMPOSITE_ALG_INFO *info;
+    const PQCP_COMPOSITE_ALG_INFO *info;
     uint8_t *ctxInfo;
     uint32_t ctxLen;
     BSL_SAL_RefCount references;
     void *libCtx;
 };
 
-int32_t CRYPT_CompositeGetPqcPrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeGetPqcPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeSetPqcPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeSetPqcPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeGetTradPrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeGetTradPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeSetTradPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
-int32_t CRYPT_CompositeSetTradPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeGetPqcPrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeGetPqcPubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeSetPqcPrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeSetPqcPubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeGetTradPrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeGetTradPubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeSetTradPrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
+int32_t PQCP_CompositeSetTradPubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode);
 
 #ifdef __cplusplus
 }

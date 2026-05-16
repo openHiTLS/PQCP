@@ -30,7 +30,7 @@
 #include "pqcp_err.h"
 #include "scloudplus.h"
 /* END_HEADER */
-
+#ifdef PQCP_SCLOUDPLUS
 static uint8_t gScloudPlusRandBuf[3][64] = {0};
 uint32_t gScloudPlusRandNum = 0;
 
@@ -45,7 +45,7 @@ static int32_t TEST_ScloudPlusRandom(uint8_t *randNum, uint32_t randLen)
     }
     return 0;
 }
-
+#endif
 /* @
 * @test  SDV_CRYPTO_PQCP_SCLOUDPLUS_KEYGEN_API_TC001
 * @spec  -
@@ -61,7 +61,7 @@ static int32_t TEST_ScloudPlusRandom(uint8_t *randNum, uint32_t randLen)
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_KEYGEN_API_TC001(int bits)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     TestRandInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -90,6 +90,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -109,6 +113,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_ENCAPS_DECAPS_API_TC001(int bits)
 {
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     TestRandInit();
     CRYPT_EAL_PkeyCtx *enCtx = NULL;
@@ -184,6 +189,10 @@ EXIT:
     BSL_SAL_Free(pubData);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -203,7 +212,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_SETGET_PUBKEY_API_TC001(int bits)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     TestRandInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -261,6 +270,10 @@ EXIT:
     BSL_SAL_Free(pubData2);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -280,7 +293,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_SETGET_PRVKEY_API_TC001(int bits)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     TestRandInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -338,6 +351,10 @@ EXIT:
     BSL_SAL_Free(prvData2);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -356,7 +373,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_CTRL_API_TC001(int bits)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
 
@@ -379,6 +396,10 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_CTRL_API_TC001(int bits)
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -396,7 +417,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_NULL_CTX_API_TC001(void)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     int32_t ret = CRYPT_EAL_PkeyGen(NULL);
     ASSERT_EQ(ret, CRYPT_NULL_INPUT);
@@ -414,6 +435,9 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_NULL_CTX_API_TC001(void)
 
 EXIT:
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -432,7 +456,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_DUP_CTX_API_TC001(int bits)
 {
-
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     TestRandInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -488,6 +512,10 @@ EXIT:
     BSL_SAL_Free(sharedKey);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+#endif
 }
 /* END_CASE */
 
@@ -509,6 +537,7 @@ EXIT:
 void SDV_CRYPTO_PQCP_SCLOUDPLUS_VECTOR_TC001(int bits, Hex *alpha, Hex *randZ, Hex *randM, Hex *expPk, Hex *expSk,
     Hex *expCipher, Hex *expSharedKey)
 {
+#ifdef PQCP_SCLOUDPLUS
     TestMemInit();
     uint8_t *ciphertext = NULL;
     uint8_t *sharedKey = NULL;
@@ -581,5 +610,16 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(prvKeyCtx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)bits;
+    (void)alpha;
+    (void)randZ;
+    (void)randM;
+    (void)expPk;
+    (void)expSk;
+    (void)expCipher;
+    (void)expSharedKey;
+#endif
 }
 /* END_CASE */

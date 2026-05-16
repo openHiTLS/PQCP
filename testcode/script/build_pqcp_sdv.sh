@@ -136,6 +136,7 @@ list_test_suites()
 build_pqcp_sdv()
 {
     local all_suites=""
+    local MACROS=""
     # 指定测试套件
     if [ -n "${RUN_TESTS}" ]; then
         local tmp=($(echo "${RUN_TESTS}" | tr -s "|" " "))
@@ -161,9 +162,13 @@ build_pqcp_sdv()
     echo "HILTS_ROOT_DIR: ${HITLS_ROOT_DIR}"
     if [ -f "${HITLS_ROOT_DIR}/build/macro.txt" ]; then
         echo "[INFO] Found macro.txt, loading macros..."
-        MACROS="$(cat ${HITLS_ROOT_DIR}/build/macro.txt)"
+        MACROS="$(tr '\n' ' ' < "${HITLS_ROOT_DIR}/build/macro.txt")"
     else
         echo "[WARNING] macro.txt not found, proceeding without additional macros."
+    fi
+    if [ -f "${PQCP_PROVIDER_DIR}/macro.txt" ]; then
+        echo "[INFO] Found PQCP macro.txt, loading macros..."
+        MACROS="${MACROS} $(tr '\n' ' ' < "${PQCP_PROVIDER_DIR}/macro.txt")"
     fi
     echo "======================================================================"
     echo "Building PQCP SDV Tests with OpenHiTLS Framework"

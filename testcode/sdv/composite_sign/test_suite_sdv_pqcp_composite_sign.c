@@ -45,7 +45,7 @@
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_KEYGEN_API_TC001(int algId)
 {
-
+#ifdef PQCP_COMPOSITE_SIGN
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -73,6 +73,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -91,7 +95,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_PRVKEY_API_TC001(int algId)
 {
-
+#ifdef PQCP_COMPOSITE_SIGN
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -118,6 +122,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -136,6 +144,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_PUBKEY_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -162,6 +171,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -181,6 +194,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_PRVKEY_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -217,6 +231,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx2);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -236,6 +254,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_PUBKEY_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -272,6 +291,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx2);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -290,6 +313,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_SIGN_VERIFY_API_TC001(int algId, Hex *message)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -343,6 +367,11 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(verifyCtx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+    (void)message;
+#endif
 }
 /* END_CASE */
 
@@ -360,6 +389,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_NULL_CTX_API_TC001(void)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
 
@@ -396,6 +426,9 @@ void SDV_CRYPTO_PQCP_COMPOSITE_NULL_CTX_API_TC001(void)
 EXIT:
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -414,6 +447,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_ALG_NOT_SET_API_TC001(void)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -428,6 +462,9 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -446,6 +483,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_INVALID_PARAMS_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -480,6 +518,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx2);
     TestRandDeInit();
     return;
+#else
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -498,6 +540,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_BUFFER_TOO_SMALL_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -523,6 +566,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -541,6 +588,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_SIGNLEN_API_TC001(int algId, int expPqcSignLen)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -568,6 +616,11 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+    (void)expPqcSignLen;
+#endif
 }
 /* END_CASE */
 
@@ -586,6 +639,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_DUP_CTX_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -621,6 +675,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(dupCtx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -639,6 +697,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_KEYLEN_API_TC001(int algId)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -686,6 +745,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -704,6 +767,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_SIGNLEN_API_TC001(int algId, int expPqcSignLen)
 {
+#ifdef PQCP_COMPOSITE_SIGN
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -734,5 +798,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
+#else
+    SKIP_TEST();
+    (void)algId;
+    (void)expPqcSignLen;
+#endif
 }
 /* END_CASE */

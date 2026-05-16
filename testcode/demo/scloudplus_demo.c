@@ -12,9 +12,9 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
+#ifdef PQCP_SCLOUDPLUS
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -156,9 +156,10 @@ static int32_t PQCP_TestLoadProvider(void)
     
     return PQCP_TEST_SUCCESS;
 }
-
+#endif
 int32_t main(void)
 {
+#ifdef PQCP_SCLOUDPLUS
     printf("PQCP库Scloud+使用示例\n");
     printf("====================================\n");
 
@@ -179,4 +180,7 @@ int32_t main(void)
     CRYPT_EAL_RandDeinit();
     (void)CRYPT_EAL_ProviderUnload(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider");
     return result;
+#else
+    printf("scloudplus feature is closed\n");
+#endif
 }

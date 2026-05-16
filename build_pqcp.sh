@@ -168,6 +168,9 @@ fi
 echo "准备全新构建环境..."
 rm -rf "${PQCP_ROOT_DIR}/build"
 mkdir -p "${PQCP_ROOT_DIR}/build"
+if [ -n "${ALGO_FLAGS}" ]; then
+    echo "${ALGO_FLAGS}" > "${PQCP_ROOT_DIR}/build/macro.txt"
+fi
 cd "${PQCP_ROOT_DIR}/build" || exit
 
 build_depend_code()

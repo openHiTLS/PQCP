@@ -29,7 +29,7 @@
 #include "pqcp_types.h"
 #include "pqcp_err.h"
 /* END_HEADER */
-
+#ifdef PQCP_POLARLAC
 static int32_t TEST_PolarLacRandom(uint8_t *rand, uint32_t randLen)
 {
     for (uint32_t i = 0; i < randLen; i++) {
@@ -37,7 +37,7 @@ static int32_t TEST_PolarLacRandom(uint8_t *rand, uint32_t randLen)
     }
     return 0;
 }
-
+#endif
 /* @
 * @test  SDV_CRYPTO_PQCP_POLARLAC_KEYGEN_API_TC001
 * @spec  -
@@ -53,7 +53,7 @@ static int32_t TEST_PolarLacRandom(uint8_t *rand, uint32_t randLen)
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_POLARLAC_KEYGEN_API_TC001(int algId)
 {
-
+#ifdef PQCP_POLARLAC
     TestMemInit();
     CRYPT_EAL_SetRandCallBack(TEST_PolarLacRandom);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -88,6 +88,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     CRYPT_EAL_SetRandCallBack(NULL);
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -107,7 +111,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_POLARLAC_ENCAPS_DECAPS_API_TC001(int algId)
 {
-
+#ifdef PQCP_POLARLAC
     TestMemInit();
     CRYPT_EAL_SetRandCallBack(TEST_PolarLacRandom);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -181,6 +185,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(exCtx);
     CRYPT_EAL_SetRandCallBack(NULL);
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -199,7 +207,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_POLARLAC_DUP_CTX_API_TC001(int algId)
 {
-
+#ifdef PQCP_POLARLAC
     TestMemInit();
     CRYPT_EAL_SetRandCallBack(TEST_PolarLacRandom);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -242,6 +250,10 @@ EXIT:
     CRYPT_EAL_PkeyFreeCtx(dupCtx);
     CRYPT_EAL_SetRandCallBack(NULL);
     return;
+#else 
+    SKIP_TEST();
+    (void)algId;
+#endif
 }
 /* END_CASE */
 
@@ -259,6 +271,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_POLARLAC_NULL_CTX_API_TC001(void)
 {
+#ifdef PQCP_POLARLAC
     TestMemInit();
     int32_t ret = CRYPT_EAL_PkeyGen(NULL);
     ASSERT_EQ(ret, CRYPT_NULL_INPUT);
@@ -277,6 +290,9 @@ void SDV_CRYPTO_PQCP_POLARLAC_NULL_CTX_API_TC001(void)
 
 EXIT:
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */
 
@@ -295,6 +311,7 @@ EXIT:
 /* BEGIN_CASE */
 void SDV_CRYPTO_PQCP_POLARLAC_KEY_NOT_SET_API_TC001(void)
 {
+#ifdef PQCP_POLARLAC
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
 
@@ -307,5 +324,8 @@ void SDV_CRYPTO_PQCP_POLARLAC_KEY_NOT_SET_API_TC001(void)
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     return;
+#else 
+    SKIP_TEST();
+#endif
 }
 /* END_CASE */

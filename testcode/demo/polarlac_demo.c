@@ -1,5 +1,6 @@
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
+#ifdef PQCP_POLARLAC
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
@@ -226,9 +227,11 @@ static int32_t PQCP_TestLoadProvider(void)
 
     return PQCP_TEST_SUCCESS;
 }
+#endif
 
 int32_t main(void)
 {
+#ifdef PQCP_POLARLAC
     printf("PQCP_PolarLac\n");
     printf("====================================\n");
 
@@ -258,4 +261,7 @@ int32_t main(void)
 
     (void)CRYPT_EAL_ProviderUnload(NULL, BSL_SAL_LIB_FMT_LIBSO, "pqcp_provider");
     return result;
+#else
+    printf("PolarLac feature is closed\n");
+#endif
 }

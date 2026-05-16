@@ -19,7 +19,7 @@
 #include "crypt_composite_sign_local.h"
 #include "pqcp_err.h"
 
-static int32_t CRYPT_CompositeGetMldsaPrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t GetMldsaPrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     /*  https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-14
         draft-ietf-lamps-pq-composite-sigs-14: sk = SerializePrivateKey(mldsaSeed, tradSK)
@@ -37,7 +37,7 @@ ERR:
     return ret;
 }
 
-static int32_t CRYPT_CompositeGetMldsaPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t GetMldsaPubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     uint32_t pubLen = ctx->info->pqcPubkeyLen;
@@ -53,22 +53,22 @@ ERR:
     return ret;
 }
 
-int32_t CRYPT_CompositeGetPqcPrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeGetPqcPrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->pqcAlg) {
         case CRYPT_PKEY_ML_DSA:
-            return CRYPT_CompositeGetMldsaPrvKey(ctx, encode);
+            return GetMldsaPrvKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
 
-int32_t CRYPT_CompositeGetPqcPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeGetPqcPubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->pqcAlg) {
         case CRYPT_PKEY_ML_DSA:
-            return CRYPT_CompositeGetMldsaPubKey(ctx, encode);
+            return GetMldsaPubKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
@@ -76,7 +76,7 @@ int32_t CRYPT_CompositeGetPqcPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *e
 }
 
 
-static int32_t CRYPT_CompositeGetSm2PubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t GetSm2PubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     uint32_t pubLen = 0;
@@ -94,7 +94,7 @@ static int32_t CRYPT_CompositeGetSm2PubKey(const CRYPT_CompositeCtx *ctx, BSL_Bu
     return PQCP_SUCCESS;
 }
 
-static int32_t CRYPT_CompositeGetSm2PrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t GetSm2PrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     uint32_t prvLen = 0;
@@ -112,29 +112,29 @@ static int32_t CRYPT_CompositeGetSm2PrvKey(const CRYPT_CompositeCtx *ctx, BSL_Bu
     return PQCP_SUCCESS;
 }
 
-int32_t CRYPT_CompositeGetTradPrvKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeGetTradPrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->tradAlg) {
         case CRYPT_PKEY_SM2:
-            return CRYPT_CompositeGetSm2PrvKey(ctx, encode);
+            return GetSm2PrvKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
 
-int32_t CRYPT_CompositeGetTradPubKey(const CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeGetTradPubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->tradAlg) {
         case CRYPT_PKEY_SM2:
-            return CRYPT_CompositeGetSm2PubKey(ctx, encode);
+            return GetSm2PubKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
 
-static int32_t CRYPT_CompositeSetMldsaPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t SetMldsaPrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     BSL_Param param[2] = {
@@ -144,7 +144,7 @@ static int32_t CRYPT_CompositeSetMldsaPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer
     return PQCP_SUCCESS;
 }
 
-static int32_t CRYPT_CompositeSetMldsaPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t SetMldsaPubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     BSL_Param param[2] = {
@@ -154,28 +154,28 @@ static int32_t CRYPT_CompositeSetMldsaPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer
     return PQCP_SUCCESS;
 }
 
-int32_t CRYPT_CompositeSetPqcPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeSetPqcPrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->pqcAlg) {
         case CRYPT_PKEY_ML_DSA:
-            return CRYPT_CompositeSetMldsaPrvKey(ctx, encode);
+            return SetMldsaPrvKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
-int32_t CRYPT_CompositeSetPqcPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeSetPqcPubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->pqcAlg) {
         case CRYPT_PKEY_ML_DSA:
-            return CRYPT_CompositeSetMldsaPubKey(ctx, encode);
+            return SetMldsaPubKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
 
-static int32_t CRYPT_CompositeSetSm2PubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t SetSm2PubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     BSL_Param param[2] = {{CRYPT_PARAM_EC_PUBKEY, BSL_PARAM_TYPE_OCTETS, encode->data, encode->dataLen, 0},
@@ -184,7 +184,7 @@ static int32_t CRYPT_CompositeSetSm2PubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *
     return PQCP_SUCCESS;
 }
 
-static int32_t CRYPT_CompositeSetSm2PrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+static int32_t SetSm2PrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     int32_t ret;
     BSL_Param para[2] = {{CRYPT_PARAM_EC_PRVKEY, BSL_PARAM_TYPE_OCTETS, encode->data, encode->dataLen, 0},
@@ -193,22 +193,22 @@ static int32_t CRYPT_CompositeSetSm2PrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *
     return PQCP_SUCCESS;
 }
 
-int32_t CRYPT_CompositeSetTradPrvKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeSetTradPrvKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->tradAlg) {
         case CRYPT_PKEY_SM2:
-            return CRYPT_CompositeSetSm2PrvKey(ctx, encode);
+            return SetSm2PrvKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
     }
 }
 
-int32_t CRYPT_CompositeSetTradPubKey(CRYPT_CompositeCtx *ctx, BSL_Buffer *encode)
+int32_t PQCP_CompositeSetTradPubKey(PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
 {
     switch (ctx->info->tradAlg) {
         case CRYPT_PKEY_SM2:
-            return CRYPT_CompositeSetSm2PubKey(ctx, encode);
+            return SetSm2PubKey(ctx, encode);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;

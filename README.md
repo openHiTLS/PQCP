@@ -31,6 +31,35 @@ cmake ..
 make
 ```
 
+### Algorithm Selection
+
+`build_pqcp.sh` supports algorithm selection at build time.
+
+- Build all algorithms:
+
+```bash
+bash ./build_pqcp.sh
+```
+
+- Enable only specific algorithms:
+
+```bash
+bash ./build_pqcp.sh --enable scloudplus polarlac
+```
+
+- Disable specific algorithms:
+
+```bash
+bash ./build_pqcp.sh --disable hiae
+```
+
+Supported algorithm names are the subdirectories under `src/`, for example:
+
+- `scloudplus`
+- `polarlac`
+- `composite_sign`
+- `hiae`
+
 ## Usage
 
 To use this provider with OpenHiTLS:

@@ -30,12 +30,7 @@ target_compile_definitions(SHARED_COMPILE_DEFS INTERFACE
     HITLS_NO_CONFIG_CHECK
 )
 
-if(MACROS)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MACROS}")
-else()
-    message(STATUS "No additional macros provided")
-    target_link_libraries(TESTCASE_PRE PRIVATE SHARED_COMPILE_DEFS)
-endif()
+target_link_libraries(TESTCASE_PRE PRIVATE SHARED_COMPILE_DEFS)
 
 if(GEN_TEST_FILES)
     # test1 test2 ...
@@ -80,7 +75,5 @@ foreach(test_suite ${TEST_FILES})
     )
     target_link_libraries(${sdv_exe} PRIVATE TESTCASE_PRE 
                             ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${SECUREC_LIB} ${PQCP_PROVIDER_LIB} pthread)
-    if(NOT MACROS)
-        target_link_libraries(${sdv_exe} PRIVATE SHARED_COMPILE_DEFS)
-    endif()
+    target_link_libraries(${sdv_exe} PRIVATE SHARED_COMPILE_DEFS)
 endforeach()
