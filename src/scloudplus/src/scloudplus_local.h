@@ -101,7 +101,7 @@ void SCLOUDPLUS_PackC2(const uint16_t* C, const SCLOUDPLUS_Para* para, uint8_t* 
 void SCLOUDPLUS_UnPackC2(const uint8_t* in, const SCLOUDPLUS_Para* para, uint16_t* C);
 
 void SCLOUDPLUS_MsgEncode(const uint8_t* msg, const SCLOUDPLUS_Para* para, uint16_t* matrixM);
-void SCLOUDPLUS_MsgDecode(const uint16_t* matrixM, const SCLOUDPLUS_Para* para, uint8_t* msg);
+int32_t SCLOUDPLUS_MsgDecode(const uint16_t* matrixM, const SCLOUDPLUS_Para* para, uint8_t* msg);
 
 int8_t SCLOUDPLUS_Verify(const uint8_t* a, const uint8_t* b, const int Len);
 int32_t SCLOUDPLUS_MdFunc(const CRYPT_MD_AlgId id, const uint8_t* input1, const uint32_t inLen1, const uint8_t* input2,

@@ -19,6 +19,7 @@
 #include "bsl_sal.h"
 #include "crypt_eal_md.h"
 #include "crypt_eal_rand.h"
+#include "crypt_utils.h"
 
 #include "pqcp_err.h"
 #include "pqcp_types.h"
@@ -153,9 +154,6 @@ EXIT:
 static int32_t SCLOUDPLUS_PKEEncrypt(const uint8_t *pk, const uint8_t *m, const uint8_t *r, const SCLOUDPLUS_Para *para,
     uint8_t *ctx)
 {
-    if (para->ss == 0 || pk == NULL || m == NULL || ctx == NULL) {
-        return PQCP_NULL_INPUT;
-    }
     int32_t ret;
     uint16_t *memoryPool =  BSL_SAL_Malloc(
             sizeof(uint16_t) * ((para->mbar * (para->m + 2 * para->n + 3 * para->nbar)) + (para->m * para->nbar)));
@@ -205,9 +203,6 @@ EXIT:
 
 static int32_t SCLOUDPLUS_PKEDecrypt(const uint8_t *sk, const uint8_t *ctx, const SCLOUDPLUS_Para *para, uint8_t *m)
 {
-    if (para->ss == 0 || sk == NULL || ctx == NULL || m == NULL) {
-        return PQCP_NULL_INPUT;
-    }
     uint16_t *memoryPool = BSL_SAL_Malloc(sizeof(uint16_t) * ((para->mbar * (para->n + 2 * para->nbar)) + (para->n * para->nbar)));
     if (memoryPool == NULL) {
         return PQCP_MEM_ALLOC_FAIL;
@@ -223,9 +218,9 @@ static int32_t SCLOUDPLUS_PKEDecrypt(const uint8_t *sk, const uint8_t *ctx, cons
     SCLOUDPLUS_DeCompressC2(C2, para, C2);
     SCLOUDPLUS_CS(C1, S, para, D);
     SCLOUDPLUS_Sub(C2, D, para->mbar * para->nbar, D);
-    SCLOUDPLUS_MsgDecode(D, para, m);
+    int32_t ret = SCLOUDPLUS_MsgDecode(D, para, m);
     BSL_SAL_FREE(memoryPool);
-    return PQCP_SUCCESS;
+    return ret;
 }
 
 void *PQCP_SCLOUDPLUS_NewCtx(void)
@@ -283,6 +278,7 @@ EXIT:
     }
     if (ctx->privateKey != NULL) {
         BSL_SAL_ClearFree(ctx->privateKey, ctx->para->kemSkSize);
+        ctx->privateKey = NULL;
     }
     return ret;
 }
@@ -297,7 +293,7 @@ int32_t PQCP_SCLOUDPLUS_SetPrvKey(SCLOUDPLUS_Ctx *ctx, BSL_Param *param)
         return PQCP_NULL_INPUT;
     }
     if (ctx->para->kemSkSize != prv->valueLen) {
-        return PQCP_SCLOUDPLUS_INVALID_ARG;
+        return PQCP_INVALID_ARG;
     }
     if (ctx->privateKey == NULL) {
         ctx->privateKey = BSL_SAL_Calloc(ctx->para->kemSkSize, sizeof(uint8_t));
@@ -419,6 +415,9 @@ int32_t PQCP_SCLOUDPLUS_Ctrl(SCLOUDPLUS_Ctx *ctx, int32_t cmd, void *val, uint32
             if (val == NULL || valLen != sizeof(uint32_t)) {
                 return PQCP_NULL_INPUT;
             }
+            if (ctx->para != NULL) {
+                return PQCP_SCLOUDPLUS_PARA_REPEATED_SET;
+            }
             int32_t algId = *(int32_t *)val;
             if (algId == PQCP_SCLOUDPLUS_128) {
                 ctx->para = &PRESET_PARAS[0];
@@ -490,7 +489,7 @@ void PQCP_SCLOUDPLUS_FreeCtx(SCLOUDPLUS_Ctx *ctx)
     }
     if (ctx->privateKey != NULL) {
         if (ctx->para != NULL) {
-            memset(ctx->privateKey, 0, ctx->para->kemSkSize);
+            BSL_SAL_CleanseData(ctx->privateKey, ctx->para->kemSkSize);
         }
         BSL_SAL_FREE(ctx->privateKey);
     }
@@ -518,6 +517,9 @@ int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx, uint8_t *ciphertext, uint32_
         || ctLen == NULL || ssLen == NULL) {
         return PQCP_NULL_INPUT;
     }
+    if (*ctLen < ctx->para->ctxSize || *ssLen < ctx->para->ss) {
+        return PQCP_INVALID_ARG;
+    }
     uint8_t in[ctx->para->ss + SCLOUDPLUS_HPK_LEN + SCLOUDPLUS_RAND_R_LEN + SCLOUDPLUS_SEED_K_LEN];
     uint8_t *C = ciphertext;
     uint8_t *m = in;
@@ -542,7 +544,6 @@ int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx, uint8_t *ciphertext, uint32_
     if (ret != PQCP_SUCCESS) {
         return ret;
     }
-    *ssLen = ctx->para->ss;
     ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, k, SCLOUDPLUS_SEED_K_LEN, C, ctx->para->ctxSize, sharedSecret, ssLen);
     if (ret != PQCP_SUCCESS) {
         return ret;
@@ -558,8 +559,8 @@ int32_t PQCP_SCLOUDPLUS_Decaps(SCLOUDPLUS_Ctx *ctx, const uint8_t *ciphertext, u
         || ssLen == NULL) {
         return PQCP_NULL_INPUT;
     }
-    if (ctLen != ctx->para->ctxSize) {
-        return PQCP_SCLOUDPLUS_INVALID_ARG;
+    if (ctLen != ctx->para->ctxSize || *ssLen < ctx->para->ss) {
+        return PQCP_INVALID_ARG;
     }
     uint8_t *C1 = BSL_SAL_Malloc(ctx->para->ctxSize);
     if (C1 == NULL) {

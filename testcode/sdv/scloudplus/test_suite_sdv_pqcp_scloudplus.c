@@ -385,7 +385,7 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_CTRL_API_TC001(int bits)
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
     ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &val, sizeof(val));
-    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(ret, PQCP_SCLOUDPLUS_PARA_REPEATED_SET);
 
     ret = CRYPT_EAL_PkeyCtrl(NULL, CRYPT_CTRL_SET_PARA_BY_ID, &val, sizeof(val));
     ASSERT_EQ(ret, CRYPT_NULL_INPUT);
@@ -595,9 +595,15 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_VECTOR_TC001(int bits, Hex *alpha, Hex *randZ, H
     ASSERT_COMPARE("compare sk", keys[1].value, keys[1].useLen, expSk->x, expSk->len);
 
     ASSERT_EQ(CRYPT_EAL_PkeySetPubEx(pubKeyCtx, keys), PQCP_SUCCESS);
+    uint32_t shortCipherLen = 3;
+    uint32_t shortSsLen = 3;
+    ASSERT_EQ(CRYPT_EAL_PkeyEncaps(pubKeyCtx, ciphertext, &shortCipherLen, sharedKey, &sharedLen), PQCP_INVALID_ARG);
+    ASSERT_EQ(CRYPT_EAL_PkeyEncaps(pubKeyCtx, ciphertext, &cipherLen, sharedKey, &shortSsLen), PQCP_INVALID_ARG);
     ASSERT_EQ(CRYPT_EAL_PkeyEncaps(pubKeyCtx, ciphertext, &cipherLen, sharedKey, &sharedLen), PQCP_SUCCESS);
     ASSERT_COMPARE("compare ct", ciphertext, cipherLen, expCipher->x, expCipher->len);
     ASSERT_COMPARE("compare ss", sharedKey, sharedLen, expSharedKey->x, expSharedKey->len);
+    ASSERT_EQ(CRYPT_EAL_PkeyDecaps(prvKeyCtx,  expCipher->x, expCipher->len, decSharedKey, &shortSsLen),
+        PQCP_INVALID_ARG);
     ASSERT_EQ(CRYPT_EAL_PkeyDecaps(prvKeyCtx,  expCipher->x, expCipher->len, decSharedKey, &decSharedLen), PQCP_SUCCESS);
     ASSERT_COMPARE("compare dec ss", decSharedKey, decSharedLen, expSharedKey->x, expSharedKey->len);
 EXIT:

@@ -239,6 +239,67 @@ EXIT:
 /* END_CASE */
 
 /* @
+* @test  SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PRVKEY_LEN_API_TC001
+* @spec  -
+* @title  PQCP Composite Sign Set/Get Private Key Length Test
+* @precon  nan
+* @brief  1. Create context and set algorithm
+*         2. Set composite private key whose SM2 private key part is 4 bytes
+*         3. Get private key and verify the returned private key length is 32 + 4 bytes
+* @expect  All operations return PQCP_SUCCESS and get private key useLen is 36
+* @prior  nan
+* @auto  FALSE
+@ */
+/* BEGIN_CASE */
+void SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PRVKEY_LEN_API_TC001(int algId)
+{
+#ifdef PQCP_COMPOSITE_SIGN
+    TestRandInitEx(NULL);
+    TestMemInit();
+    CRYPT_EAL_PkeyCtx *ctx = NULL;
+    uint8_t prvKeyData[36] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+        0x01, 0x02, 0x03, 0x04
+    };
+    uint8_t getPrvKeyData[64] = {0};
+
+    ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
+    ASSERT_TRUE(ctx != NULL);
+
+    int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &algId, sizeof(algId));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    BSL_Param prvParams[2] = {
+        {PQCP_PARAM_COMPOSITE_PRVKEY, BSL_PARAM_TYPE_OCTETS, prvKeyData, sizeof(prvKeyData), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeySetPrvEx(ctx, prvParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    BSL_Param getPrvParams[2] = {
+        {PQCP_PARAM_COMPOSITE_PRVKEY, BSL_PARAM_TYPE_OCTETS, getPrvKeyData, sizeof(getPrvKeyData), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeyGetPrvEx(ctx, getPrvParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(getPrvParams[0].useLen, sizeof(prvKeyData));
+    ASSERT_COMPARE("compare prv key", prvKeyData, sizeof(prvKeyData), getPrvKeyData, getPrvParams[0].useLen);
+
+EXIT:
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    TestRandDeInit();
+    return;
+#else
+    SKIP_TEST();
+    (void)algId;
+#endif
+}
+/* END_CASE */
+
+/* @
 * @test  SDV_CRYPTO_PQCP_COMPOSITE_SET_PUBKEY_API_TC001
 * @spec  -
 * @title  PQCP Composite Sign Set Public Key API Test
@@ -292,6 +353,75 @@ EXIT:
     TestRandDeInit();
     return;
 #else 
+    SKIP_TEST();
+    (void)algId;
+#endif
+}
+/* END_CASE */
+
+/* @
+* @test  SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PUBKEY_LEN_API_TC001
+* @spec  -
+* @title  PQCP Composite Sign Set/Get Public Key Length Test
+* @precon  nan
+* @brief  1. Create context and generate key pair
+*         2. Get public key and set it to another context
+*         3. Get public key from the second context and verify the returned public key length
+* @expect  All operations return PQCP_SUCCESS and get public key useLen is same as the set public key length
+* @prior  nan
+* @auto  FALSE
+@ */
+/* BEGIN_CASE */
+void SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PUBKEY_LEN_API_TC001(int algId)
+{
+#ifdef PQCP_COMPOSITE_SIGN
+    TestRandInitEx(NULL);
+    TestMemInit();
+    CRYPT_EAL_PkeyCtx *ctx = NULL;
+    CRYPT_EAL_PkeyCtx *ctx2 = NULL;
+    uint8_t pubKeyData[4096] = {0};
+    uint8_t getPubKeyData[4096] = {0};
+
+    ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
+    ASSERT_TRUE(ctx != NULL);
+
+    ctx2 = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
+    ASSERT_TRUE(ctx2 != NULL);
+
+    int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &algId, sizeof(algId));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ret = CRYPT_EAL_PkeyCtrl(ctx2, CRYPT_CTRL_SET_PARA_BY_ID, &algId, sizeof(algId));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    BSL_Param pubParams[2] = {
+        {PQCP_PARAM_COMPOSITE_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubKeyData, sizeof(pubKeyData), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, pubParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    pubParams[0].valueLen = pubParams[0].useLen;
+    ret = CRYPT_EAL_PkeySetPubEx(ctx2, pubParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    BSL_Param getPubParams[2] = {
+        {PQCP_PARAM_COMPOSITE_PUBKEY, BSL_PARAM_TYPE_OCTETS, getPubKeyData, sizeof(getPubKeyData), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx2, getPubParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(getPubParams[0].useLen, pubParams[0].valueLen);
+    ASSERT_COMPARE("compare pub key", pubKeyData, pubParams[0].valueLen, getPubKeyData, getPubParams[0].useLen);
+
+EXIT:
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    CRYPT_EAL_PkeyFreeCtx(ctx2);
+    TestRandDeInit();
+    return;
+#else
     SKIP_TEST();
     (void)algId;
 #endif

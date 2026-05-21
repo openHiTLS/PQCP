@@ -403,7 +403,8 @@ int32_t PQCP_COMPOSITE_SetPrvKey(PQCP_CompositeCtx *ctx, const CRYPT_CompositePr
     int32_t ret;
     RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
-    RETURN_RET_IF(prv->len < ctx->info->compPrvKeyLen, PQCP_COMPOSITE_KEYLEN_ERROR);
+    // the prvkey len of trad is not determined, so we just verify that the prv->len must be greater than ctx->info->pqcPrvkeyLen
+    RETURN_RET_IF(prv->len <= ctx->info->pqcPrvkeyLen, PQCP_COMPOSITE_KEYLEN_ERROR);
     BSL_Buffer pqcPrv = {prv->data, ctx->info->pqcPrvkeyLen};
     BSL_Buffer tradPrv = {prv->data + ctx->info->pqcPrvkeyLen, prv->len - ctx->info->pqcPrvkeyLen};
     RETURN_RET_IF_ERR(PQCP_CompositeSetPqcPrvKey(ctx, &pqcPrv), ret);

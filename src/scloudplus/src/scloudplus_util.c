@@ -21,6 +21,7 @@
 #include "crypt_eal_cipher.h"
 #include "crypt_eal_md.h"
 #include "pqcp_err.h"
+#include "crypt_utils.h"
 
 static inline Complex ComplexAdd(const Complex a, const Complex b)
 {
@@ -802,8 +803,9 @@ void SCLOUDPLUS_MsgEncode(const uint8_t *msg, const SCLOUDPLUS_Para *para, uint1
     }
 }
 
-void SCLOUDPLUS_MsgDecode(const uint16_t *matrixM, const SCLOUDPLUS_Para *para, uint8_t *msg)
+int32_t SCLOUDPLUS_MsgDecode(const uint16_t *matrixM, const SCLOUDPLUS_Para *para, uint8_t *msg)
 {
+    int32_t ret = PQCP_SUCCESS;
     uint8_t *msgPtr = msg;
     Complex encMsg[SCLOUDPLUS_BW_COMPLEX_LEN], w[SCLOUDPLUS_BW_COMPLEX_LEN], u[SCLOUDPLUS_BW_COMPLEX_LEN];
     uint32_t bwNLen = SCLOUDPLUS_BW_COMPLEX_LEN << 1;
@@ -813,11 +815,12 @@ void SCLOUDPLUS_MsgDecode(const uint16_t *matrixM, const SCLOUDPLUS_Para *para, 
             w[j] = (Complex){0, 0};
             u[j] = (Complex){0, 0};
         }
-        BDDForBWn(encMsg, bwNLen, para->logq, para->tau, w);
+        RETURN_RET_IF_ERR(BDDForBWn(encMsg, bwNLen, para->logq, para->tau, w), ret);
         DelabelingRecoverW(w, para->logq, para->tau, u);
         DelabelingComputeU(u, para->tau, msgPtr);
         msgPtr += (para->mu >> 3);
     }
+    return ret;
 }
 
 void SCLOUDPLUS_PackPK(const uint16_t *B, const SCLOUDPLUS_Para *para, uint8_t *pk)

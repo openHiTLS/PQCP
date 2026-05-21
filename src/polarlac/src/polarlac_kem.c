@@ -15,6 +15,7 @@
 #ifdef PQCP_POLARLAC
 #include <string.h>
 
+#include "bsl_bytes.h"
 #include "crypt_eal_md.h"
 #include "crypt_eal_rand.h"
 #include "polarlac_local.h"
@@ -85,7 +86,7 @@ static int32_t PolarLacKemDecFo(const CRYPT_POLAR_LAC_Ctx *ctx, const uint8_t *c
     RETURN_RET_IF(PQCP_POLAR_LAC_PkeEncrypt(ctx, buf, verifyCt, &cLen, seed), ret);
 
     // verify
-    if (memcmp(c, verifyCt, ctLen) != 0) {
+    if (ConstTimeMemcmp(c, verifyCt, ctLen) == 0) {
         // k=hash(hash(sk)|c)
         ret = SHA3_256(sk, skLen, buf, msgLen + ctLen);
         if (ret != PQCP_SUCCESS) {
@@ -116,7 +117,6 @@ int32_t PQCP_POLAR_LAC_KeyGenInternal(CRYPT_POLAR_LAC_Ctx *ctx)
     // generate seed
     RETURN_RET_IF(CRYPT_EAL_Randbytes(seed, seedLen), ret);
     // key generation with seed
-    PQCP_POLAR_LAC_PkeKeyGen(ctx, seed);
-    return 0;
+    return PQCP_POLAR_LAC_PkeKeyGen(ctx, seed);
 }
 #endif // PQCP_POLARLAC

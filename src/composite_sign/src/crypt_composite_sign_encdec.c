@@ -90,7 +90,7 @@ static int32_t GetSm2PubKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
         return ret;
     }
     encode->data = pub;
-    encode->dataLen = pubLen;
+    encode->dataLen = param[0].useLen;
     return PQCP_SUCCESS;
 }
 
@@ -108,7 +108,7 @@ static int32_t GetSm2PrvKey(const PQCP_CompositeCtx *ctx, BSL_Buffer *encode)
         return ret;
     }
     encode->data = prv;
-    encode->dataLen = prvLen;
+    encode->dataLen = param[0].useLen;
     return PQCP_SUCCESS;
 }
 

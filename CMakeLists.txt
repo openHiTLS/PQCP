@@ -104,6 +104,7 @@ target_include_directories(pqcp_provider
         ${HITLS_ROOT_PATH}/crypto/eal/src
         ${HITLS_ROOT_PATH}/crypto/include
         ${HITLS_ROOT_PATH}/bsl/sal/include
+        ${HITLS_ROOT_PATH}/bsl/include
 )
 
 foreach(src ${PROVIDER_SOURCES})
