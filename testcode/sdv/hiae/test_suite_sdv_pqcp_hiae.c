@@ -258,10 +258,12 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_AEAD_API_TC001(Hex *keyHex, Hex *ivHex, Hex *aa
     ASSERT_EQ(ret, PQCP_SUCCESS);
     totalLen = outLen;
     ASSERT_EQ(totalLen, plainLen);
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagOut, sizeof(tagOut));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagExp, tagLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    outLen = 0;
+    ret = CRYPT_EAL_CipherFinal(decCtx, plainOut, &outLen);
     ASSERT_EQ(ret, PQCP_SUCCESS);
     ASSERT_COMPARE("hiae aead plain", plain, plainLen, plainOut, totalLen);
-    ASSERT_COMPARE("hiae aead dec tag", tagExp, tagLen, tagOut, tagLen);
 
 EXIT:
     CRYPT_EAL_CipherFreeCtx(encCtx);
@@ -467,7 +469,6 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_TAMPER_API_TC001(void)
     uint8_t cipherTampered[67];
     uint8_t decode[67];
     uint8_t tagEnc[HIAE_TAG_LEN];
-    uint8_t tagDec[HIAE_TAG_LEN];
     uint32_t outLen;
     uint32_t round;
     uint32_t pos;
@@ -502,9 +503,12 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_TAMPER_API_TC001(void)
     ret = CRYPT_EAL_CipherUpdate(decCtx, cipher, sizeof(cipher), decode, &outLen);
     ASSERT_EQ(ret, PQCP_SUCCESS);
     ASSERT_EQ(outLen, sizeof(decode));
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagDec, sizeof(tagDec));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagEnc, sizeof(tagEnc));
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ASSERT_COMPARE("hiae cipher untampered tag", tagEnc, sizeof(tagEnc), tagDec, sizeof(tagDec));
+    outLen = 0;
+    ret = CRYPT_EAL_CipherFinal(decCtx, decode, &outLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_COMPARE("hiae cipher untampered plain", plain, sizeof(plain), decode, sizeof(decode));
 
     srand(1);
     for (round = 0; round < 100; round++) {
@@ -520,10 +524,11 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_TAMPER_API_TC001(void)
         ret = CRYPT_EAL_CipherUpdate(decCtx, cipherTampered, sizeof(cipherTampered), decode, &outLen);
         ASSERT_EQ(ret, PQCP_SUCCESS);
         ASSERT_EQ(outLen, sizeof(decode));
-        ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagDec, sizeof(tagDec));
+        ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagEnc, sizeof(tagEnc));
         ASSERT_EQ(ret, PQCP_SUCCESS);
-
-        ASSERT_NE(memcmp(tagEnc, tagDec, sizeof(tagEnc)), 0);
+        outLen = 0;
+        ret = CRYPT_EAL_CipherFinal(decCtx, decode, &outLen);
+        ASSERT_EQ(ret, CRYPT_MODES_TAG_ERROR);
     }
 
 EXIT:
@@ -932,7 +937,6 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_RANDOM_API_TC001(void)
     uint8_t cipher[16384];
     uint8_t decode[16384];
     uint8_t tagEnc[16];
-    uint8_t tagDec[16];
     uint32_t g;
     uint32_t t;
     uint32_t msgLen;
@@ -978,11 +982,13 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_RANDOM_API_TC001(void)
             ASSERT_EQ(ret, PQCP_SUCCESS);
             totalOut = outLen;
             ASSERT_EQ(totalOut, msgLen);
-            ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagDec, sizeof(tagDec));
+            ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagEnc, sizeof(tagEnc));
+            ASSERT_EQ(ret, PQCP_SUCCESS);
+            outLen = 0;
+            ret = CRYPT_EAL_CipherFinal(decCtx, decode, &outLen);
             ASSERT_EQ(ret, PQCP_SUCCESS);
 
             ASSERT_COMPARE("hiae random plain", plain, msgLen, decode, msgLen);
-            ASSERT_COMPARE("hiae random tag", tagEnc, sizeof(tagEnc), tagDec, sizeof(tagDec));
         }
     }
 
@@ -1125,7 +1131,12 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_STREAMING_API_TC001(void)
     ASSERT_EQ(ret, PQCP_SUCCESS);
     ret = HiaeCipherUpdateByChunks(decCtx, cipherA, outLenA, plainA, sizeof(plainA), NULL, 0, false, &outLenA);
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagA, sizeof(tagA));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagA, sizeof(tagA));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    {
+        uint32_t finalLen = 0;
+        ret = CRYPT_EAL_CipherFinal(decCtx, plainA, &finalLen);
+    }
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
     CRYPT_EAL_CipherFreeCtx(decCtx);
@@ -1139,7 +1150,12 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_STREAMING_API_TC001(void)
     ret = HiaeCipherUpdateByChunks(decCtx, cipherA, outLenB, plainB, sizeof(plainB), msgSplitB,
                                    sizeof(msgSplitB) / sizeof(msgSplitB[0]), false, &outLenB);
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagB, sizeof(tagB));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagA, sizeof(tagA));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    {
+        uint32_t finalLen = 0;
+        ret = CRYPT_EAL_CipherFinal(decCtx, plainB, &finalLen);
+    }
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
     CRYPT_EAL_CipherFreeCtx(decCtx);
@@ -1153,7 +1169,12 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_STREAMING_API_TC001(void)
     ret = HiaeCipherUpdateByChunks(decCtx, cipherA, outLenC, plainC, sizeof(plainC), msgSplitC,
                                    sizeof(msgSplitC) / sizeof(msgSplitC[0]), false, &outLenC);
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagC, sizeof(tagC));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagA, sizeof(tagA));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    {
+        uint32_t finalLen = 0;
+        ret = CRYPT_EAL_CipherFinal(decCtx, plainC, &finalLen);
+    }
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
     CRYPT_EAL_CipherFreeCtx(decCtx);
@@ -1167,16 +1188,18 @@ void SDV_CRYPTO_PQCP_HIAE_CIPHER_STREAMING_API_TC001(void)
     ret = HiaeCipherUpdateByChunks(decCtx, cipherA, outLenD, plainD, sizeof(plainD), msgSplitD,
                                    sizeof(msgSplitD) / sizeof(msgSplitD[0]), false, &outLenD);
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_GET_TAG, tagD, sizeof(tagD));
+    ret = CRYPT_EAL_CipherCtrl(decCtx, CRYPT_CTRL_SET_TAG, tagA, sizeof(tagA));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    {
+        uint32_t finalLen = 0;
+        ret = CRYPT_EAL_CipherFinal(decCtx, plainD, &finalLen);
+    }
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
     ASSERT_COMPARE("hiae stream dec plain A", msg, msgLen, plainA, outLenA);
     ASSERT_COMPARE("hiae stream dec plain B", msg, msgLen, plainB, outLenB);
     ASSERT_COMPARE("hiae stream dec plain C", msg, msgLen, plainC, outLenC);
     ASSERT_COMPARE("hiae stream dec plain D", msg, msgLen, plainD, outLenD);
-    ASSERT_COMPARE("hiae stream dec tag B", tagA, sizeof(tagA), tagB, sizeof(tagB));
-    ASSERT_COMPARE("hiae stream dec tag C", tagA, sizeof(tagA), tagC, sizeof(tagC));
-    ASSERT_COMPARE("hiae stream dec tag D", tagA, sizeof(tagA), tagD, sizeof(tagD));
 
     FillSeq(msg, alignedLen, 0xa6);
     CRYPT_EAL_CipherFreeCtx(encCtx);

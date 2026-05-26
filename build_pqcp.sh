@@ -24,6 +24,7 @@ BUILD_TYPE="Release"
 ENABLE_ASAN="OFF"
 ENABLE_GCOV="OFF"
 OPENHITLS_DIR="platform/openhitls"
+OPENHITLS_REF="openhitls-0.4.0-alpha2"
 LIB_TYPE="SHARED"
 CUSTOM_HITLS_DIR=""
 
@@ -178,7 +179,7 @@ build_depend_code()
     if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
         echo "下载OpenHiTLS..."
         mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
-        git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
+        git clone --depth 1 --branch "${OPENHITLS_REF}" https://gitcode.com/openHiTLS/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
     fi
     # 构建OpenHiTLS
     echo "构建OpenHiTLS..."

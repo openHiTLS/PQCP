@@ -1,5 +1,3 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
 name: PQCP Build and Test
 
 on:
@@ -11,7 +9,7 @@ on:
 env:
   BUILD_TYPE: Release
   OPENHITLS_DIR: platform/openhitls
-  SECURE_C_DIR: platform/openhitls/platform/Secure_C
+  OPENHITLS_REF: openhitls-0.4.0-alpha2
 
 jobs:
   build:
@@ -26,25 +24,19 @@ jobs:
     - name: Download OpenHiTLS
       run: |
         mkdir -p ${{ github.workspace }}/platform
-        cd ${{ github.workspace }}/platform
-        git clone --recurse-submodules https://gitcode.com/openhitls/openhitls.git
-
-    - name: Build Secure_C
-      run: |
-        cd ${{ github.workspace }}/${{ env.SECURE_C_DIR }}
-        make -j$(nproc)
+        git clone --depth 1 --branch "${{ env.OPENHITLS_REF }}" https://gitcode.com/openHiTLS/openhitls.git ${{ github.workspace }}/${{ env.OPENHITLS_DIR }}
 
     - name: Build OpenHiTLS
       run: |
         mkdir -p ${{ github.workspace }}/${{ env.OPENHITLS_DIR }}/build
         cd ${{ github.workspace }}/${{ env.OPENHITLS_DIR }}/build
-        python3 ../configure.py --enable \
-          hitls_bsl hitls_crypto hitls_tls hitls_pki hitls_auth \
-          --lib_type shared \
-          --add_options="-DHITLS_EAL_INIT_OPTS=9 -DHITLS_CRYPTO_ASM_CHECK" \
-          --add_link_flags="-L${{ github.workspace }}/${{ env.SECURE_C_DIR }}/lib -ldl" \
-          --bits=64 --system=linux
-        cmake ..
+        cmake .. \
+          -DHITLS_BUILD_PROFILE=full \
+          -DHITLS_BUILD_STATIC=OFF \
+          -DHITLS_EAL_INIT_OPTS=9 \
+          -DHITLS_CRYPTO_ASM_CHECK=ON \
+          -DCMAKE_SHARED_LINKER_FLAGS="-ldl" \
+          -DHITLS_PLATFORM_BITS=64
         make -j$(nproc)
 
     - name: Configure CMake
@@ -54,7 +46,7 @@ jobs:
         cmake .. \
           -DCMAKE_BUILD_TYPE="${{ env.BUILD_TYPE }}" \
           -DENABLE_ASAN="OFF" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/${{ env.OPENHITLS_DIR }};${{ github.workspace }}/${{ env.SECURE_C_DIR }}"
+          -DHITLS_ROOT_PATH="${{ github.workspace }}/${{ env.OPENHITLS_DIR }}"
 
     - name: Build
       working-directory: ${{ github.workspace }}/build
@@ -66,4 +58,3 @@ jobs:
         name: pqcp-build
         path: ${{ github.workspace }}/build
         retention-days: 5
-

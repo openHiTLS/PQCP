@@ -22,6 +22,7 @@
 #include "crypt_errno.h"
 #include "crypt_types.h"
 #include "bsl_err_internal.h"
+#include "bsl_bytes.h"
 #include "bsl_sal.h"
 #include "crypt_hiae.h"
 #include "hiae_impl.h"
@@ -36,6 +37,8 @@ struct PQCP_HiaeCipherCtx {
     bool isEnc;
     bool inited;
     bool finalized;
+    uint8_t vfyTag[HIAE_TAG_LEN];
+    uint32_t vfyTagLen;
     uint8_t msgBuf[HIAE_BLOCK_SIZE];
     uint32_t msgBufLen;
 };
@@ -151,6 +154,8 @@ int32_t PQCP_HIAE_CipherInitCtx(PQCP_HIAE_CipherCtx *c, const uint8_t *key, uint
     c->isEnc = enc;
     c->inited = true;
     c->finalized = false;
+    c->vfyTagLen = 0;
+    BSL_SAL_CleanseData(c->vfyTag, sizeof(c->vfyTag));
     BSL_SAL_CleanseData(c->tag, sizeof(c->tag));
     BSL_SAL_CleanseData(c->msgBuf, sizeof(c->msgBuf));
 
@@ -274,15 +279,23 @@ int32_t PQCP_HIAE_CipherFinal(PQCP_HIAE_CipherCtx *c, uint8_t *out, uint32_t *ou
         BSL_ERR_PUSH_ERROR(CRYPT_EAL_ERR_STATE);
         return CRYPT_EAL_ERR_STATE;
     }
-    if (c->finalized) {
-        *outLen = 0;
-        return PQCP_SUCCESS;
-    }
-    ret = FinalizeIfNeeded(c);
-    if (ret != PQCP_SUCCESS) {
-        return ret;
+    if (!c->finalized) {
+        ret = FinalizeIfNeeded(c);
+        if (ret != PQCP_SUCCESS) {
+            return ret;
+        }
     }
     *outLen = 0;
+    if (!c->isEnc) {
+        if (c->vfyTagLen != HIAE_TAG_LEN) {
+            BSL_ERR_PUSH_ERROR(CRYPT_MODES_TAGLEN_ERROR);
+            return CRYPT_MODES_TAGLEN_ERROR;
+        }
+        if (ConstTimeMemcmp(c->tag, c->vfyTag, HIAE_TAG_LEN) == 0) {
+            BSL_ERR_PUSH_ERROR(CRYPT_MODES_TAG_ERROR);
+            return CRYPT_MODES_TAG_ERROR;
+        }
+    }
     return PQCP_SUCCESS;
 }
 
@@ -318,7 +331,9 @@ static int32_t SetIv(PQCP_HIAE_CipherCtx *ctx, const uint8_t *iv, uint32_t ivLen
     ctx->msgLen = 0;
     ctx->msgBufLen = 0;
     ctx->finalized = false;
+    ctx->vfyTagLen = 0;
     BSL_SAL_CleanseData(ctx->tag, sizeof(ctx->tag));
+    BSL_SAL_CleanseData(ctx->vfyTag, sizeof(ctx->vfyTag));
     BSL_SAL_CleanseData(ctx->msgBuf, sizeof(ctx->msgBuf));
     return PQCP_SUCCESS;
 }
@@ -400,6 +415,10 @@ static int32_t GetTag(PQCP_HIAE_CipherCtx *ctx, uint8_t *tag, uint32_t tagLen)
         BSL_ERR_PUSH_ERROR(CRYPT_EAL_ERR_STATE);
         return CRYPT_EAL_ERR_STATE;
     }
+    if (!ctx->isEnc) {
+        BSL_ERR_PUSH_ERROR(CRYPT_EAL_ERR_STATE);
+        return CRYPT_EAL_ERR_STATE;
+    }
     if (!ctx->finalized) {
         ret = FinalizeIfNeeded(ctx);
         if (ret != PQCP_SUCCESS) {
@@ -425,6 +444,18 @@ int32_t PQCP_HIAE_CipherCtrl(PQCP_HIAE_CipherCtx *c, int32_t cmd, void *val, uin
             return SetAad(c, val, valLen);
         case CRYPT_CTRL_GET_TAG:
             return GetTag(c, val, valLen);
+        case CRYPT_CTRL_SET_TAG:
+            if (val == NULL || valLen != HIAE_TAG_LEN) {
+                BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
+                return PQCP_INVALID_ARG;
+            }
+            if (!c->inited || c->finalized || c->isEnc) {
+                BSL_ERR_PUSH_ERROR(CRYPT_EAL_ERR_STATE);
+                return CRYPT_EAL_ERR_STATE;
+            }
+            memcpy(c->vfyTag, val, HIAE_TAG_LEN);
+            c->vfyTagLen = valLen;
+            return PQCP_SUCCESS;
         case CRYPT_CTRL_GET_BLOCKSIZE:
             if (val == NULL || valLen != sizeof(uint32_t)) {
                 BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
