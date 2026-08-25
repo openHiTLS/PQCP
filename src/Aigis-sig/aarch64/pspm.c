@@ -1,0 +1,202 @@
+/* Copyright (c) 2025 LiuRuikang
+ * School Of Cyber Engineering, Xidian University
+ *
+ * This file is part of the openHiTLS project.
+ *
+ * openHiTLS is licensed under the Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+#include <stdio.h>
+#include "pspm.h"
+
+#include <string.h>
+
+#include "polyvec.h"
+#include "params.h"
+#include "reduce.h"
+
+static inline uint64_t load64(uint8_t *t) {
+    uint64_t r;
+    memcpy(&r, t, sizeof(uint64_t));
+    return r;
+}
+
+static inline void store64(uint8_t *t, uint64_t r) {
+    memcpy(t, &r, sizeof(uint64_t));
+}
+
+void emulate_cs1(polyvecl *r, const poly *c, const uint8_t s1_table[PARAM_L][PARAM_N * 3])
+{
+    uint8_t w[PARAM_N];
+    uint64_t *w64 = (uint64_t *) w;
+    uint64_t *s64;
+
+    for (int l = 0; l < PARAM_L; l++)
+    {
+        memset(w, 0, 512);
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            if (c->coeffs[i] != 0)
+            {
+                s64 = s1_table[l] + PARAM_N - i + (PARAM_N & (c->coeffs[i] >> 31));
+                for (int j = 0; j < PARAM_N / 8; j++) 
+                {
+                    w64[j] += s64[j];
+                }
+            }
+        }
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            r->vec[l].coeffs[i] = w[i] - BETA1;
+        }
+    }
+}
+
+int emulate_ct0(polyveck *r, const poly *c, const polyveck *t0)
+{
+    int32_t stable[PARAM_N * 3];
+    int32_t w[PARAM_N];  
+
+    int32_t *stable32;
+    int32_t a;
+
+    for (int k = 0; k < PARAM_K; k++)
+    {
+        memset(w, 0, PARAM_N * 4);
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            stable[i] = -t0->vec[k].coeffs[i];
+            stable[PARAM_N + i] = t0->vec[k].coeffs[i];
+            stable[PARAM_N * 2 + i] = -t0->vec[k].coeffs[i];
+        }
+
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            if (c->coeffs[i] != 0)
+            {
+                stable32 = stable + PARAM_N - i + (PARAM_N & (c->coeffs[i] >> 31));
+                for (int j = 0; j < PARAM_N; j++)
+                {
+                    w[j] += stable32[j];
+                }
+            }
+        }
+
+        for (int i = 0; i < PARAM_N; i++)
+        {     
+            r->vec[k].coeffs[i] = w[i];
+        }
+    }
+    return 0;
+}
+
+int emulate_ct1(polyveck *r, const poly *c, const polyveck *t)
+{
+    int32_t stable[PARAM_N * 3];
+    int32_t w[PARAM_N];  
+
+    int32_t *stable32;
+    int32_t a;
+
+    for (int k = 0; k < PARAM_K; k++)
+    {
+        memset(w, 0, PARAM_N * 4);
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            stable[i] = -t->vec[k].coeffs[i];
+            stable[PARAM_N + i] = t->vec[k].coeffs[i];
+            stable[PARAM_N * 2 + i] =- t->vec[k].coeffs[i];
+        }
+
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            if (c->coeffs[i] != 0)
+            {
+                stable32 = stable + PARAM_N - i + (PARAM_N & (c->coeffs[i] >> 31));
+                for (int j = 0; j < PARAM_N; j++)
+                    w[j] += stable32[j];
+            }
+        }
+
+        for (int i = 0; i < PARAM_N; i++)
+            r->vec[k].coeffs[i] = w[i] ;
+    }
+    return 0;
+}
+
+#if PARAMS == 1
+
+void emulate_cs2(polyveck *r, const poly *c, const uint16_t s2_table[PARAM_K][PARAM_N * 3])
+{
+    uint16_t w[PARAM_N];
+    uint64_t f, e;
+    uint64_t *s64;
+    uint64_t *w64 = (uint64_t *) w;
+    uint16_t *stable16;
+
+    for (int k = 0; k < PARAM_K; k++)
+    {
+        memset(w, 0, 512 * 2);
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            if (c->coeffs[i] != 0)
+            {
+                stable16 = s2_table[k] + PARAM_N - i + (PARAM_N & (c->coeffs[i] >> 31));
+                s64 = stable16;
+                for (int j = 0; j < PARAM_N / 4; j++)
+                {
+                    f = load64(w + j * 4);
+                    e = load64(stable16 + j * 4);
+                    store64(w + j * 4, f + e);
+                }
+            }
+        }
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            r->vec[k].coeffs[i] = w[i] - BETA2;
+        }
+    }
+}
+
+#else 
+
+void emulate_cs2(polyveck *r, const poly *c, const uint8_t s2_table[PARAM_K][PARAM_N * 3])
+{
+
+    uint8_t w[PARAM_N];
+    uint64_t f, e;
+    uint8_t *stable8;
+    int32_t a;
+    uint64_t *s64;
+    uint64_t *w64 = w;
+
+    for (int k = 0; k < PARAM_K; k++)
+    {
+        memset(w, 0, 512);
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            if (c->coeffs[i] != 0)
+            {
+                stable8 = s2_table[k] + PARAM_N - i + (PARAM_N & (c->coeffs[i] >> 31));
+                s64 = stable8;
+                for (int j = 0; j < PARAM_N / 8; j++)
+                    w64[j] += s64[j];
+            }
+        }
+        for (int i = 0; i < PARAM_N; i++)
+        {
+            r->vec[k].coeffs[i] = w[i] - BETA2;
+        }
+    }
+}
+
+#endif
