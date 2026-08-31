@@ -18,6 +18,11 @@
 
 #include "crypt_eal_provider.h"
 
+typedef struct {
+    void *handle;
+    void *libCtx;
+} PQCP_ProvCtx;
+
 #ifdef PQCP_SCLOUDPLUS
 extern const CRYPT_EAL_Func g_pqcpKeyMgmtScloudPlus[];
 extern const CRYPT_EAL_Func g_pqcpKemScloudPlus[];
@@ -31,6 +36,11 @@ extern const CRYPT_EAL_Func g_pqcpKemPolarLac[];
 #ifdef PQCP_COMPOSITE_SIGN
 extern const CRYPT_EAL_Func g_pqcpKeyMgmtCompositeSign[];
 extern const CRYPT_EAL_Func g_pqcpCompositeSign[];
+#endif
+
+#ifdef PQCP_AIGIS_SIG
+extern const CRYPT_EAL_Func g_pqcpKeyMgmtAigisSig[10];
+extern const CRYPT_EAL_Func g_pqcpAigisSig[3];
 #endif
 
 #ifdef PQCP_HIAE

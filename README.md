@@ -53,12 +53,31 @@ bash ./build_pqcp.sh --enable scloudplus polarlac
 bash ./build_pqcp.sh --disable hiae
 ```
 
-Supported algorithm names are the subdirectories under `src/`, for example:
+Supported command-line algorithm names are normalized to lowercase with `-` represented as `_`, for example:
 
+- `aigis_sig` (`src/Aigis-sig`)
 - `scloudplus`
 - `polarlac`
 - `composite_sign`
 - `hiae`
+
+### Aigis-Sig+ KAT
+
+The Aigis-Sig+ KAT vectors and test source are included in this repository and are discovered by
+the standard PQCP SDV flow. From a clean clone, build the provider and run its 61-case suite:
+
+```bash
+bash ./build_pqcp.sh --enable aigis_sig
+bash ./testcode/script/build_pqcp_sdv.sh no-demo \
+    run-tests=test_suite_sdv_pqcp_aigis_sig
+cd testcode/script
+bash ./execute_sdv.sh test_suite_sdv_pqcp_aigis_sig
+```
+
+The suite covers SHA3-I, SHA3-II, SHA3-III, SM3-I, SM3-II, and SM3-III key generation,
+byte-exact signatures, verification, imported-key interoperability, and public provider API lifecycle checks. The normal
+`build_pqcp.sh` dependency flow prepares the required openHiTLS build; no parent repository files or
+pre-generated local test output are required.
 
 ## Usage
 

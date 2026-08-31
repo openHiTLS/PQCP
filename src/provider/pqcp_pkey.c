@@ -16,14 +16,22 @@
 #include "scloudplus.h"
 #include "crypt_polarlac.h"
 #include "crypt_composite_sign.h"
+#ifdef PQCP_AIGIS_SIG
+#include "crypt_aigis_sig.h"
+#endif
 #include "pqcp_provider.h"
+#include "pqcp_provider_impl.h"
 #include "crypt_eal_provider.h"
 #include "crypt_eal_implprovider.h"
 #include "pqcp_err.h"
 
 void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 {
+#ifdef PQCP_AIGIS_SIG
+    PQCP_ProvCtx *providerCtx = (PQCP_ProvCtx *)provCtx;
+#else
     (void)provCtx;
+#endif
     void *pkeyCtx = NULL;
     switch (algId)
     {
@@ -40,6 +48,11 @@ void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 #ifdef PQCP_COMPOSITE_SIGN
     case PQCP_PKEY_COMPOSITE_SIGN:
         pkeyCtx = PQCP_COMPOSITE_NewCtx();
+        break;
+#endif
+#ifdef PQCP_AIGIS_SIG
+    case PQCP_PKEY_AIGIS_SIG:
+        pkeyCtx = PQCP_AIGIS_SIG_NewCtx(providerCtx == NULL ? NULL : providerCtx->libCtx);
         break;
 #endif
     default:
@@ -67,6 +80,27 @@ const CRYPT_EAL_Func g_pqcpKemScloudPlus[] = {
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE_INIT, (CRYPT_EAL_ImplPkeyDecapsInit)PQCP_SCLOUDPLUS_DecapsInit},
     {CRYPT_EAL_IMPLPKEYKEM_ENCAPSULATE, (CRYPT_EAL_ImplPkeyKemEncapsulate)PQCP_SCLOUDPLUS_Encaps},
     {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE, (CRYPT_EAL_ImplPkeyKemDecapsulate)PQCP_SCLOUDPLUS_Decaps},
+    CRYPT_EAL_FUNC_END,
+};
+#endif
+
+#ifdef PQCP_AIGIS_SIG
+const CRYPT_EAL_Func g_pqcpKeyMgmtAigisSig[] = {
+    {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)PQCP_AIGIS_SIG_GenKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPRV, (CRYPT_EAL_ImplPkeyMgmtSetPrv)PQCP_AIGIS_SIG_SetPrvKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPUB, (CRYPT_EAL_ImplPkeyMgmtSetPub)PQCP_AIGIS_SIG_SetPubKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPRV, (CRYPT_EAL_ImplPkeyMgmtGetPrv)PQCP_AIGIS_SIG_GetPrvKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPUB, (CRYPT_EAL_ImplPkeyMgmtGetPub)PQCP_AIGIS_SIG_GetPubKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_DUPCTX, (CRYPT_EAL_ImplPkeyMgmtDupCtx)PQCP_AIGIS_SIG_DupCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_CTRL, (CRYPT_EAL_ImplPkeyMgmtCtrl)PQCP_AIGIS_SIG_Ctrl},
+    {CRYPT_EAL_IMPLPKEYMGMT_FREECTX, (CRYPT_EAL_ImplPkeyMgmtFreeCtx)PQCP_AIGIS_SIG_FreeCtx},
+    CRYPT_EAL_FUNC_END,
+};
+
+const CRYPT_EAL_Func g_pqcpAigisSig[] = {
+    {CRYPT_EAL_IMPLPKEYSIGN_SIGN, (CRYPT_EAL_ImplPkeySign)PQCP_AIGIS_SIG_Sign},
+    {CRYPT_EAL_IMPLPKEYSIGN_VERIFY, (CRYPT_EAL_ImplPkeyVerify)PQCP_AIGIS_SIG_Verify},
     CRYPT_EAL_FUNC_END,
 };
 #endif

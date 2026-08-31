@@ -34,17 +34,52 @@ ALGO_FLAGS=""            # 生成的算法宏定义编译选项
 BUILD_ARGS=""
 DEL_ARGS=""
 
+normalize_algorithm_name()
+{
+    echo "$1" | tr '[:upper:]-' '[:lower:]_'
+}
+
+list_available_algorithms()
+{
+    local algorithms=""
+    for algo_dir in "${PQCP_ROOT_DIR}"/src/*; do
+        if [ -d "${algo_dir}/src" ]; then
+            algorithms="${algorithms} $(normalize_algorithm_name "$(basename "${algo_dir}")")"
+        fi
+    done
+    echo "${algorithms}"
+}
+
 algo_to_macro()
 {
-    local algo="$1"
+    local algo=$(normalize_algorithm_name "$1")
     local upper=$(echo "${algo}" | tr '[:lower:]' '[:upper:]')
     echo "PQCP_${upper}"
+}
+
+is_algorithm_enabled()
+{
+    local target=$(normalize_algorithm_name "$1")
+    if [ -n "${ENABLED_ALGORITHMS}" ]; then
+        for algo in ${ENABLED_ALGORITHMS}; do
+            if [ "${algo}" = "${target}" ]; then
+                return 0
+            fi
+        done
+        return 1
+    fi
+    for algo in ${DISABLED_ALGORITHMS}; do
+        if [ "${algo}" = "${target}" ]; then
+            return 1
+        fi
+    done
+    return 0
 }
 
 generate_algo_flags()
 {
     local flags=""
-    local all_algos=$(ls -l ${PQCP_ROOT_DIR}/src | grep ^d | awk '{print $9}' | grep -v "provider" | tr '\n' ' ')
+    local all_algos=$(list_available_algorithms)
     for algo in ${all_algos}; do
             local macro=$(algo_to_macro "${algo}")
             flags="${flags} -D${macro}"
@@ -103,14 +138,14 @@ while [[ $# -gt 0 ]]; do
         --enable)
             shift
             while [[ -n $1 && ! $1 =~ ^-- ]]; do
-                ENABLED_ALGORITHMS="${ENABLED_ALGORITHMS} $1"
+                ENABLED_ALGORITHMS="${ENABLED_ALGORITHMS} $(normalize_algorithm_name "$1")"
                 shift
             done
             ;;
         --disable)
             shift
             while [[ -n $1 && ! $1 =~ ^-- ]]; do
-                DISABLED_ALGORITHMS="${DISABLED_ALGORITHMS} $1"
+                DISABLED_ALGORITHMS="${DISABLED_ALGORITHMS} $(normalize_algorithm_name "$1")"
                 shift
             done
             ;;
@@ -134,7 +169,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --build_args ARGS  传递额外的编译参数（如: --build_args "-g -O0"）"
             echo "  --help, -h         显示帮助信息"
             echo ""
-            echo "可用的算法: $(ls -l ${PQCP_ROOT_DIR}/src | grep ^d | awk '{print $9}' | grep -v "provider" | tr '\n' ' ')"
+            echo "可用的算法: $(list_available_algorithms)"
             echo ""
             echo "示例:"
             echo "  $0                                 # 构建所有算法"
@@ -152,6 +187,11 @@ done
 
 # 生成算法宏定义编译选项
 ALGO_FLAGS=$(generate_algo_flags)
+if is_algorithm_enabled "aigis_sig"; then
+    PQCP_ENABLE_AIGIS_SIG="ON"
+else
+    PQCP_ENABLE_AIGIS_SIG="OFF"
+fi
 if [ -n "${ALGO_FLAGS}" ]; then
     echo "======================================================================"
     echo "算法裁剪选项:"
@@ -210,6 +250,7 @@ cmake .. \
     -DENABLE_ASAN=${ENABLE_ASAN} \
     -DENABLE_GCOV=${ENABLE_GCOV} \
     -DCMAKE_C_FLAGS="${ALGO_FLAGS}" \
+    -DPQCP_ENABLE_AIGIS_SIG="${PQCP_ENABLE_AIGIS_SIG}" \
     -DUSER_BUILD_ARGS="${BUILD_ARGS}" \
     -DHITLS_ROOT_PATH="${HITLS_ROOT_PATH}" \
     -DPQCP_LIB_TYPE=${LIB_TYPE}

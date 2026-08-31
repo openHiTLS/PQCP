@@ -30,7 +30,6 @@ option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 # 调试选项设置
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g3 -O0")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 
 # ASAN配置
 if(ENABLE_ASAN)
@@ -49,6 +48,55 @@ file(GLOB_RECURSE PROVIDER_SOURCES
     src/polarlac/src/*.c
     src/composite_sign/src/*.c
 )
+
+option(PQCP_ENABLE_AIGIS_SIG "Build the Aigis-Sig provider implementation" ON)
+option(PQCP_AIGIS_SIG_ARMV8 "Use the AArch64 assembly backend for Aigis-Sig" OFF)
+
+set(PQCP_AIGIS_SIG_SOURCES)
+set(PQCP_AIGIS_SIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/Aigis-sig")
+if(PQCP_ENABLE_AIGIS_SIG)
+    list(APPEND PQCP_AIGIS_SIG_SOURCES
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_sign.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_poly.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_sample.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_pack.c
+        ${PQCP_AIGIS_SIG_DIR}/src/portable/aigis_sig_arith.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_sm3_kdf.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_sha3_kdf.c
+        ${PQCP_AIGIS_SIG_DIR}/src/crypt_aigis_sig.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_hashkdf.c
+        ${PQCP_AIGIS_SIG_DIR}/src/aigis_sig_params.c
+    )
+    if(PQCP_AIGIS_SIG_ARMV8)
+        if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+            message(FATAL_ERROR "PQCP_AIGIS_SIG_ARMV8 requires an AArch64 target")
+        endif()
+        if(NOT CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
+            message(FATAL_ERROR "PQCP_AIGIS_SIG_ARMV8 requires an ELF AArch64 target")
+        endif()
+        enable_language(ASM)
+        list(APPEND PQCP_AIGIS_SIG_SOURCES
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_ntt.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_pointwise.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_poly.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_sample.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_pack.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_keccak_scalar.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_keccak_x2.S
+            ${PQCP_AIGIS_SIG_DIR}/src/armv8/aigis_sig_pspm.S
+        )
+        message(STATUS "Aigis-Sig backend: ARMv8 assembly")
+    else()
+        list(APPEND PQCP_AIGIS_SIG_SOURCES
+            ${PQCP_AIGIS_SIG_DIR}/src/portable/aigis_sig_ntt.c
+            ${PQCP_AIGIS_SIG_DIR}/src/portable/aigis_sig_challenge.c
+        )
+        message(STATUS "Aigis-Sig backend: portable C")
+    endif()
+    list(APPEND PROVIDER_SOURCES ${PQCP_AIGIS_SIG_SOURCES})
+else()
+    message(STATUS "Aigis-Sig disabled by algorithm selection")
+endif()
 file(GLOB_RECURSE HIAE_SOURCES
     src/hiae/src/*.c
 )
@@ -84,6 +132,11 @@ endif()
 # Create shared library
 add_library(pqcp_provider ${PQCP_LIB_TYPE} ${PROVIDER_SOURCES})
 
+target_include_directories(pqcp_provider PRIVATE
+    "${PQCP_AIGIS_SIG_DIR}/include"
+    "${PQCP_AIGIS_SIG_DIR}/src"
+)
+
 if(USER_BUILD_ARGS)
     separate_arguments(USER_BUILD_ARGS)
     target_compile_options(pqcp_provider PRIVATE ${USER_BUILD_ARGS})
@@ -106,6 +159,7 @@ target_include_directories(pqcp_provider
         ${HITLS_ROOT_PATH}/conf/macro_config
         ${HITLS_ROOT_PATH}/crypto/eal/src
         ${HITLS_ROOT_PATH}/crypto/include
+        ${HITLS_ROOT_PATH}/crypto/sm3/include
         ${HITLS_ROOT_PATH}/bsl/sal/include
         ${HITLS_ROOT_PATH}/bsl/include
 )
@@ -121,10 +175,22 @@ target_compile_definitions(pqcp_provider PRIVATE
     HITLS_CRYPTO_EAL
     HITLS_CRYPTO_PKEY
     HITLS_CRYPTO_MD
+    HITLS_CRYPTO_SM3
     HITLS_CRYPTO_CIPHER
     HITLS_CRYPTO_MAC
     HITLS_NO_CONFIG_CHECK
 )
+
+if(PQCP_ENABLE_AIGIS_SIG)
+    target_compile_definitions(pqcp_provider PRIVATE PQCP_AIGIS_SIG)
+    if(PQCP_AIGIS_SIG_ARMV8)
+        target_compile_definitions(pqcp_provider PRIVATE PQCP_AIGIS_SIG_ARMV8_BACKEND)
+    else()
+        target_compile_definitions(pqcp_provider PRIVATE PQCP_AIGIS_SIG_PORTABLE_BACKEND)
+    endif()
+else()
+    target_compile_options(pqcp_provider PRIVATE -UPQCP_AIGIS_SIG)
+endif()
 
 if(NOT PQCP_HIAE_SUPPORTED)
     target_compile_options(pqcp_provider PRIVATE -UPQCP_HIAE)
@@ -134,6 +200,10 @@ foreach(src ${HIAE_SOURCES})
     if(PQCP_HIAE_SUPPORTED)
         set_source_files_properties(${src} PROPERTIES COMPILE_OPTIONS "${PQCP_HIAE_COMPILE_OPTIONS}")
     endif()
+endforeach()
+
+foreach(src ${PQCP_AIGIS_SIG_SOURCES})
+    set_property(SOURCE ${src} APPEND PROPERTY COMPILE_OPTIONS "-fvisibility=hidden")
 endforeach()
 
 # 新增：目标链接目录

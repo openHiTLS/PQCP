@@ -22,11 +22,6 @@
 
 /* Provider name */
 #define PQCP_PROVIDER_NAME "provider=pqcp"
-/* Provider context structure */
-typedef struct {
-    void *handle;
-} PQCP_ProvCtx;
-
 
 static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
 #ifdef PQCP_SCLOUDPLUS
@@ -37,6 +32,9 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
 #endif
 #ifdef PQCP_COMPOSITE_SIGN
     {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpKeyMgmtCompositeSign, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_AIGIS_SIG
+    {PQCP_PKEY_AIGIS_SIG, g_pqcpKeyMgmtAigisSig, PQCP_PROVIDER_NAME},
 #endif
     CRYPT_EAL_ALGINFO_END
 };
@@ -54,6 +52,9 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
 static CRYPT_EAL_AlgInfo g_pqcpKeySign[] = {
 #ifdef PQCP_COMPOSITE_SIGN
     {PQCP_PKEY_COMPOSITE_SIGN, g_pqcpCompositeSign, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_AIGIS_SIG
+    {PQCP_PKEY_AIGIS_SIG, g_pqcpAigisSig, PQCP_PROVIDER_NAME},
 #endif
     CRYPT_EAL_ALGINFO_END
 };
@@ -134,8 +135,26 @@ int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
                               void **provCtx)
 {
     PQCP_ProvCtx *ctx = NULL;
+    CRYPT_EAL_ProvMgrCtrlCb mgrCtrl = NULL;
+    void *libCtx = NULL;
+    int32_t ret;
     (void)param;
-    (void)capFuncs;
+    if (mgrCtx == NULL || capFuncs == NULL || outFuncs == NULL || provCtx == NULL) {
+        return PQCP_NULL_INPUT;
+    }
+    for (uint32_t i = 0; capFuncs[i].id != 0; ++i) {
+        if (capFuncs[i].id == CRYPT_EAL_CAP_MGRCTXCTRL) {
+            mgrCtrl = (CRYPT_EAL_ProvMgrCtrlCb)capFuncs[i].func;
+            break;
+        }
+    }
+    if (mgrCtrl == NULL) {
+        return PQCP_NOT_SUPPORT;
+    }
+    ret = mgrCtrl(mgrCtx, CRYPT_EAL_MGR_GETLIBCTX, &libCtx, 0);
+    if (ret != PQCP_SUCCESS) {
+        return ret;
+    }
     /* Create provider context */
     ctx = (PQCP_ProvCtx *)BSL_SAL_Malloc(sizeof(PQCP_ProvCtx));
     if (ctx == NULL) {
@@ -143,6 +162,7 @@ int32_t CRYPT_EAL_ProviderInit(CRYPT_EAL_ProvMgrCtx *mgrCtx,
     }
 
     ctx->handle = mgrCtx;
+    ctx->libCtx = libCtx;
     *outFuncs = g_pqcpProviderFuncs;
     *provCtx = ctx;
     return PQCP_SUCCESS;
