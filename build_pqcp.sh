@@ -25,6 +25,7 @@ ENABLE_ASAN="OFF"
 ENABLE_GCOV="OFF"
 OPENHITLS_DIR="platform/openhitls"
 OPENHITLS_REF="openhitls-0.4.0-alpha2"
+OPENHITLS_REPO="${OPENHITLS_REPO:-https://github.com/openHiTLS/openHiTLS.git}"
 LIB_TYPE="SHARED"
 CUSTOM_HITLS_DIR=""
 
@@ -33,6 +34,24 @@ DISABLED_ALGORITHMS=""   # --disable 指定的算法列表
 ALGO_FLAGS=""            # 生成的算法宏定义编译选项
 BUILD_ARGS=""
 DEL_ARGS=""
+PQCP_ENABLE_NEV="ON"
+PQCP_NEV_ENABLE_NEON="OFF"
+PQCP_NEV_ENABLE_SVE2="OFF"
+PQCP_NEV_ENABLE_SVE2_SHA3="OFF"
+PQCP_NEV_HASH_BACKEND="SHA3"
+PQCP_NEV_CUSTOM_HASH_SOURCES=""
+PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS=""
+
+get_build_jobs()
+{
+    if command -v nproc >/dev/null 2>&1; then
+        nproc
+    elif command -v sysctl >/dev/null 2>&1; then
+        sysctl -n hw.logicalcpu
+    else
+        getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1
+    fi
+}
 
 normalize_algorithm_name()
 {
@@ -132,7 +151,11 @@ while [[ $# -gt 0 ]]; do
                 echo "错误: --hitls_dir 选项需要一个参数"
                 exit 1
             fi
-            CUSTOM_HITLS_DIR="$2"
+            if [ ! -d "$2" ]; then
+                echo "错误: OpenHiTLS目录不存在: $2"
+                exit 1
+            fi
+            CUSTOM_HITLS_DIR=$(realpath "$2")
             shift 2
             ;;
         --enable)
@@ -151,10 +174,65 @@ while [[ $# -gt 0 ]]; do
             ;;
         --build_args)
            shift
-            while [[ -n $1 && ! $1 =~ ^-- ]]; do
-                BUILD_ARGS="${BUILD_ARGS} $1"
-                shift
-            done
+           while [[ -n $1 && ! $1 =~ ^-- ]]; do
+               BUILD_ARGS="${BUILD_ARGS} $1"
+               shift
+           done
+           ;;
+        --nev-neon)
+            PQCP_NEV_ENABLE_NEON="ON"
+            shift
+            ;;
+        --nev-sve2)
+            PQCP_NEV_ENABLE_NEON="ON"
+            PQCP_NEV_ENABLE_SVE2="ON"
+            shift
+            ;;
+        --nev-sve2-sha3)
+            PQCP_NEV_ENABLE_NEON="ON"
+            PQCP_NEV_ENABLE_SVE2="ON"
+            PQCP_NEV_ENABLE_SVE2_SHA3="ON"
+            shift
+            ;;
+        --nev-hash-backend)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                echo "错误: --nev-hash-backend 选项需要一个参数"
+                exit 1
+            fi
+            PQCP_NEV_HASH_BACKEND=$(echo "$2" | tr '[:lower:]' '[:upper:]')
+            if [[ "${PQCP_NEV_HASH_BACKEND}" != "SHA3" &&
+                  "${PQCP_NEV_HASH_BACKEND}" != "SM3" &&
+                  "${PQCP_NEV_HASH_BACKEND}" != "CUSTOM" ]]; then
+                echo "错误: NEV Hash/KDF后端仅支持 sha3、sm3 或 custom"
+                exit 1
+            fi
+            shift 2
+            ;;
+        --nev-custom-hash-source)
+            if [[ -z "$2" || "$2" == -* || ! -f "$2" ]]; then
+                echo "错误: --nev-custom-hash-source 需要一个存在的源文件"
+                exit 1
+            fi
+            CUSTOM_SOURCE=$(realpath "$2")
+            if [ -n "${PQCP_NEV_CUSTOM_HASH_SOURCES}" ]; then
+                PQCP_NEV_CUSTOM_HASH_SOURCES="${PQCP_NEV_CUSTOM_HASH_SOURCES};${CUSTOM_SOURCE}"
+            else
+                PQCP_NEV_CUSTOM_HASH_SOURCES="${CUSTOM_SOURCE}"
+            fi
+            shift 2
+            ;;
+        --nev-custom-hash-include)
+            if [[ -z "$2" || "$2" == -* || ! -d "$2" ]]; then
+                echo "错误: --nev-custom-hash-include 需要一个存在的目录"
+                exit 1
+            fi
+            CUSTOM_INCLUDE=$(realpath "$2")
+            if [ -n "${PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS}" ]; then
+                PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS="${PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS};${CUSTOM_INCLUDE}"
+            else
+                PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS="${CUSTOM_INCLUDE}"
+            fi
+            shift 2
             ;;
         --help|-h)
             echo "用法: $0 [选项]"
@@ -167,6 +245,12 @@ while [[ $# -gt 0 ]]; do
             echo "  --enable algo...   只启用指定的算法（如: polarlac scloudplus）"
             echo "  --disable algo...  禁用指定的算法"
             echo "  --build_args ARGS  传递额外的编译参数（如: --build_args "-g -O0"）"
+            echo "  --nev-neon         编译NEV的可选ARMv8汇编实现（仅AArch64，兼容选项名）"
+            echo "  --nev-sve2         编译时选择256-bit SVE2 NEV和SHA3实现（仅AArch64）"
+            echo "  --nev-sve2-sha3    启用NEON x1/x2与SVE2 x4混合SHA3优化（仅AArch64）"
+            echo "  --nev-hash-backend BACKEND  选择NEV Hash/KDF后端: sha3(默认)、sm3、custom"
+            echo "  --nev-custom-hash-source FILE  添加CUSTOM后端源文件，可重复指定"
+            echo "  --nev-custom-hash-include DIR  添加CUSTOM后端头文件目录，可重复指定"
             echo "  --help, -h         显示帮助信息"
             echo ""
             echo "可用的算法: $(list_available_algorithms)"
@@ -175,6 +259,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0                                 # 构建所有算法"
             echo "  $0 --enable polarlac scloudplus   # 只启用polarlac和scloudplus"
             echo "  $0 --disable polarlac             # 禁用polarlac"
+            echo "  $0 --nev-hash-backend sm3         # 构建可用ICCS KAT验证的SM3配置"
             exit 0
             ;;
         *)
@@ -191,6 +276,12 @@ if is_algorithm_enabled "aigis_sig"; then
     PQCP_ENABLE_AIGIS_SIG="ON"
 else
     PQCP_ENABLE_AIGIS_SIG="OFF"
+fi
+
+if is_algorithm_enabled "nev"; then
+    PQCP_ENABLE_NEV="ON"
+else
+    PQCP_ENABLE_NEV="OFF"
 fi
 if [ -n "${ALGO_FLAGS}" ]; then
     echo "======================================================================"
@@ -219,7 +310,7 @@ build_depend_code()
     if [ ! -d "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}" ]; then
         echo "下载OpenHiTLS..."
         mkdir -p "${PQCP_ROOT_DIR}/platform"  # 确保父目录存在
-        git clone --depth 1 --branch "${OPENHITLS_REF}" https://gitcode.com/openHiTLS/openhitls.git "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
+        git clone --depth 1 --branch "${OPENHITLS_REF}" "${OPENHITLS_REPO}" "${PQCP_ROOT_DIR}/${OPENHITLS_DIR}"
     fi
     # 构建OpenHiTLS
     echo "构建OpenHiTLS..."
@@ -249,6 +340,13 @@ cmake .. \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     -DENABLE_ASAN=${ENABLE_ASAN} \
     -DENABLE_GCOV=${ENABLE_GCOV} \
+    -DPQCP_ENABLE_NEV=${PQCP_ENABLE_NEV} \
+    -DPQCP_NEV_ENABLE_NEON=${PQCP_NEV_ENABLE_NEON} \
+    -DPQCP_NEV_ENABLE_SVE2=${PQCP_NEV_ENABLE_SVE2} \
+    -DPQCP_NEV_ENABLE_SVE2_SHA3=${PQCP_NEV_ENABLE_SVE2_SHA3} \
+    -DPQCP_NEV_HASH_BACKEND=${PQCP_NEV_HASH_BACKEND} \
+    -DPQCP_NEV_CUSTOM_HASH_SOURCES="${PQCP_NEV_CUSTOM_HASH_SOURCES}" \
+    -DPQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS="${PQCP_NEV_CUSTOM_HASH_INCLUDE_DIRS}" \
     -DCMAKE_C_FLAGS="${ALGO_FLAGS}" \
     -DPQCP_ENABLE_AIGIS_SIG="${PQCP_ENABLE_AIGIS_SIG}" \
     -DUSER_BUILD_ARGS="${BUILD_ARGS}" \
@@ -257,6 +355,6 @@ cmake .. \
 
 # 编译项目
 echo "开始编译..."
-make -j$(nproc)
+make -j"$(get_build_jobs)"
 echo $HITLS_ROOT_PATH > base_path.txt
 echo "构建完成！"

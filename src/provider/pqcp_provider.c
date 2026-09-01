@@ -36,6 +36,9 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyMgmt[] = {
 #ifdef PQCP_AIGIS_SIG
     {PQCP_PKEY_AIGIS_SIG, g_pqcpKeyMgmtAigisSig, PQCP_PROVIDER_NAME},
 #endif
+#ifdef PQCP_NEV
+    {PQCP_PKEY_NEV, g_pqcpKeyMgmtNev, PQCP_PROVIDER_NAME},
+#endif
     CRYPT_EAL_ALGINFO_END
 };
 
@@ -45,6 +48,9 @@ static CRYPT_EAL_AlgInfo g_pqcpKeyKem[] = {
 #endif
 #ifdef PQCP_POLARLAC
     {PQCP_PKEY_POLAR_LAC, g_pqcpKemPolarLac, PQCP_PROVIDER_NAME},
+#endif
+#ifdef PQCP_NEV
+    {PQCP_PKEY_NEV, g_pqcpKemNev, PQCP_PROVIDER_NAME},
 #endif
     CRYPT_EAL_ALGINFO_END
 };

@@ -19,6 +19,9 @@
 #ifdef PQCP_AIGIS_SIG
 #include "crypt_aigis_sig.h"
 #endif
+#ifdef PQCP_NEV
+#include "crypt_nev.h"
+#endif
 #include "pqcp_provider.h"
 #include "pqcp_provider_impl.h"
 #include "crypt_eal_provider.h"
@@ -53,6 +56,11 @@ void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 #ifdef PQCP_AIGIS_SIG
     case PQCP_PKEY_AIGIS_SIG:
         pkeyCtx = PQCP_AIGIS_SIG_NewCtx(providerCtx == NULL ? NULL : providerCtx->libCtx);
+        break;
+#endif
+#ifdef PQCP_NEV
+    case PQCP_PKEY_NEV:
+        pkeyCtx = PQCP_NEV_NewCtx();
         break;
 #endif
     default:
@@ -101,6 +109,29 @@ const CRYPT_EAL_Func g_pqcpKeyMgmtAigisSig[] = {
 const CRYPT_EAL_Func g_pqcpAigisSig[] = {
     {CRYPT_EAL_IMPLPKEYSIGN_SIGN, (CRYPT_EAL_ImplPkeySign)PQCP_AIGIS_SIG_Sign},
     {CRYPT_EAL_IMPLPKEYSIGN_VERIFY, (CRYPT_EAL_ImplPkeyVerify)PQCP_AIGIS_SIG_Verify},
+    CRYPT_EAL_FUNC_END,
+};
+#endif
+
+#ifdef PQCP_NEV
+const CRYPT_EAL_Func g_pqcpKeyMgmtNev[] = {
+    {CRYPT_EAL_IMPLPKEYMGMT_NEWCTX, (CRYPT_EAL_ImplPkeyMgmtNewCtx)CRYPT_PQCP_PkeyMgmtNewCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_GENKEY, (CRYPT_EAL_ImplPkeyMgmtGenKey)PQCP_NEV_Gen},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPRV, (CRYPT_EAL_ImplPkeyMgmtSetPrv)PQCP_NEV_SetPrvKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_SETPUB, (CRYPT_EAL_ImplPkeyMgmtSetPub)PQCP_NEV_SetPubKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPRV, (CRYPT_EAL_ImplPkeyMgmtGetPrv)PQCP_NEV_GetPrvKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_GETPUB, (CRYPT_EAL_ImplPkeyMgmtGetPub)PQCP_NEV_GetPubKey},
+    {CRYPT_EAL_IMPLPKEYMGMT_DUPCTX, (CRYPT_EAL_ImplPkeyMgmtDupCtx)PQCP_NEV_DupCtx},
+    {CRYPT_EAL_IMPLPKEYMGMT_CTRL, (CRYPT_EAL_ImplPkeyMgmtCtrl)PQCP_NEV_Ctrl},
+    {CRYPT_EAL_IMPLPKEYMGMT_FREECTX, (CRYPT_EAL_ImplPkeyMgmtFreeCtx)PQCP_NEV_FreeCtx},
+    CRYPT_EAL_FUNC_END,
+};
+
+const CRYPT_EAL_Func g_pqcpKemNev[] = {
+    {CRYPT_EAL_IMPLPKEYKEM_ENCAPSULATE_INIT, (CRYPT_EAL_ImplPkeyEncapsInit)PQCP_NEV_EncapsInit},
+    {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE_INIT, (CRYPT_EAL_ImplPkeyDecapsInit)PQCP_NEV_DecapsInit},
+    {CRYPT_EAL_IMPLPKEYKEM_ENCAPSULATE, (CRYPT_EAL_ImplPkeyKemEncapsulate)PQCP_NEV_Encaps},
+    {CRYPT_EAL_IMPLPKEYKEM_DECAPSULATE, (CRYPT_EAL_ImplPkeyKemDecapsulate)PQCP_NEV_Decaps},
     CRYPT_EAL_FUNC_END,
 };
 #endif

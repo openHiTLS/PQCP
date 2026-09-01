@@ -36,6 +36,7 @@
 #include "helper.h"
 #include "crypto_test_util.h"
 
+#include <stdlib.h>
 #include "crypt_util_rand.h"
 #include "bsl_err_internal.h"
 
@@ -50,7 +51,8 @@ void *TestMalloc(uint32_t len)
 
 int32_t TestPqcpProviderLoad(void)
 {
-    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, PROVIDER_PATH);
+    const char *envPath = getenv("PQCP_PROVIDER_PATH");
+    int32_t ret = CRYPT_EAL_ProviderSetLoadPath(NULL, (envPath != NULL) ? envPath : PROVIDER_PATH);
     if (ret != 0) {
         printf("set provider path failed.\n");
         return 1;

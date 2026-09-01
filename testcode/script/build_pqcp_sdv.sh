@@ -14,6 +14,17 @@
 # See the Mulan PSL v2 for more details.
 set -e
 
+get_build_jobs()
+{
+    if command -v nproc >/dev/null 2>&1; then
+        nproc
+    elif command -v sysctl >/dev/null 2>&1; then
+        sysctl -n hw.logicalcpu
+    else
+        getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1
+    fi
+}
+
 # PQCP SDV测试构建脚本 - 复用OpenHiTLS测试框架
 # 该脚本将PQCP测试文件集成到OpenHiTLS测试框架中构建
 
@@ -53,7 +64,9 @@ export_env()
     export PQCP_TEST_DIR
 
     # PQCP provider目录
-    PQCP_PROVIDER_DIR="${PQCP_ROOT_DIR}/build"
+    if [ -z "${PQCP_PROVIDER_DIR}" ]; then
+        PQCP_PROVIDER_DIR="${PQCP_ROOT_DIR}/build"
+    fi
     export PQCP_PROVIDER_DIR
 
     # 构建选项
@@ -160,9 +173,33 @@ build_pqcp_sdv()
         done
     fi
     echo "HILTS_ROOT_DIR: ${HITLS_ROOT_DIR}"
+    if [[ "${all_suites}" == *"/nev/test_suite_sdv_pqcp_nev"* ]]; then
+        local backend_file="${PQCP_PROVIDER_DIR}/nev_hash_backend.txt"
+        local backend=""
+        if [ -f "${backend_file}" ]; then
+            backend=$(tr -d '[:space:]' < "${backend_file}")
+        fi
+        if [ "${backend}" != "SM3" ]; then
+            if [ -n "${RUN_TESTS}" ]; then
+                echo "[ERROR] NEV ICCS KAT requires a provider built with PQCP_NEV_HASH_BACKEND=SM3"
+                echo "[ERROR] Provider backend is '${backend:-unknown}' (${PQCP_PROVIDER_DIR})"
+                exit 1
+            fi
+            local filtered_suites=""
+            for suite in ${all_suites}; do
+                if [[ "${suite}" != *"/nev/test_suite_sdv_pqcp_nev" ]]; then
+                    filtered_suites="${filtered_suites} ${suite}"
+                fi
+            done
+            all_suites="${filtered_suites}"
+            echo "[INFO] Skipping NEV ICCS KAT for ${backend:-unknown} Hash/KDF backend"
+        else
+            MACROS="${MACROS} -DPQCP_NEV"
+        fi
+    fi
     if [ -f "${HITLS_ROOT_DIR}/build/macro.txt" ]; then
         echo "[INFO] Found macro.txt, loading macros..."
-        MACROS="$(tr '\n' ' ' < "${HITLS_ROOT_DIR}/build/macro.txt")"
+        MACROS="${MACROS} $(tr '\n' ' ' < "${HITLS_ROOT_DIR}/build/macro.txt")"
     else
         echo "[WARNING] macro.txt not found, proceeding without additional macros."
     fi
@@ -179,8 +216,9 @@ build_pqcp_sdv()
           -DPRINT_TO_TERMINAL=ON -g -O0" -DBUILD_DEMO=${BUILD_DEMO} -DENABLE_ASAN=${ENABLE_ASAN} \
           -DSECUREC_LIB="${SECURE_C_LIB_PATH}" \
           -DENABLE_GCOV=${ENABLE_GCOV} -DHITLS_ROOT_DIR=${HITLS_ROOT_DIR} -DMACROS="${MACROS}" \
+          -DPQCP_PROVIDER_DIR=${PQCP_PROVIDER_DIR} \
           ..
-    make -j$(nproc)
+    make -j"$(get_build_jobs)"
 }
 
 # 清理构建产物

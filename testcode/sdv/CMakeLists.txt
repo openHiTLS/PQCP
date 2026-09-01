@@ -3,6 +3,7 @@ set(TEST_SOURCE
     ${PQCP_ROOT}/testcode/framework/gen_test/test.c
     ${PQCP_ROOT}/testcode/framework/crypto/alg_check.c
     ${PQCP_ROOT}/testcode/framework/crypto/crypto_test_util.c
+    ${PQCP_ROOT}/testcode/sdv/nev/nev_kat_drng.c
 )
 
 add_library(TESTCASE_PRE ${TEST_SOURCE})

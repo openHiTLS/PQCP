@@ -47,4 +47,9 @@ extern const CRYPT_EAL_Func g_pqcpAigisSig[3];
 extern const CRYPT_EAL_Func g_pqcpCipherHiae[];
 extern const CRYPT_EAL_Func g_pqcpMacHiae[];
 #endif
+
+#ifdef PQCP_NEV
+extern const CRYPT_EAL_Func g_pqcpKeyMgmtNev[];
+extern const CRYPT_EAL_Func g_pqcpKemNev[];
+#endif
 #endif /* PQCP_PROVIDER_IMPL_H */

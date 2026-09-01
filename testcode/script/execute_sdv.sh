@@ -31,8 +31,9 @@ testsuite_array=()
 testcase_array=()
 
 # Build library path with all necessary library paths (cross-platform)
-# Start with build directory (no leading colon)
-LIB_PATHS="$(realpath ${PQCP_ROOT_DIR}/build)"
+# Start with the selected provider build directory (no leading colon).
+PQCP_PROVIDER_DIR="${PQCP_PROVIDER_DIR:-${PQCP_ROOT_DIR}/build}"
+LIB_PATHS="$(realpath ${PQCP_PROVIDER_DIR})"
 
 # Set library path based on platform
 if [[ "$(uname)" == "Darwin" ]]; then

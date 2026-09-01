@@ -18,6 +18,7 @@ project(pqcp_test C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(PQCP_ROOT "${PROJECT_SOURCE_DIR}/..")
+set(PQCP_PROVIDER_DIR "${CMAKE_SOURCE_DIR}/../build" CACHE PATH "PQCP provider build directory")
 # 设置输出目录
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -47,9 +48,13 @@ endif()
 
 # 设置依赖库搜索路径
 message(STATUS "HITLS_ROOT_DIR: ${HITLS_ROOT_DIR}")
+set(HITLS_LIB_DIR "" CACHE PATH "Directory holding the built openHiTLS libraries (defaults to ${HITLS_ROOT_DIR}/build)")
+if(NOT HITLS_LIB_DIR)
+    set(HITLS_LIB_DIR "${HITLS_ROOT_DIR}/build")
+endif()
 set(PQCP_DEPENDENCY_DIRS
-        ${HITLS_ROOT_DIR}/build
-        ${CMAKE_SOURCE_DIR}/../build
+        ${HITLS_LIB_DIR}
+        ${PQCP_PROVIDER_DIR}
     CACHE STRING "PQCP dependency library paths")
 
 # 查找依赖库
@@ -85,6 +90,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/../src/composite_sign/src
     ${CMAKE_SOURCE_DIR}/../src/hiae/include
     ${CMAKE_SOURCE_DIR}/../src/hiae/src
+    ${CMAKE_SOURCE_DIR}/../src/nev/include
+    ${CMAKE_SOURCE_DIR}/sdv/nev
 )
 
 # 构建Demo
