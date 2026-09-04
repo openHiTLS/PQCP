@@ -535,7 +535,8 @@ static int UnpackHint(const AigisSigParams *params, AigisSigPolyVecK *h, const u
         return -1;
     }
     posLen = ((size_t)k * 6 + 7) >> 3;
-    if (sigLen != 1 + countLen + posLen) {
+    const size_t encodedLen = 1 + countLen + posLen;
+    if (sigLen < encodedLen) {
         return -1;
     }
     if (posLen != 0 && ((size_t)k * 6 & 7) != 0 && (sig[posLen - 1] >> ((size_t)k * 6 & 7)) != 0) {
@@ -543,6 +544,18 @@ static int UnpackHint(const AigisSigParams *params, AigisSigPolyVecK *h, const u
     }
 
     Unpack6Bits(pos, sig, k);
+
+    /* The compact hint is padded to the parameter-set maximum signature
+     * length.  Requiring the entire suffix to be zero preserves a unique
+     * external representation for each signature. */
+    uint8_t paddingDiff = 0;
+    const size_t paddingLen = sigLen - encodedLen;
+    for (size_t paddingIndex = 0; paddingIndex < paddingLen; paddingIndex++) {
+        paddingDiff |= sig[posLen + paddingIndex];
+    }
+    if (paddingDiff != 0) {
+        return -1;
+    }
 
     r = 0;
     for (k = 0; k < max; k++) {
@@ -583,9 +596,9 @@ int32_t PQCP_AIGIS_SIG_PackSignature(const PQCP_AIGIS_SIG_CoreCtx *opCtx, uint8_
 
     // pack h
     sigLen = PackHint(params, sig, h);
-    sigLen += (int)prefixLen;
+    (void)memset(sig + sigLen, 0, params->signatureBytes - prefixLen - (uint32_t)sigLen);
 
-    return sigLen;
+    return (int)params->signatureBytes;
 }
 
 int32_t PQCP_AIGIS_SIG_UnpackSignature(const PQCP_AIGIS_SIG_CoreCtx *opCtx, AigisSigPolyVecL *z, AigisSigPolyVecK *h,
@@ -597,7 +610,7 @@ int32_t PQCP_AIGIS_SIG_UnpackSignature(const PQCP_AIGIS_SIG_CoreCtx *opCtx, Aigi
     const uint32_t packedBytes = params->polyZPackedBytes;
     const size_t prefixLen = (size_t)count * packedBytes + params->seedBytes;
 
-    if (sig == NULL || sigLen < prefixLen + 1 || sigLen > params->signatureMaxBytes) {
+    if (sig == NULL || sigLen != params->signatureBytes) {
         return -1;
     }
 
@@ -625,7 +638,7 @@ int32_t PQCP_AIGIS_SIG_UnpackSignatureCheckZ(const PQCP_AIGIS_SIG_CoreCtx *opCtx
     int32_t normFailed;
     int32_t hintFailed;
 
-    if (sig == NULL || sigLen < prefixLen + 1 || sigLen > params->signatureMaxBytes) {
+    if (sig == NULL || sigLen != params->signatureBytes) {
         return -1;
     }
 

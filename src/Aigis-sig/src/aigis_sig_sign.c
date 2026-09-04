@@ -398,7 +398,7 @@ int32_t PQCP_AIGIS_SIG_VerifyInternal(const PQCP_AIGIS_SIG_CoreCtx *opCtx, const
         return PQCP_INVALID_ARG;
     }
     const AigisSigParams *params = opCtx->params;
-    if (sigLen < params->signatureMinBytes || sigLen > params->signatureMaxBytes) {
+    if (sigLen != params->signatureBytes) {
         return PQCP_INVALID_ARG;
     }
     if (msgLen > UINT32_MAX - params->crhBytes) {

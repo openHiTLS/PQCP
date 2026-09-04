@@ -82,6 +82,28 @@ static void TEST_AigisSigSetRegressionEntropy(int32_t algId)
     }
     g_aigisSigRandCalls = 0U;
 }
+
+static uint32_t TEST_AigisSigCompactSignatureLen(const uint8_t *signature, uint32_t hintOffset)
+{
+    const uint32_t sectionCount = signature[hintOffset];
+    const uint32_t countLen = (sectionCount + 1U) >> 1;
+    uint32_t hintCount = 0U;
+
+    for (uint32_t i = 0U; i < sectionCount; i++) {
+        const uint8_t packedCounts = signature[hintOffset + 1U + (i >> 1)];
+        hintCount += (packedCounts >> ((i & 1U) << 2)) & 0x0fU;
+    }
+    return hintOffset + 1U + countLen + ((hintCount * 6U + 7U) >> 3);
+}
+
+static int32_t TEST_AigisSigIsZero(const uint8_t *data, uint32_t dataLen)
+{
+    uint8_t diff = 0U;
+    for (uint32_t i = 0U; i < dataLen; i++) {
+        diff |= data[i];
+    }
+    return diff == 0U;
+}
 #endif
 
 /* @
@@ -91,9 +113,9 @@ static void TEST_AigisSigSetRegressionEntropy(int32_t algId)
 * @precon nan
 * @brief 1. Register the accepted KAT key-generation entropy
 *        2. Generate and export the key pair through the provider
-*        3. Sign the accepted message and compare every output byte
-*        4. Verify the accepted signature
-* @expect PK, SK and signature match the accepted vector
+*        3. Sign the accepted message and compare its compact encoding and zero padding
+*        4. Verify the fixed-length signature and reject the compact legacy encoding
+* @expect PK, SK and compact signature fields match the accepted vector; padding is canonical
 * @prior  nan
 * @auto   TRUE
 @ */
@@ -131,7 +153,7 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_KAT_TC001(int algId, Hex *entropy, Hex *expectedP
               PQCP_SUCCESS);
     ASSERT_EQ(pubKeyLen, expectedPk->len);
     ASSERT_EQ(prvKeyLen, expectedSk->len);
-    ASSERT_TRUE(signatureCapacity >= expectedSig->len);
+    ASSERT_TRUE(signatureCapacity > expectedSig->len);
 
     pubKey = BSL_SAL_Malloc(pubKeyLen);
     prvKey = BSL_SAL_Malloc(prvKeyLen);
@@ -153,10 +175,12 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_KAT_TC001(int algId, Hex *entropy, Hex *expectedP
 
     signatureLen = signatureCapacity;
     ASSERT_EQ(CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message->x, message->len, signature, &signatureLen), PQCP_SUCCESS);
-    ASSERT_EQ(signatureLen, expectedSig->len);
-    ASSERT_COMPARE("Aigis-Sig+ KAT signature", signature, signatureLen, expectedSig->x, expectedSig->len);
+    ASSERT_EQ(signatureLen, signatureCapacity);
+    ASSERT_COMPARE("Aigis-Sig+ KAT signature", signature, expectedSig->len, expectedSig->x, expectedSig->len);
+    ASSERT_TRUE(TEST_AigisSigIsZero(signature + expectedSig->len, signatureLen - expectedSig->len));
+    ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen), PQCP_SUCCESS);
     ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, expectedSig->x, expectedSig->len),
-              PQCP_SUCCESS);
+              PQCP_AIGIS_SIG_INVALID_SIG_LEN);
     ASSERT_EQ(g_aigisSigRandCalls, 1U);
 
     /*
@@ -174,9 +198,10 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_KAT_TC001(int algId, Hex *entropy, Hex *expectedP
     signatureLen = signatureCapacity;
     ASSERT_EQ(CRYPT_EAL_PkeySign(importPrvCtx, CRYPT_MD_MAX, message->x, message->len, signature, &signatureLen),
               PQCP_SUCCESS);
-    ASSERT_EQ(signatureLen, expectedSig->len);
-    ASSERT_COMPARE("Aigis-Sig+ imported private key KAT signature", signature, signatureLen, expectedSig->x,
+    ASSERT_EQ(signatureLen, signatureCapacity);
+    ASSERT_COMPARE("Aigis-Sig+ imported private key KAT signature", signature, expectedSig->len, expectedSig->x,
                    expectedSig->len);
+    ASSERT_TRUE(TEST_AigisSigIsZero(signature + expectedSig->len, signatureLen - expectedSig->len));
 
     importPubCtx =
         CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_AIGIS_SIG, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
@@ -185,9 +210,8 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_KAT_TC001(int algId, Hex *entropy, Hex *expectedP
     BSL_Param importPubParams[2] = {
         {PQCP_PARAM_AIGIS_SIG_PUBKEY, BSL_PARAM_TYPE_OCTETS, expectedPk->x, expectedPk->len, 0U}, BSL_PARAM_END};
     ASSERT_EQ(CRYPT_EAL_PkeySetPubEx(importPubCtx, importPubParams), PQCP_SUCCESS);
-    ASSERT_EQ(
-        CRYPT_EAL_PkeyVerify(importPubCtx, CRYPT_MD_MAX, message->x, message->len, expectedSig->x, expectedSig->len),
-        PQCP_SUCCESS);
+    ASSERT_EQ(CRYPT_EAL_PkeyVerify(importPubCtx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen),
+              PQCP_SUCCESS);
     ASSERT_EQ(g_aigisSigRandCalls, 1U);
 
 EXIT:
@@ -240,6 +264,7 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_API_TC001(int algId, Hex *message)
     uint32_t countLen;
     uint32_t positionOffset;
     uint32_t positionBytes;
+    uint32_t compactSignatureLen;
     uint8_t hintHeader;
     uint8_t savedCountByte;
     int32_t invalidAlg = INT32_MAX;
@@ -282,6 +307,7 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_API_TC001(int algId, Hex *message)
               PQCP_AIGIS_SIG_INVALID_SIG_LEN);
     signatureLen = signatureCapacity;
     ASSERT_EQ(CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message->x, message->len, signature, &signatureLen), PQCP_SUCCESS);
+    ASSERT_EQ(signatureLen, signatureCapacity);
     ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen), PQCP_SUCCESS);
     if (algId == PQCP_AIGIS_SIG_SM3_I || algId == PQCP_AIGIS_SIG_SHA3_I) {
         hintOffset = TEST_AIGIS_SIG_I_HINT_OFFSET;
@@ -294,17 +320,24 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_API_TC001(int algId, Hex *message)
     hintHeader = signature[hintOffset];
     maxHintSections = algId == PQCP_AIGIS_SIG_SM3_I || algId == PQCP_AIGIS_SIG_SHA3_I ? 16U :
                       algId == PQCP_AIGIS_SIG_SM3_II || algId == PQCP_AIGIS_SIG_SHA3_II ? 32U : 64U;
+    compactSignatureLen = TEST_AigisSigCompactSignatureLen(signature, hintOffset);
+    ASSERT_TRUE(compactSignatureLen < signatureLen);
+    ASSERT_TRUE(TEST_AigisSigIsZero(signature + compactSignatureLen, signatureLen - compactSignatureLen));
+
+    ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen - 1U),
+              PQCP_AIGIS_SIG_INVALID_SIG_LEN);
+    signature[compactSignatureLen] = 1U;
+    ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen),
+              PQCP_AIGIS_SIG_VERIFY_FAIL);
+    signature[compactSignatureLen] = 0U;
 
     /* max is canonical: when nonzero, its final encoded section must contain
      * at least one hint.  Append one/two empty sections without changing the
      * decoded hint and require every public verify variant to reject it. */
     if (hintHeader == 0U) {
-        ASSERT_TRUE(signatureLen < signatureCapacity);
         signature[hintOffset] = 1U;
-        signature[signatureLen++] = 0U;
         ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen),
                   PQCP_AIGIS_SIG_VERIFY_FAIL);
-        signatureLen--;
         signature[hintOffset] = hintHeader;
     } else if ((hintHeader & 1U) != 0U && hintHeader < maxHintSections) {
         signature[hintOffset] = (uint8_t)(hintHeader + 1U);
@@ -312,18 +345,17 @@ void SDV_CRYPTO_PQCP_AIGIS_SIG_API_TC001(int algId, Hex *message)
                   PQCP_AIGIS_SIG_VERIFY_FAIL);
         signature[hintOffset] = hintHeader;
     } else if ((uint32_t)hintHeader + 2U <= maxHintSections) {
-        ASSERT_TRUE(signatureLen < signatureCapacity);
+        ASSERT_TRUE(compactSignatureLen < signatureCapacity);
         countLen = ((uint32_t)hintHeader + 1U) >> 1;
         positionOffset = hintOffset + 1U + countLen;
-        positionBytes = signatureLen - positionOffset;
+        positionBytes = compactSignatureLen - positionOffset;
         (void)memmove(signature + positionOffset + 1U, signature + positionOffset, positionBytes);
         signature[positionOffset] = 0U;
         signature[hintOffset] = (uint8_t)(hintHeader + 2U);
-        signatureLen++;
         ASSERT_EQ(CRYPT_EAL_PkeyVerify(ctx, CRYPT_MD_MAX, message->x, message->len, signature, signatureLen),
                   PQCP_AIGIS_SIG_VERIFY_FAIL);
-        signatureLen--;
         (void)memmove(signature + positionOffset, signature + positionOffset + 1U, positionBytes);
+        signature[compactSignatureLen] = 0U;
         signature[hintOffset] = hintHeader;
     } else {
         const uint32_t lastCount = (uint32_t)hintHeader - 1U;

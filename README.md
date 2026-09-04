@@ -210,7 +210,9 @@ bash ./execute_sdv.sh test_suite_sdv_pqcp_aigis_sig
 ```
 
 The suite covers SHA3-I, SHA3-II, SHA3-III, SM3-I, SM3-II, and SM3-III key generation,
-byte-exact signatures, verification, imported-key interoperability, and public provider API lifecycle checks. The normal
+byte-exact fixed-length signatures, canonical zero-padding verification, imported-key interoperability, and public
+provider API lifecycle checks. Aigis-Sig+ signatures use the parameter-set maximum size (2015, 4533, and 9134 bytes
+for parameter sets I, II, and III respectively); unpadded compact encodings and nonzero padding are rejected. The normal
 `build_pqcp.sh` dependency flow prepares the required openHiTLS build; no parent repository files or
 pre-generated local test output are required.
 

@@ -46,11 +46,11 @@ int32_t PQCP_AIGIS_SIG_GetPubKey(const CRYPT_AIGIS_SIG_Ctx *ctx, BSL_Param *para
 /** Select the algorithm variant or query provider attributes. */
 int32_t PQCP_AIGIS_SIG_Ctrl(CRYPT_AIGIS_SIG_Ctx *ctx, int32_t cmd, void *val, uint32_t valLen);
 
-/** Sign data. signLen is the available size on input and the actual size on success. */
+/** Sign data. signLen is the available size on input and the fixed parameter-set size on success. */
 int32_t PQCP_AIGIS_SIG_Sign(CRYPT_AIGIS_SIG_Ctx *ctx, int32_t mdId, const uint8_t *data, uint32_t dataLen,
                             uint8_t *sign, uint32_t *signLen);
 
-/** Verify a signature. sign is read-only but follows the openHiTLS provider callback ABI. */
+/** Verify a fixed-length signature. sign is read-only but follows the openHiTLS provider callback ABI. */
 int32_t PQCP_AIGIS_SIG_Verify(const CRYPT_AIGIS_SIG_Ctx *ctx, int32_t mdId, const uint8_t *data, uint32_t dataLen,
                               uint8_t *sign, uint32_t signLen);
 

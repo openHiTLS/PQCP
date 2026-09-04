@@ -20,16 +20,13 @@
 
 _Static_assert(AIGIS_SIG_PARAM_I_PUBLIC_KEY_BYTES == 928U, "parameter I public-key size mismatch");
 _Static_assert(AIGIS_SIG_PARAM_I_PRIVATE_KEY_BYTES == 2800U, "parameter I private-key size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_I_SIGNATURE_MIN_BYTES == 1953U, "parameter I minimum signature size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_I_SIGNATURE_MAX_BYTES == 2015U, "parameter I maximum signature size mismatch");
+_Static_assert(AIGIS_SIG_PARAM_I_SIGNATURE_BYTES == 2015U, "parameter I signature size mismatch");
 _Static_assert(AIGIS_SIG_PARAM_II_PUBLIC_KEY_BYTES == 1824U, "parameter II public-key size mismatch");
 _Static_assert(AIGIS_SIG_PARAM_II_PRIVATE_KEY_BYTES == 4976U, "parameter II private-key size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_II_SIGNATURE_MIN_BYTES == 4385U, "parameter II minimum signature size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_II_SIGNATURE_MAX_BYTES == 4533U, "parameter II maximum signature size mismatch");
+_Static_assert(AIGIS_SIG_PARAM_II_SIGNATURE_BYTES == 4533U, "parameter II signature size mismatch");
 _Static_assert(AIGIS_SIG_PARAM_III_PUBLIC_KEY_BYTES == 4672U, "parameter III public-key size mismatch");
 _Static_assert(AIGIS_SIG_PARAM_III_PRIVATE_KEY_BYTES == 8800U, "parameter III private-key size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_III_SIGNATURE_MIN_BYTES == 9025U, "parameter III minimum signature size mismatch");
-_Static_assert(AIGIS_SIG_PARAM_III_SIGNATURE_MAX_BYTES == 9134U, "parameter III maximum signature size mismatch");
+_Static_assert(AIGIS_SIG_PARAM_III_SIGNATURE_BYTES == 9134U, "parameter III signature size mismatch");
 
 static const AigisSigParams AIGIS_SIG_PARAMS[] = {
     {
@@ -62,8 +59,7 @@ static const AigisSigParams AIGIS_SIG_PARAMS[] = {
         .polyEta2PackedBytes = 256U,
         .publicKeyBytes = AIGIS_SIG_PARAM_I_PUBLIC_KEY_BYTES,
         .privateKeyBytes = AIGIS_SIG_PARAM_I_PRIVATE_KEY_BYTES,
-        .signatureMaxBytes = AIGIS_SIG_PARAM_I_SIGNATURE_MAX_BYTES,
-        .signatureMinBytes = AIGIS_SIG_PARAM_I_SIGNATURE_MIN_BYTES,
+        .signatureBytes = AIGIS_SIG_PARAM_I_SIGNATURE_BYTES,
     },
     {
         .id = 2,
@@ -95,8 +91,7 @@ static const AigisSigParams AIGIS_SIG_PARAMS[] = {
         .polyEta2PackedBytes = 128U,
         .publicKeyBytes = AIGIS_SIG_PARAM_II_PUBLIC_KEY_BYTES,
         .privateKeyBytes = AIGIS_SIG_PARAM_II_PRIVATE_KEY_BYTES,
-        .signatureMaxBytes = AIGIS_SIG_PARAM_II_SIGNATURE_MAX_BYTES,
-        .signatureMinBytes = AIGIS_SIG_PARAM_II_SIGNATURE_MIN_BYTES,
+        .signatureBytes = AIGIS_SIG_PARAM_II_SIGNATURE_BYTES,
     },
     {
         .id = 3,
@@ -128,8 +123,7 @@ static const AigisSigParams AIGIS_SIG_PARAMS[] = {
         .polyEta2PackedBytes = 128U,
         .publicKeyBytes = AIGIS_SIG_PARAM_III_PUBLIC_KEY_BYTES,
         .privateKeyBytes = AIGIS_SIG_PARAM_III_PRIVATE_KEY_BYTES,
-        .signatureMaxBytes = AIGIS_SIG_PARAM_III_SIGNATURE_MAX_BYTES,
-        .signatureMinBytes = AIGIS_SIG_PARAM_III_SIGNATURE_MIN_BYTES,
+        .signatureBytes = AIGIS_SIG_PARAM_III_SIGNATURE_BYTES,
     },
 };
 
