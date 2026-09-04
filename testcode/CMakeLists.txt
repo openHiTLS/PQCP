@@ -32,6 +32,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -Wextra")
 endif()
+if(NOT APPLE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
+endif()
 
 # 启用AddressSanitizer（如果需要）
 if(ENABLE_ASAN)
@@ -77,7 +80,10 @@ foreach(LIB IN ITEMS
         message(FATAL_ERROR "Required library ${LIB} not found in: ${PQCP_DEPENDENCY_DIRS}")
     endif()
 endforeach()
-add_compile_options(-Wall -Wextra -Werror -Wno-enum-conversion)
+add_compile_options(-Wall -Wextra -Werror)
+if(CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
+    add_compile_options(-Wno-enum-conversion)
+endif()
 # 包含目录
 include_directories(
     ${HITLS_ROOT_DIR}/include/bsl

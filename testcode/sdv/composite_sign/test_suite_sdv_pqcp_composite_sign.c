@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "bsl_err.h"
 #include "crypt_errno.h"
 #include "bsl_sal.h"
 #include "bsl_params.h"
@@ -28,7 +29,61 @@
 #include "pqcp_provider.h"
 #include "pqcp_types.h"
 #include "pqcp_err.h"
+#include "stub_utils.h"
 /* END_HEADER */
+
+#ifdef PQCP_COMPOSITE_SIGN
+#define TEST_COMPOSITE_BUFFER_SIZE 16384U
+
+STUB_DEFINE_RET1(void *, BSL_SAL_Malloc, uint32_t);
+
+static CRYPT_EAL_PkeyCtx *NewCompositeSignCtx(int algId)
+{
+    CRYPT_EAL_PkeyCtx *ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN,
+        CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
+    if (ctx == NULL) {
+        return NULL;
+    }
+
+    int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &algId, sizeof(algId));
+    if (ret != PQCP_SUCCESS) {
+        CRYPT_EAL_PkeyFreeCtx(ctx);
+        return NULL;
+    }
+    return ctx;
+}
+
+#ifndef PQCP_AIGIS_SIG
+static int IsAigisCompositeAlg(int algId)
+{
+    switch (algId) {
+        case PQCP_COMPOSITE_AIGIS_SIG_SM3_I_SM2:
+        case PQCP_COMPOSITE_AIGIS_SIG_SM3_II_SM2:
+        case PQCP_COMPOSITE_AIGIS_SIG_SM3_III_SM2:
+        case PQCP_COMPOSITE_AIGIS_SIG_SHA3_I_SM2:
+        case PQCP_COMPOSITE_AIGIS_SIG_SHA3_II_SM2:
+        case PQCP_COMPOSITE_AIGIS_SIG_SHA3_III_SM2:
+            return 1;
+        default:
+            return 0;
+    }
+}
+#define SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId) \
+    do {                                        \
+        if (IsAigisCompositeAlg(algId)) {       \
+            SKIP_TEST();                        \
+        }                                       \
+    } while (0)
+#else
+#define SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId) ((void)(algId))
+#endif
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+#define SKIP_IF_NOT_X86() ((void)0)
+#else
+#define SKIP_IF_NOT_X86() SKIP_TEST()
+#endif
+#endif
 
 /* @
 * @test  SDV_CRYPTO_PQCP_COMPOSITE_KEYGEN_API_TC001
@@ -46,6 +101,7 @@
 void SDV_CRYPTO_PQCP_COMPOSITE_KEYGEN_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -96,10 +152,11 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_PRVKEY_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
-    uint8_t prvKeyData[4096] = {0};
+    uint8_t prvKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -145,10 +202,11 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_PUBKEY_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestMemInit();
     TestRandInitEx(NULL);
     CRYPT_EAL_PkeyCtx *ctx = NULL;
-    uint8_t pubKeyData[4096] = {0};
+    uint8_t pubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -195,11 +253,12 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_PRVKEY_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
     CRYPT_EAL_PkeyCtx *ctx2 = NULL;
-    uint8_t prvKeyData[4096] = {0};
+    uint8_t prvKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -254,6 +313,7 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PRVKEY_LEN_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -316,11 +376,12 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_PUBKEY_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
     CRYPT_EAL_PkeyCtx *ctx2 = NULL;
-    uint8_t pubKeyData[4096] = {0};
+    uint8_t pubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -375,12 +436,13 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_SET_GET_PUBKEY_LEN_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
     CRYPT_EAL_PkeyCtx *ctx2 = NULL;
-    uint8_t pubKeyData[4096] = {0};
-    uint8_t getPubKeyData[4096] = {0};
+    uint8_t pubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    uint8_t getPubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -444,19 +506,21 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_SIGN_VERIFY_API_TC001(int algId, Hex *message)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
     CRYPT_EAL_PkeyCtx *verifyCtx = NULL;
-    uint8_t pubKeyData[4096] = {0};
-    uint8_t signData[5000] = {0};
+    uint8_t pubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
     uint32_t signLen = sizeof(signData);
     const char *context = "test sdv composite sign";
     uint32_t contextLen = strlen(context);
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
 
-    verifyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
+    verifyCtx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE,
+        "provider=pqcp");
     ASSERT_TRUE(verifyCtx != NULL);
 
     int32_t ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_SET_PARA_BY_ID, &algId, sizeof(algId));
@@ -498,6 +562,221 @@ EXIT:
     TestRandDeInit();
     return;
 #else 
+    SKIP_TEST();
+    (void)algId;
+    (void)message;
+#endif
+}
+/* END_CASE */
+
+/* @
+* @test  SDV_CRYPTO_PQCP_COMPOSITE_KEYGEN_MALLOC_STUB_TC001
+* @spec  -
+* @title  PQCP Composite Sign Key Generation Malloc Failure Test
+* @precon  nan
+* @brief  1. Create context and set algorithm
+*         2. Generate key pair once with malloc stub disabled to count allocations
+*         3. Inject malloc failure at each selected allocation point and generate key pair again
+* @expect  Key generation handles malloc failure without crash or memory leak
+* @prior  nan
+* @auto  FALSE
+@ */
+/* BEGIN_CASE */
+void SDV_CRYPTO_PQCP_COMPOSITE_KEYGEN_MALLOC_STUB_TC001(int algId)
+{
+#ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_NOT_X86();
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
+    TestRandInitEx(NULL);
+    TestMemInit();
+    CRYPT_EAL_PkeyCtx *ctx = NULL;
+    uint32_t totalMallocCount = 0;
+
+    ctx = NewCompositeSignCtx(algId);
+    ASSERT_TRUE(ctx != NULL);
+
+    STUB_REPLACE(BSL_SAL_Malloc, STUB_BSL_SAL_Malloc);
+    STUB_EnableMallocFail(false);
+    STUB_ResetMallocCount();
+
+    int32_t ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    totalMallocCount = STUB_GetMallocCallCount();
+    ASSERT_TRUE(totalMallocCount > 0);
+
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    ctx = NULL;
+
+    for (uint32_t i = 0; i < totalMallocCount; i++) {
+        STUB_EnableMallocFail(false);
+        ctx = NewCompositeSignCtx(algId);
+        ASSERT_TRUE(ctx != NULL);
+
+        STUB_ResetMallocCount();
+        STUB_SetMallocFailIndex(i);
+        STUB_EnableMallocFail(true);
+        (void)CRYPT_EAL_PkeyGen(ctx);
+
+        STUB_EnableMallocFail(false);
+        CRYPT_EAL_PkeyFreeCtx(ctx);
+        ctx = NULL;
+        BSL_ERR_ClearError();
+    }
+
+EXIT:
+    STUB_EnableMallocFail(false);
+    STUB_RESTORE(BSL_SAL_Malloc);
+    BSL_ERR_ClearError();
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    TestRandDeInit();
+    return;
+#else
+    SKIP_TEST();
+    (void)algId;
+#endif
+}
+/* END_CASE */
+
+/* @
+* @test  SDV_CRYPTO_PQCP_COMPOSITE_SIGN_MALLOC_STUB_TC001
+* @spec  -
+* @title  PQCP Composite Sign Malloc Failure Test
+* @precon  nan
+* @brief  1. Create context and generate key pair
+*         2. Sign once with malloc stub disabled to count allocations
+*         3. Inject malloc failure at each selected allocation point and sign again
+* @expect  Sign handles malloc failure without crash or memory leak
+* @prior  nan
+* @auto  FALSE
+@ */
+/* BEGIN_CASE */
+void SDV_CRYPTO_PQCP_COMPOSITE_SIGN_MALLOC_STUB_TC001(int algId, Hex *message)
+{
+#ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_NOT_X86();
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
+    TestRandInitEx(NULL);
+    TestMemInit();
+    CRYPT_EAL_PkeyCtx *ctx = NULL;
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    uint32_t signLen = sizeof(signData);
+    uint32_t totalMallocCount = 0;
+
+    ctx = NewCompositeSignCtx(algId);
+    ASSERT_TRUE(ctx != NULL);
+
+    int32_t ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    STUB_REPLACE(BSL_SAL_Malloc, STUB_BSL_SAL_Malloc);
+    STUB_EnableMallocFail(false);
+    STUB_ResetMallocCount();
+
+    ret = CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message->x, message->len, signData, &signLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    totalMallocCount = STUB_GetMallocCallCount();
+    ASSERT_TRUE(totalMallocCount > 0);
+
+    for (uint32_t i = 0; i < totalMallocCount; i++) {
+        signLen = sizeof(signData);
+        STUB_ResetMallocCount();
+        STUB_SetMallocFailIndex(i);
+        STUB_EnableMallocFail(true);
+        (void)CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message->x, message->len, signData, &signLen);
+        STUB_EnableMallocFail(false);
+        BSL_ERR_ClearError();
+    }
+
+EXIT:
+    STUB_EnableMallocFail(false);
+    STUB_RESTORE(BSL_SAL_Malloc);
+    BSL_ERR_ClearError();
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    TestRandDeInit();
+    return;
+#else
+    SKIP_TEST();
+    (void)algId;
+    (void)message;
+#endif
+}
+/* END_CASE */
+
+/* @
+* @test  SDV_CRYPTO_PQCP_COMPOSITE_VERIFY_MALLOC_STUB_TC001
+* @spec  -
+* @title  PQCP Composite Sign Verify Malloc Failure Test
+* @precon  nan
+* @brief  1. Create sign and verify contexts, generate key pair, and sign a message
+*         2. Verify once with malloc stub disabled to count allocations
+*         3. Inject malloc failure at each selected allocation point and verify again
+* @expect  Verify handles malloc failure without crash or memory leak
+* @prior  nan
+* @auto  FALSE
+@ */
+/* BEGIN_CASE */
+void SDV_CRYPTO_PQCP_COMPOSITE_VERIFY_MALLOC_STUB_TC001(int algId, Hex *message)
+{
+#ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_NOT_X86();
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
+    TestRandInitEx(NULL);
+    TestMemInit();
+    CRYPT_EAL_PkeyCtx *ctx = NULL;
+    CRYPT_EAL_PkeyCtx *verifyCtx = NULL;
+    uint8_t pubKeyData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    uint32_t signLen = sizeof(signData);
+    uint32_t totalMallocCount = 0;
+
+    ctx = NewCompositeSignCtx(algId);
+    ASSERT_TRUE(ctx != NULL);
+    verifyCtx = NewCompositeSignCtx(algId);
+    ASSERT_TRUE(verifyCtx != NULL);
+
+    int32_t ret = CRYPT_EAL_PkeyGen(ctx);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    BSL_Param pubParams[2] = {
+        {PQCP_PARAM_COMPOSITE_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubKeyData, sizeof(pubKeyData), 0},
+        BSL_PARAM_END
+    };
+    ret = CRYPT_EAL_PkeyGetPubEx(ctx, pubParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    pubParams[0].valueLen = pubParams[0].useLen;
+    ret = CRYPT_EAL_PkeySetPubEx(verifyCtx, pubParams);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    ret = CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message->x, message->len, signData, &signLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+
+    STUB_REPLACE(BSL_SAL_Malloc, STUB_BSL_SAL_Malloc);
+    STUB_EnableMallocFail(false);
+    STUB_ResetMallocCount();
+
+    ret = CRYPT_EAL_PkeyVerify(verifyCtx, CRYPT_MD_MAX, message->x, message->len, signData, signLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    totalMallocCount = STUB_GetMallocCallCount();
+    ASSERT_TRUE(totalMallocCount > 0);
+
+    for (uint32_t i = 0; i < totalMallocCount; i++) {
+        STUB_ResetMallocCount();
+        STUB_SetMallocFailIndex(i);
+        STUB_EnableMallocFail(true);
+        (void)CRYPT_EAL_PkeyVerify(verifyCtx, CRYPT_MD_MAX, message->x, message->len, signData, signLen);
+        STUB_EnableMallocFail(false);
+        BSL_ERR_ClearError();
+    }
+
+EXIT:
+    STUB_EnableMallocFail(false);
+    STUB_RESTORE(BSL_SAL_Malloc);
+    BSL_ERR_ClearError();
+    CRYPT_EAL_PkeyFreeCtx(ctx);
+    CRYPT_EAL_PkeyFreeCtx(verifyCtx);
+    TestRandDeInit();
+    return;
+#else
     SKIP_TEST();
     (void)algId;
     (void)message;
@@ -614,6 +893,7 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_INVALID_PARAMS_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -671,6 +951,7 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_BUFFER_TOO_SMALL_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -716,15 +997,18 @@ EXIT:
 * @auto  FALSE
 @ */
 /* BEGIN_CASE */
-void SDV_CRYPTO_PQCP_COMPOSITE_GET_SIGNLEN_API_TC001(int algId, int expPqcSignLen)
+void SDV_CRYPTO_PQCP_COMPOSITE_GET_SIGNLEN_API_TC001(int algId, int expMaxPqcSignLen)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
+    uint32_t maxSignLen = 0;
     uint32_t signLen = 0;
     uint32_t tradSignLen = 0;
-    uint32_t pqcSignLen = 0;
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    const uint8_t message[] = "Test message for composite signature length";
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
 
@@ -734,14 +1018,25 @@ void SDV_CRYPTO_PQCP_COMPOSITE_GET_SIGNLEN_API_TC001(int algId, int expPqcSignLe
     ret = CRYPT_EAL_PkeyGen(ctx);
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_SIGNLEN, &signLen, sizeof(signLen));
+    ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_SIGNLEN, &maxSignLen, sizeof(maxSignLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
     ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_TRAD_SIGNLEN, &tradSignLen, sizeof(tradSignLen)),
               PQCP_SUCCESS);
-    ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN, &pqcSignLen, sizeof(pqcSignLen)), PQCP_SUCCESS);
-    ASSERT_EQ(pqcSignLen, expPqcSignLen);
     ASSERT_TRUE(tradSignLen >= 72);
-    ASSERT_EQ(signLen, tradSignLen + pqcSignLen);
+    ASSERT_EQ(maxSignLen, tradSignLen + (uint32_t)expMaxPqcSignLen);
+
+    signLen = sizeof(signData);
+    ret = CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message, sizeof(message), signData, &signLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_TRUE(signLen <= maxSignLen);
+
+    uint32_t pqcSignLen = 0;
+    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN, &pqcSignLen, sizeof(pqcSignLen));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(pqcSignLen, (uint32_t)expMaxPqcSignLen);
+    ASSERT_TRUE(signLen > pqcSignLen);
+    ASSERT_TRUE(signLen - pqcSignLen <= tradSignLen);
+    ASSERT_TRUE(signData[pqcSignLen] == 0x30);
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
@@ -749,7 +1044,7 @@ EXIT:
 #else 
     SKIP_TEST();
     (void)algId;
-    (void)expPqcSignLen;
+    (void)expMaxPqcSignLen;
 #endif
 }
 /* END_CASE */
@@ -770,11 +1065,12 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_DUP_CTX_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
     CRYPT_EAL_PkeyCtx *dupCtx = NULL;
-    uint8_t signData[5000] = {0};
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
     uint32_t signLen = sizeof(signData);
     const uint8_t message[] = "Test message for composite signature";
 
@@ -828,6 +1124,7 @@ EXIT:
 void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_KEYLEN_API_TC001(int algId)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
@@ -849,7 +1146,7 @@ void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_KEYLEN_API_TC001(int algId)
 
     ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_PRVKEY_LEN, &pqcPrvKeyLen, sizeof(pqcPrvKeyLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ASSERT_EQ(pqcPrvKeyLen, 32);
+    ASSERT_TRUE(pqcPrvKeyLen > 0);
 
     ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_TRAD_PRVKEY_LEN, &tradPrvKeyLen, sizeof(tradPrvKeyLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
@@ -895,15 +1192,18 @@ EXIT:
 * @auto  FALSE
 @ */
 /* BEGIN_CASE */
-void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_SIGNLEN_API_TC001(int algId, int expPqcSignLen)
+void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_SIGNLEN_API_TC001(int algId, int expMaxPqcSignLen)
 {
 #ifdef PQCP_COMPOSITE_SIGN
+    SKIP_IF_AIGIS_COMPOSITE_DISABLED(algId);
     TestRandInitEx(NULL);
     TestMemInit();
     CRYPT_EAL_PkeyCtx *ctx = NULL;
-    uint32_t pqcSigLen = 0;
     uint32_t totalSigLen = 0;
     uint32_t tradSigLen = 0;
+    uint32_t signLen = 0;
+    uint8_t signData[TEST_COMPOSITE_BUFFER_SIZE] = {0};
+    const uint8_t message[] = "Test message for separate signature length";
 
     ctx = CRYPT_EAL_ProviderPkeyNewCtx(NULL, PQCP_PKEY_COMPOSITE_SIGN, CRYPT_EAL_PKEY_SIGN_OPERATE, "provider=pqcp");
     ASSERT_TRUE(ctx != NULL);
@@ -914,24 +1214,34 @@ void SDV_CRYPTO_PQCP_COMPOSITE_GET_SEPARATE_SIGNLEN_API_TC001(int algId, int exp
     ret = CRYPT_EAL_PkeyGen(ctx);
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
-    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN, &pqcSigLen, sizeof(pqcSigLen));
-    ASSERT_EQ(ret, PQCP_SUCCESS);
-    ASSERT_EQ(pqcSigLen, (uint32_t)expPqcSignLen);
-
     ret = CRYPT_EAL_PkeyCtrl(ctx, CRYPT_CTRL_GET_SIGNLEN, &totalSigLen, sizeof(totalSigLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
-    ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_TRAD_SIGNLEN, &tradSigLen, sizeof(tradSigLen)), PQCP_SUCCESS);
+    ASSERT_EQ(CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_TRAD_SIGNLEN, &tradSigLen, sizeof(tradSigLen)),
+              PQCP_SUCCESS);
     ASSERT_TRUE(tradSigLen == 72);
-    ASSERT_EQ(totalSigLen, tradSigLen + pqcSigLen);
+    ASSERT_EQ(totalSigLen, tradSigLen + (uint32_t)expMaxPqcSignLen);
+
+    signLen = sizeof(signData);
+    ret = CRYPT_EAL_PkeySign(ctx, CRYPT_MD_MAX, message, sizeof(message), signData, &signLen);
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_TRUE(signLen <= totalSigLen);
+
+    uint32_t pqcSignLen = 0;
+    ret = CRYPT_EAL_PkeyCtrl(ctx, PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN, &pqcSignLen, sizeof(pqcSignLen));
+    ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(pqcSignLen, (uint32_t)expMaxPqcSignLen);
+    ASSERT_TRUE(signLen > pqcSignLen);
+    ASSERT_TRUE(signLen - pqcSignLen <= tradSigLen);
+    ASSERT_TRUE(signData[pqcSignLen] == 0x30);
 
 EXIT:
     CRYPT_EAL_PkeyFreeCtx(ctx);
     TestRandDeInit();
     return;
-#else
+#else 
     SKIP_TEST();
     (void)algId;
-    (void)expPqcSignLen;
+    (void)expMaxPqcSignLen;
 #endif
 }
 /* END_CASE */

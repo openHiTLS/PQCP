@@ -3,6 +3,8 @@ set(TEST_SOURCE
     ${PQCP_ROOT}/testcode/framework/gen_test/test.c
     ${PQCP_ROOT}/testcode/framework/crypto/alg_check.c
     ${PQCP_ROOT}/testcode/framework/crypto/crypto_test_util.c
+    ${PQCP_ROOT}/testcode/framework/common/test_util.c
+    ${PQCP_ROOT}/testcode/framework/stub/stub_utils.h
     ${PQCP_ROOT}/testcode/sdv/nev/nev_kat_drng.c
 )
 
@@ -11,6 +13,8 @@ add_library(TESTCASE_PRE ${TEST_SOURCE})
 target_include_directories(TESTCASE_PRE PRIVATE
     ${PQCP_ROOT}/testcode/framework/include
     ${PQCP_ROOT}/testcode/framework/crypto
+    ${PQCP_ROOT}/testcode/framework/common
+    ${PQCP_ROOT}/testcode/framework/stub
     ${HITLS_ROOT_DIR}/config/macro_config
     ${HITLS_ROOT_DIR}/conf/macro_config
     ${HITLS_ROOT_DIR}/crypto/include
@@ -69,12 +73,15 @@ foreach(test_suite ${TEST_FILES})
     target_include_directories(${sdv_exe} PRIVATE
         ${PQCP_ROOT}/testcode/framework/include
         ${PQCP_ROOT}/testcode/framework/crypto
+        ${PQCP_ROOT}/testcode/framework/common
+        ${PQCP_ROOT}/testcode/framework/stub
         ${HITLS_ROOT_DIR}/include/crypto
         ${HITLS_ROOT_DIR}/include/bsl
         ${HITLS_ROOT_DIR}/config/macro_config
         ${HITLS_ROOT_DIR}/conf/macro_config
     )
-    target_link_libraries(${sdv_exe} PRIVATE TESTCASE_PRE 
-                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${SECUREC_LIB} ${PQCP_PROVIDER_LIB} pthread)
+    target_link_libraries(${sdv_exe} PRIVATE TESTCASE_PRE
+                            ${HITLS_CRYPTO_LIB} ${HITLS_BSL_LIB} ${SECUREC_LIB} ${PQCP_PROVIDER_LIB} pthread
+                            ${CMAKE_DL_LIBS})
     target_link_libraries(${sdv_exe} PRIVATE SHARED_COMPILE_DEFS)
 endforeach()

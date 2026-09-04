@@ -25,7 +25,7 @@ ENABLE_ASAN="OFF"
 ENABLE_GCOV="OFF"
 OPENHITLS_DIR="platform/openhitls"
 OPENHITLS_REF="openhitls-0.4.0-alpha2"
-OPENHITLS_REPO="${OPENHITLS_REPO:-https://github.com/openHiTLS/openHiTLS.git}"
+OPENHITLS_REPO="${OPENHITLS_REPO:-https://gitcode.com/openHiTLS/openhitls.git}"
 LIB_TYPE="SHARED"
 CUSTOM_HITLS_DIR=""
 

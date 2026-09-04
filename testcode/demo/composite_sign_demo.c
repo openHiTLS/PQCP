@@ -26,8 +26,8 @@ static int32_t CompositeSignDemo(void)
     CRYPT_EAL_PkeyCtx *verifyCtx = NULL;
     int32_t val = PQCP_COMPOSITE_MLDSA44_SM2;
     uint8_t msg[5] = {0x01, 0x02, 0x03, 0x04, 0x05};
-    uint8_t pubdata[4096];
-    uint8_t signData[4096];
+    uint8_t pubdata[8192];
+    uint8_t signData[8192];
     BSL_Param pub[2] = {
         {PQCP_PARAM_COMPOSITE_PUBKEY, BSL_PARAM_TYPE_OCTETS, pubdata, sizeof(pubdata), 0},
         BSL_PARAM_END

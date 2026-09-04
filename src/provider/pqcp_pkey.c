@@ -30,7 +30,7 @@
 
 void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 {
-#ifdef PQCP_AIGIS_SIG
+#if defined(PQCP_AIGIS_SIG) || defined(PQCP_COMPOSITE_SIGN)
     PQCP_ProvCtx *providerCtx = (PQCP_ProvCtx *)provCtx;
 #else
     (void)provCtx;
@@ -50,7 +50,7 @@ void *CRYPT_PQCP_PkeyMgmtNewCtx(void *provCtx, int32_t algId)
 #endif
 #ifdef PQCP_COMPOSITE_SIGN
     case PQCP_PKEY_COMPOSITE_SIGN:
-        pkeyCtx = PQCP_COMPOSITE_NewCtx();
+        pkeyCtx = PQCP_COMPOSITE_NewCtx(providerCtx == NULL ? NULL : providerCtx->libCtx);
         break;
 #endif
 #ifdef PQCP_AIGIS_SIG

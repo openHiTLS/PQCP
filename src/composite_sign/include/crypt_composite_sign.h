@@ -29,7 +29,7 @@ typedef struct CompositeCtx PQCP_CompositeCtx;
 typedef CRYPT_Data CRYPT_CompositePub;
 typedef CRYPT_Data CRYPT_CompositePrv;
 
-PQCP_CompositeCtx *PQCP_COMPOSITE_NewCtx(void);
+PQCP_CompositeCtx *PQCP_COMPOSITE_NewCtx(void *libCtx);
 
 void PQCP_COMPOSITE_FreeCtx(PQCP_CompositeCtx *ctx);
 

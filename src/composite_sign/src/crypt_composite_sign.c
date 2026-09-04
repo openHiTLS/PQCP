@@ -16,17 +16,32 @@
 #include <string.h>
 
 #include "crypt_composite_sign_local.h"
+#ifdef PQCP_AIGIS_SIG
+#include "crypt_aigis_sig.h"
+#endif
 #include "crypt_utils.h"
 #include "crypt_algid.h"
 #include "crypt_types.h"
 #include "crypt_eal_pkey.h"
-#include "eal_pkey_local.h"
 #include "eal_md_local.h"
 
 #include "pqcp_types.h"
+#include "pqcp_provider.h"
 #include "pqcp_err.h"
 
-#define MLDSA_SEED_LEN 32
+#ifdef PQCP_AIGIS_SIG
+#define AIGIS_SIG_PARAM_I_PUBLIC_KEY_LEN 928
+#define AIGIS_SIG_PARAM_I_PRIVATE_KEY_LEN 2800
+#define AIGIS_SIG_PARAM_I_SIGNATURE_LEN 2015
+#define AIGIS_SIG_PARAM_II_PUBLIC_KEY_LEN 1824
+#define AIGIS_SIG_PARAM_II_PRIVATE_KEY_LEN 4976
+#define AIGIS_SIG_PARAM_II_SIGNATURE_LEN 4533
+#define AIGIS_SIG_PARAM_III_PUBLIC_KEY_LEN 4672
+#define AIGIS_SIG_PARAM_III_PRIVATE_KEY_LEN 8800
+#define AIGIS_SIG_PARAM_III_SIGNATURE_LEN 9134
+#define SM2_PUBLIC_KEY_LEN 65
+#define SM2_PRIVATE_KEY_LEN 32
+#endif
 #define CHECK_UINT32_LEN_AND_INFO(ctx, val, len)                \
     do                                                          \
     {                                                           \
@@ -47,12 +62,68 @@
         }                                                       \
     } while (0)
 
+#define PQC_METHOD_FREE(func) ((void (*)(void *))(func))
+#define PQC_METHOD_DUP(func) ((void *(*)(const void *))(func))
+#define PQC_METHOD_CTRL(func) ((int32_t(*)(void *, int32_t, void *, uint32_t))(func))
+#define PQC_METHOD_GEN(func) ((int32_t(*)(void *))(func))
+#define PQC_METHOD_SIGN(func)                                                                                   \
+    ((int32_t(*)(void *, int32_t, const uint8_t *, uint32_t, uint8_t *, uint32_t *))(func))
+#define PQC_METHOD_VERIFY(func)                                                                                 \
+    ((int32_t(*)(const void *, int32_t, const uint8_t *, uint32_t, uint8_t *, uint32_t))(func))
+
 /*
-This part of codes references the composite sign IEFT DRAFT: https://datatracker.ietf.org/doc/draft-ietf-lamps-pq-composite-sigs/
+This part of codes references the composite sign IEFT DRAFT:
+https://datatracker.ietf.org/doc/draft-ietf-lamps-pq-composite-sigs/
 */
 static const uint8_t PREFIX[] = {0x43, 0x6F, 0x6D, 0x70, 0x6F, 0x73, 0x69, 0x74, 0x65, 0x41, 0x6C,
                                  0x67, 0x6F, 0x72, 0x69, 0x74, 0x68, 0x6D, 0x53, 0x69, 0x67, 0x6E,
                                  0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x32, 0x30, 0x32, 0x35};
+
+static int32_t EalPqcNewCtx(PQCP_CompositeCtx *ctx)
+{
+    int32_t ret;
+    ctx->pqcCtx = CRYPT_EAL_PkeyNewCtx(ctx->info->pqcAlg);
+    RETURN_RET_IF(ctx->pqcCtx == NULL, PQCP_MEM_ALLOC_FAIL);
+    int32_t pqcParam = ctx->info->pqcParam;
+    RETURN_RET_IF_ERR(CRYPT_EAL_PkeyCtrl(ctx->pqcCtx, CRYPT_CTRL_SET_PARA_BY_ID, &pqcParam, sizeof(pqcParam)), ret);
+    return PQCP_SUCCESS;
+}
+
+static int32_t FixedPqcGetSigLen(PQCP_CompositeCtx *ctx, const uint8_t *sign, uint32_t signLen, uint32_t *pqcSigLen)
+{
+    (void)sign;
+    if (signLen < ctx->info->pqcSigLen) {
+        BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_INVALID_SIG_LEN);
+        return PQCP_COMPOSITE_INVALID_SIG_LEN;
+    }
+    *pqcSigLen = ctx->info->pqcSigLen;
+    return PQCP_SUCCESS;
+}
+
+const PQCP_COMPOSITE_PQC_METHOD g_compositeMldsaPqcMethod = {
+    EalPqcNewCtx, PQC_METHOD_FREE(CRYPT_EAL_PkeyFreeCtx), PQC_METHOD_DUP(CRYPT_EAL_PkeyDupCtx),
+    PQC_METHOD_CTRL(CRYPT_EAL_PkeyCtrl), PQC_METHOD_GEN(CRYPT_EAL_PkeyGen),
+    PQC_METHOD_SIGN(CRYPT_EAL_PkeySign), PQC_METHOD_VERIFY(CRYPT_EAL_PkeyVerify), FixedPqcGetSigLen,
+    PQCP_CompositeGetMldsaPrvKey, PQCP_CompositeGetMldsaPubKey, PQCP_CompositeSetMldsaPrvKey,
+    PQCP_CompositeSetMldsaPubKey};
+
+#ifdef PQCP_AIGIS_SIG
+static int32_t AigisPqcNewCtx(PQCP_CompositeCtx *ctx)
+{
+    int32_t ret;
+    ctx->pqcCtx = PQCP_AIGIS_SIG_NewCtx(ctx->libCtx);
+    RETURN_RET_IF(ctx->pqcCtx == NULL, PQCP_MEM_ALLOC_FAIL);
+    int32_t pqcParam = ctx->info->pqcParam;
+    RETURN_RET_IF_ERR(PQCP_AIGIS_SIG_Ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_PARA_BY_ID, &pqcParam, sizeof(pqcParam)), ret);
+    return PQCP_SUCCESS;
+}
+const PQCP_COMPOSITE_PQC_METHOD g_compositeAigisPqcMethod = {
+    AigisPqcNewCtx, PQC_METHOD_FREE(PQCP_AIGIS_SIG_FreeCtx), PQC_METHOD_DUP(PQCP_AIGIS_SIG_DupCtx),
+    PQC_METHOD_CTRL(PQCP_AIGIS_SIG_Ctrl), PQC_METHOD_GEN(PQCP_AIGIS_SIG_GenKey),
+    PQC_METHOD_SIGN(PQCP_AIGIS_SIG_Sign), PQC_METHOD_VERIFY(PQCP_AIGIS_SIG_Verify), FixedPqcGetSigLen,
+    PQCP_CompositeGetAigisPrvKey, PQCP_CompositeGetAigisPubKey, PQCP_CompositeSetAigisPrvKey,
+    PQCP_CompositeSetAigisPubKey};
+#endif
 
 static const PQCP_COMPOSITE_ALG_INFO g_composite_info[] = {
     {
@@ -70,6 +141,8 @@ static const PQCP_COMPOSITE_ALG_INFO g_composite_info[] = {
         1312, // pqc public key len
         32, // pqc private key len
         2420, // pqc sig len
+        1, // set pqc ctx info
+        &g_compositeMldsaPqcMethod, // pqc method
     },
     {   PQCP_COMPOSITE_MLDSA65_SM2, // Composite algId
         "COMPSIG-MLDSA65-SM2", // label
@@ -85,6 +158,8 @@ static const PQCP_COMPOSITE_ALG_INFO g_composite_info[] = {
         1952, // pqc public key len
         32, // pqc private key len
         3309, // pqc sig len
+        1, // set pqc ctx info
+        &g_compositeMldsaPqcMethod, // pqc method
     },
     {
         PQCP_COMPOSITE_MLDSA87_SM2, // Composite algId
@@ -101,7 +176,119 @@ static const PQCP_COMPOSITE_ALG_INFO g_composite_info[] = {
         2592, // pqc public key len
         32, // pqc private key len
         4627, // pqc sig len
+        1, // set pqc ctx info
+        &g_compositeMldsaPqcMethod, // pqc method
+    },
+#ifdef PQCP_AIGIS_SIG
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SM3_I_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SM3-I-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SM3_I, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SM3, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_I_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_I_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_I_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_I_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_I_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
+    },
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SM3_II_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SM3-II-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SM3_II, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SM3, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_II_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_II_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_II_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_II_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_II_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
+    },
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SM3_III_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SM3-III-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SM3_III, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SM3, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_III_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_III_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_III_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_III_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_III_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
+    },
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SHA3_I_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SHA3-I-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SHA3_I, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SHA3_256, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_I_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_I_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_I_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_I_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_I_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
+    },
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SHA3_II_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SHA3-II-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SHA3_II, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SHA3_256, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_II_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_II_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_II_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_II_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_II_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
+    },
+    {
+        PQCP_COMPOSITE_AIGIS_SIG_SHA3_III_SM2, // Composite algId
+        "COMPSIG-AIGIS-SIG-SHA3-III-SM2", // label
+        PQCP_PKEY_AIGIS_SIG, // pqc algId
+        PQCP_AIGIS_SIG_SHA3_III, // pqc paraId
+        CRYPT_PKEY_SM2, // trad algId
+        0, // trad paraId
+        CRYPT_MD_SHA3_512, // composite hash Id
+        CRYPT_MD_SM3, // trad hash Id
+        0, // bits
+        AIGIS_SIG_PARAM_III_PUBLIC_KEY_LEN + SM2_PUBLIC_KEY_LEN, // composite public key len
+        AIGIS_SIG_PARAM_III_PRIVATE_KEY_LEN + SM2_PRIVATE_KEY_LEN, // composite private key len
+        AIGIS_SIG_PARAM_III_PUBLIC_KEY_LEN, // pqc public key len
+        AIGIS_SIG_PARAM_III_PRIVATE_KEY_LEN, // pqc private key len
+        AIGIS_SIG_PARAM_III_SIGNATURE_LEN, // pqc sig len
+        0, // set pqc ctx info
+        &g_compositeAigisPqcMethod, // pqc method
     }
+#endif
 };
 
 const PQCP_COMPOSITE_ALG_INFO *PQCP_COMPOSITE_GetInfo(int32_t paramId)
@@ -116,7 +303,16 @@ const PQCP_COMPOSITE_ALG_INFO *PQCP_COMPOSITE_GetInfo(int32_t paramId)
     return NULL;
 }
 
-PQCP_CompositeCtx *PQCP_COMPOSITE_NewCtx(void)
+static int32_t CompositeSetPqcCtxInfo(PQCP_CompositeCtx *ctx)
+{
+    if (!ctx->info->isSetPqcCtxInfo) {
+        return PQCP_SUCCESS;
+    }
+    return ctx->info->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_CTX_INFO, (void *)(uintptr_t)ctx->info->label,
+        (uint32_t)strlen(ctx->info->label));
+}
+
+PQCP_CompositeCtx *PQCP_COMPOSITE_NewCtx(void *libCtx)
 {
     PQCP_CompositeCtx *ctx = BSL_SAL_Calloc(1, sizeof(PQCP_CompositeCtx));
     if (ctx == NULL) {
@@ -124,6 +320,7 @@ PQCP_CompositeCtx *PQCP_COMPOSITE_NewCtx(void)
         return NULL;
     }
     BSL_SAL_ReferencesInit(&(ctx->references));
+    ctx->libCtx = libCtx;
     return ctx;
 }
 
@@ -137,12 +334,11 @@ void PQCP_COMPOSITE_FreeCtx(PQCP_CompositeCtx *ctx)
     if (ref > 0) {
         return;
     }
-    if (ctx->pqcMethod != NULL && ctx->pqcMethod->freeCtx != NULL) {
-        ctx->pqcMethod->freeCtx(ctx->pqcCtx);
+    if (ctx->info != NULL && ctx->info->pqcMethod != NULL) {
+        ctx->info->pqcMethod->freeCtx(ctx->pqcCtx);
+        ctx->pqcCtx = NULL;
     }
-    if (ctx->tradMethod != NULL && ctx->tradMethod->freeCtx != NULL) {
-        ctx->tradMethod->freeCtx(ctx->tradCtx);
-    }
+    CRYPT_EAL_PkeyFreeCtx(ctx->tradCtx);
     BSL_SAL_FREE(ctx->ctxInfo);
     BSL_SAL_ReferencesFree(&(ctx->references));
     BSL_SAL_FREE(ctx);
@@ -154,25 +350,23 @@ PQCP_CompositeCtx *PQCP_COMPOSITE_DupCtx(PQCP_CompositeCtx *ctx)
         BSL_ERR_PUSH_ERROR(PQCP_NULL_INPUT);
         return NULL;
     }
-    PQCP_CompositeCtx *newCtx = PQCP_COMPOSITE_NewCtx();
+    PQCP_CompositeCtx *newCtx = PQCP_COMPOSITE_NewCtx(ctx->libCtx);
     if (newCtx == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
         return NULL;
     }
     newCtx->info = ctx->info;
-    newCtx->pqcMethod = ctx->pqcMethod;
-    newCtx->tradMethod = ctx->tradMethod;
-    if (newCtx->pqcMethod != NULL && newCtx->tradMethod != NULL) {
-        if (newCtx->pqcMethod->dupCtx == NULL || newCtx->tradMethod->dupCtx == NULL) {
+    if (ctx->pqcCtx != NULL || ctx->tradCtx != NULL) {
+        if (newCtx->info == NULL || newCtx->info->pqcMethod == NULL) {
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             goto ERR;
         }
-        newCtx->pqcCtx = newCtx->pqcMethod->dupCtx(ctx->pqcCtx);
+        newCtx->pqcCtx = newCtx->info->pqcMethod->dupCtx(ctx->pqcCtx);
         if (newCtx->pqcCtx == NULL) {
             BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
             goto ERR;
         }
-        newCtx->tradCtx = newCtx->tradMethod->dupCtx(ctx->tradCtx);
+        newCtx->tradCtx = CRYPT_EAL_PkeyDupCtx(ctx->tradCtx);
         if (newCtx->tradCtx == NULL) {
             BSL_ERR_PUSH_ERROR(PQCP_MEM_ALLOC_FAIL);
             goto ERR;
@@ -186,7 +380,6 @@ PQCP_CompositeCtx *PQCP_COMPOSITE_DupCtx(PQCP_CompositeCtx *ctx)
         }
     }
     newCtx->ctxLen = ctx->ctxLen;
-    newCtx->libCtx = ctx->libCtx;
     return newCtx;
 ERR:
     PQCP_COMPOSITE_FreeCtx(newCtx);
@@ -203,13 +396,13 @@ static int32_t GetSignLen(PQCP_CompositeCtx *ctx, void *val, uint32_t len)
         BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
         return PQCP_INVALID_ARG;
     }
-    if (ctx->info == NULL ||ctx->pqcCtx == NULL || ctx->tradCtx == NULL) {
+    if (ctx->info == NULL || ctx->pqcCtx == NULL || ctx->tradCtx == NULL) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYINFO_NOT_SET);
         return PQCP_COMPOSITE_KEYINFO_NOT_SET;
     }
     uint32_t pqcSigLen = ctx->info->pqcSigLen;
     uint32_t tradSigLen = 0;
-    int32_t ret = ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, &tradSigLen, sizeof(tradSigLen));
+    int32_t ret = CRYPT_EAL_PkeyCtrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, &tradSigLen, sizeof(tradSigLen));
     if (ret != PQCP_SUCCESS) {
         BSL_ERR_PUSH_ERROR(ret);
         return ret;
@@ -234,26 +427,23 @@ static int32_t SetAlgInfo(PQCP_CompositeCtx *ctx, void *val, uint32_t len)
         BSL_ERR_PUSH_ERROR(PQCP_INVALID_ARG);
         return PQCP_INVALID_ARG;
     }
-    const EAL_PkeyMethod *pqcMethod = CRYPT_EAL_PkeyFindMethod(ctx->info->pqcAlg);
-    const EAL_PkeyMethod *tradMethod = CRYPT_EAL_PkeyFindMethod(ctx->info->tradAlg);
-    if (pqcMethod == NULL || tradMethod == NULL) {
-        BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
-        return PQCP_NOT_SUPPORT;
-    }
-    ctx->pqcCtx = pqcMethod->newCtx();
-    GOTO_ERR_IF_TRUE((ctx->pqcCtx == NULL), PQCP_MEM_ALLOC_FAIL);
-    ctx->tradCtx = tradMethod->newCtx();
+    GOTO_ERR_IF(ctx->info->pqcMethod->newCtx(ctx), ret);
+    ctx->tradCtx = CRYPT_EAL_PkeyNewCtx(ctx->info->tradAlg);
     GOTO_ERR_IF_TRUE((ctx->tradCtx == NULL), PQCP_MEM_ALLOC_FAIL);
-    int32_t pqcParam = ctx->info->pqcParam;
-    GOTO_ERR_IF(pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_PARA_BY_ID, &(pqcParam), sizeof(pqcParam)), ret);
-    ctx->pqcMethod = pqcMethod;
-    ctx->tradMethod = tradMethod;
+    if (ctx->info->tradParam != 0) {
+        int32_t tradParam = ctx->info->tradParam;
+        GOTO_ERR_IF(CRYPT_EAL_PkeyCtrl(ctx->tradCtx, CRYPT_CTRL_SET_PARA_BY_ID, &tradParam, sizeof(tradParam)), ret);
+    }
     return PQCP_SUCCESS;
 ERR:
-    pqcMethod->freeCtx(ctx->pqcCtx);
-    ctx->pqcCtx = NULL;
-    tradMethod->freeCtx(ctx->tradCtx);
-    ctx->tradCtx = NULL;
+    if (ctx->info != NULL && ctx->info->pqcMethod != NULL) {
+        ctx->info->pqcMethod->freeCtx(ctx->pqcCtx);
+        ctx->pqcCtx = NULL;
+    }
+    if (ctx->tradCtx != NULL) {
+        CRYPT_EAL_PkeyFreeCtx(ctx->tradCtx);
+        ctx->tradCtx = NULL;
+    }
     ctx->info = NULL;
     return ret;
 }
@@ -303,6 +493,13 @@ static int32_t GetPrvKeyLen(PQCP_CompositeCtx *ctx, void *val, uint32_t len)
     return PQCP_SUCCESS;
 }
 
+static int32_t GetPqcSignLen(PQCP_CompositeCtx *ctx, void *val, uint32_t len)
+{
+    CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
+    *(uint32_t *)val = ctx->info->pqcSigLen;
+    return PQCP_SUCCESS;
+}
+
 int32_t PQCP_COMPOSITE_Ctrl(PQCP_CompositeCtx *ctx, int32_t opt, void *val, uint32_t len)
 {
     RETURN_RET_IF(ctx == NULL, PQCP_NULL_INPUT);
@@ -319,23 +516,22 @@ int32_t PQCP_COMPOSITE_Ctrl(PQCP_CompositeCtx *ctx, int32_t opt, void *val, uint
             return SetCtxInfo(ctx, val, len);
         case PQCP_CTRL_HYBRID_GET_PQC_PRVKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            *(uint32_t *)val = MLDSA_SEED_LEN;
+            *(uint32_t *)val = ctx->info->pqcPrvkeyLen;
             return PQCP_SUCCESS;
         case PQCP_CTRL_HYBRID_GET_PQC_PUBKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            return ctx->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_GET_PUBKEY_LEN, val, len);
+            return ctx->info->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_GET_PUBKEY_LEN, val, len);
         case PQCP_CTRL_HYBRID_GET_TRAD_PRVKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            return ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_PRVKEY_LEN, val, len);
+            return CRYPT_EAL_PkeyCtrl(ctx->tradCtx, CRYPT_CTRL_GET_PRVKEY_LEN, val, len);
         case PQCP_CTRL_HYBRID_GET_TRAD_PUBKEY_LEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            return ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_PUBKEY_LEN, val, len);
+            return CRYPT_EAL_PkeyCtrl(ctx->tradCtx, CRYPT_CTRL_GET_PUBKEY_LEN, val, len);
         case PQCP_CTRL_HYBRID_GET_PQC_SIGNLEN:
-            CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            return ctx->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_GET_SIGNLEN, val, len);
+            return GetPqcSignLen(ctx, val, len);
         case PQCP_CTRL_HYBRID_GET_TRAD_SIGNLEN:
             CHECK_UINT32_LEN_AND_INFO(ctx, val, len);
-            return ctx->tradMethod->ctrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, val, len);
+            return CRYPT_EAL_PkeyCtrl(ctx->tradCtx, CRYPT_CTRL_GET_SIGNLEN, val, len);
         default:
             BSL_ERR_PUSH_ERROR(PQCP_NOT_SUPPORT);
             return PQCP_NOT_SUPPORT;
@@ -347,8 +543,8 @@ int32_t PQCP_COMPOSITE_GenKey(PQCP_CompositeCtx *ctx)
     int32_t ret;
     RETURN_RET_IF(ctx == NULL, PQCP_NULL_INPUT);
     RETURN_RET_IF((ctx->pqcCtx == NULL || ctx->tradCtx == NULL), PQCP_COMPOSITE_KEYINFO_NOT_SET);
-    RETURN_RET_IF_ERR(ctx->pqcMethod->gen(ctx->pqcCtx), ret);
-    RETURN_RET_IF_ERR(ctx->tradMethod->gen(ctx->tradCtx), ret);
+    RETURN_RET_IF_ERR(ctx->info->pqcMethod->gen(ctx->pqcCtx), ret);
+    RETURN_RET_IF_ERR(CRYPT_EAL_PkeyGen(ctx->tradCtx), ret);
     return ret;
 }
 
@@ -359,7 +555,7 @@ int32_t PQCP_COMPOSITE_GetPrvKey(const PQCP_CompositeCtx *ctx, CRYPT_CompositePr
     int32_t ret;
     BSL_Buffer pqcPrv = { 0 };
     BSL_Buffer tradPrv = { 0 };
-    GOTO_ERR_IF(PQCP_CompositeGetPqcPrvKey(ctx, &pqcPrv), ret);
+    GOTO_ERR_IF(ctx->info->pqcMethod->getPrv(ctx, &pqcPrv), ret);
     GOTO_ERR_IF(PQCP_CompositeGetTradPrvKey(ctx, &tradPrv), ret);
     if (prv->len < pqcPrv.dataLen + tradPrv.dataLen) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_LEN_NOT_ENOUGH);
@@ -382,7 +578,7 @@ int32_t PQCP_COMPOSITE_GetPubKey(const PQCP_CompositeCtx *ctx, CRYPT_CompositePu
     int32_t ret;
     BSL_Buffer pqcPub = { 0 };
     BSL_Buffer tradPub = { 0 };
-    GOTO_ERR_IF(PQCP_CompositeGetPqcPubKey(ctx, &pqcPub), ret);
+    GOTO_ERR_IF(ctx->info->pqcMethod->getPub(ctx, &pqcPub), ret);
     GOTO_ERR_IF(PQCP_CompositeGetTradPubKey(ctx, &tradPub), ret);
     if (pub->len < pqcPub.dataLen + tradPub.dataLen) {
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_LEN_NOT_ENOUGH);
@@ -403,11 +599,11 @@ int32_t PQCP_COMPOSITE_SetPrvKey(PQCP_CompositeCtx *ctx, const CRYPT_CompositePr
     int32_t ret;
     RETURN_RET_IF((ctx == NULL || prv == NULL || prv->data == NULL), PQCP_NULL_INPUT);
     RETURN_RET_IF(ctx->info == NULL, PQCP_COMPOSITE_KEYINFO_NOT_SET);
-    // the prvkey len of trad is not determined, so we just verify that the prv->len must be greater than ctx->info->pqcPrvkeyLen
+    // The prvkey len of trad is not determined, so only verify it is longer than the PQC private key part.
     RETURN_RET_IF(prv->len <= ctx->info->pqcPrvkeyLen, PQCP_COMPOSITE_KEYLEN_ERROR);
     BSL_Buffer pqcPrv = {prv->data, ctx->info->pqcPrvkeyLen};
     BSL_Buffer tradPrv = {prv->data + ctx->info->pqcPrvkeyLen, prv->len - ctx->info->pqcPrvkeyLen};
-    RETURN_RET_IF_ERR(PQCP_CompositeSetPqcPrvKey(ctx, &pqcPrv), ret);
+    RETURN_RET_IF_ERR(ctx->info->pqcMethod->setPrv(ctx, &pqcPrv), ret);
     RETURN_RET_IF_ERR(PQCP_CompositeSetTradPrvKey(ctx, &tradPrv), ret);
     return PQCP_SUCCESS;
 }
@@ -421,7 +617,7 @@ int32_t PQCP_COMPOSITE_SetPubKey(PQCP_CompositeCtx *ctx, const CRYPT_CompositePu
 
     BSL_Buffer pqcPub = {pub->data, ctx->info->pqcPubkeyLen};
     BSL_Buffer tradPub = {pub->data + ctx->info->pqcPubkeyLen, pub->len - ctx->info->pqcPubkeyLen};
-    RETURN_RET_IF_ERR(PQCP_CompositeSetPqcPubKey(ctx, &pqcPub), ret);
+    RETURN_RET_IF_ERR(ctx->info->pqcMethod->setPub(ctx, &pqcPub), ret);
     RETURN_RET_IF_ERR(PQCP_CompositeSetTradPubKey(ctx, &tradPub), ret);
     return PQCP_SUCCESS;
 }
@@ -545,14 +741,15 @@ int32_t PQCP_COMPOSITE_Sign(PQCP_CompositeCtx *ctx, int32_t algId, const uint8_t
     }
     int32_t ret;
     uint32_t pqcSigLen = ctx->info->pqcSigLen;
-    uint32_t tradSigLen = *signLen - pqcSigLen;
     CRYPT_Data msg = {0};
     RETURN_RET_IF_ERR(CompositeMsgEncode(ctx, ctx->info->hashId, data, dataLen, &msg), ret);
-    GOTO_ERR_IF(ctx->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_CTX_INFO, (void *)(uintptr_t)ctx->info->label,
-        (uint32_t)strlen(ctx->info->label)), ret);
-    int32_t pqcRet = ctx->pqcMethod->sign(ctx->pqcCtx, CRYPT_MD_MAX, msg.data, msg.len, sign, &pqcSigLen);
-    int32_t tradRet = ctx->tradMethod->sign(ctx->tradCtx, ctx->info->tradHashId, msg.data, msg.len, sign + pqcSigLen,
-                                           &tradSigLen);
+    GOTO_ERR_IF(CompositeSetPqcCtxInfo(ctx), ret);
+    uint8_t *pqcSig = sign;
+    int32_t pqcRet = ctx->info->pqcMethod->sign(ctx->pqcCtx, CRYPT_MD_MAX, msg.data, msg.len, pqcSig, &pqcSigLen);
+    uint32_t tradSigLen = *signLen - pqcSigLen;
+    uint8_t *tradSig = pqcSig + pqcSigLen;
+    int32_t tradRet = CRYPT_EAL_PkeySign(ctx->tradCtx, ctx->info->tradHashId, msg.data, msg.len, tradSig,
+                                         &tradSigLen);
     if (pqcRet != PQCP_SUCCESS || tradRet != PQCP_SUCCESS) {
         ret = (pqcRet != PQCP_SUCCESS) ? pqcRet : tradRet;
         BSL_ERR_PUSH_ERROR(ret);
@@ -576,20 +773,17 @@ int32_t PQCP_COMPOSITE_Verify(PQCP_CompositeCtx *ctx, int32_t algId, const uint8
         BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_KEYINFO_NOT_SET);
         return PQCP_COMPOSITE_KEYINFO_NOT_SET;
     }
-    if (signLen < ctx->info->pqcSigLen) {
-        BSL_ERR_PUSH_ERROR(PQCP_COMPOSITE_INVALID_SIG_LEN);
-        return PQCP_COMPOSITE_INVALID_SIG_LEN;
-    }
     int32_t ret;
-    uint32_t pqcSigLen = ctx->info->pqcSigLen;
-    uint32_t tradSigLen = signLen - pqcSigLen;
+    uint32_t pqcSigLen = 0;
     CRYPT_Data msg = {0};
+    GOTO_ERR_IF(ctx->info->pqcMethod->getSigLen(ctx, sign, signLen, &pqcSigLen), ret);
+    uint8_t *pqcSig = sign;
+    uint32_t tradSigLen = signLen - pqcSigLen;
+    uint8_t *tradSig = pqcSig + pqcSigLen;
     RETURN_RET_IF_ERR(CompositeMsgEncode(ctx, ctx->info->hashId, data, dataLen, &msg), ret);
-    GOTO_ERR_IF(ctx->pqcMethod->ctrl(ctx->pqcCtx, CRYPT_CTRL_SET_CTX_INFO, (void *)(uintptr_t)ctx->info->label,
-        (uint32_t)strlen(ctx->info->label)), ret);
-    GOTO_ERR_IF(ctx->pqcMethod->verify(ctx->pqcCtx, CRYPT_MD_MAX, msg.data, msg.len, sign, pqcSigLen), ret);
-    GOTO_ERR_IF(ctx->tradMethod->verify(ctx->tradCtx, ctx->info->tradHashId, msg.data, msg.len, sign + pqcSigLen,
-                                              tradSigLen), ret);
+    GOTO_ERR_IF(CompositeSetPqcCtxInfo(ctx), ret);
+    GOTO_ERR_IF(ctx->info->pqcMethod->verify(ctx->pqcCtx, CRYPT_MD_MAX, msg.data, msg.len, pqcSig, pqcSigLen), ret);
+    GOTO_ERR_IF(CRYPT_EAL_PkeyVerify(ctx->tradCtx, ctx->info->tradHashId, msg.data, msg.len, tradSig, tradSigLen), ret);
 ERR:
     BSL_SAL_FREE(msg.data);
     return ret;
