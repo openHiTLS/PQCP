@@ -1,9 +1,7 @@
 /*
- * based on https://eprint.iacr.org/2021/986, CC0 1.0 Universal.
+ * Copyright (c) 2026 openHiTLS. All Rights Reserved.
  *
- * This file is part of the openHiTLS project.
- *
- * openHiTLS is licensed under the Mulan PSL v2.
+ * PQCP is licensed under the Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *

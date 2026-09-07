@@ -1,13 +1,11 @@
-/* Copyright (c) 2025 LiuRuikang
- * School Of Cyber Engineering, Xidian University
+/*
+ * Copyright (c) 2026 openHiTLS. All Rights Reserved.
  *
- * This file is part of the openHiTLS project.
- *
- * openHiTLS is licensed under the Mulan PSL v2.
+ * PQCP is licensed under the Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *
- * http://license.coscl.org.cn/MulanPSL2
+ *     http://license.coscl.org.cn/MulanPSL2
  *
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
  * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
@@ -24,10 +22,10 @@ void sm3kdf(uint8_t* output, unsigned long long outlen, const uint8_t* input, un
 {
 	uint8_t* pData = NULL;
 	uint8_t cdgst[32]; //ÕªÒª
-	uint8_t *cCnt; //¼ÆÊýÆ÷µÄÄÚ´æ±íÊ¾Öµ
-	int nCnt = 1;  //¼ÆÊýÆ÷
-	int nDgst = 32; //ÕªÒª³¤¶È
-	int nTimes; //ÐèÒª¼ÆËãµÄ´ÎÊý
+	uint8_t *cCnt; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ê¾Öµ
+	int nCnt = 1;  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	int nDgst = 32; //ÕªÒªï¿½ï¿½ï¿½ï¿½
+	int nTimes; //ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
 	int i = 0;
 
 	if (NULL == (pData = (uint8_t*)malloc(inlen + 4)))
@@ -48,7 +46,7 @@ void sm3kdf(uint8_t* output, unsigned long long outlen, const uint8_t* input, un
 		}
 		ippsSM3MessageDigest(pData, (int)inlen + 4, cdgst);
 
-		if (i == nTimes - 1) //×îºóÒ»´Î¼ÆËã£¬¸ù¾Ýkeylen/32ÊÇ·ñÕû³ý£¬½ØÈ¡ÕªÒªµÄÖµ
+		if (i == nTimes - 1) //ï¿½ï¿½ï¿½Ò»ï¿½Î¼ï¿½ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½keylen/32ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ÕªÒªï¿½ï¿½Öµ
 		{
 			if (outlen % 32 != 0)
 			{
