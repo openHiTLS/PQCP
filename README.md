@@ -2,7 +2,11 @@
 
 PQCP means Pioneer Quotable Crypto Provider
 
-This project provides a provider of non-standardized algorithms for OpenHTLS to support the new generation of advanced cryptographic algorithms.
+This project provides an OpenHTLS provider of post-quantum and next-generation cryptographic algorithms.
+
+> **⚠️ Experimental software — not recommended for production use.** PQCP contains
+> prototype implementations. We make a best effort to avoid security bugs.
+> See [SECURITY.md](SECURITY.md).
 
 ## Features
 - Post-quantum algorithms
