@@ -143,10 +143,11 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_ENCAPS_DECAPS_API_TC001(int bits)
     uint32_t sharedLen = 0;
     ret = CRYPT_EAL_PkeyCtrl(deCtx, CRYPT_CTRL_GET_SHARED_KEY_LEN, &sharedLen, sizeof(sharedLen));
     ASSERT_EQ(ret, PQCP_SUCCESS);
+    uint32_t expectedSharedLen = sharedLen;
 
     cipher = BSL_SAL_Malloc(cipherLen);
     ASSERT_TRUE(cipher != NULL);
-    sharedKey = BSL_SAL_Malloc(sharedLen);
+    sharedKey = BSL_SAL_Malloc(sharedLen + 1);
     ASSERT_TRUE(sharedKey != NULL);
     sharedKey2 = BSL_SAL_Malloc(sharedLen);
     ASSERT_TRUE(sharedKey2 != NULL);
@@ -167,8 +168,13 @@ void SDV_CRYPTO_PQCP_SCLOUDPLUS_ENCAPS_DECAPS_API_TC001(int bits)
     ret = CRYPT_EAL_PkeyEncapsInit(enCtx, NULL);
     ASSERT_EQ(ret, PQCP_SUCCESS);
 
+    /* A larger output buffer must not change the parameter set's shared key length. */
+    sharedKey[expectedSharedLen] = 0xA5;
+    sharedLen = expectedSharedLen + 1;
     ret = CRYPT_EAL_PkeyEncaps(enCtx, cipher, &cipherLen, sharedKey, &sharedLen);
     ASSERT_EQ(ret, PQCP_SUCCESS);
+    ASSERT_EQ(sharedLen, expectedSharedLen);
+    ASSERT_EQ(sharedKey[expectedSharedLen], 0xA5);
 
     ret = CRYPT_EAL_PkeyDecapsInit(deCtx, NULL);
     ASSERT_EQ(ret, PQCP_SUCCESS);

@@ -544,6 +544,7 @@ int32_t PQCP_SCLOUDPLUS_Encaps(SCLOUDPLUS_Ctx *ctx, uint8_t *ciphertext, uint32_
     if (ret != PQCP_SUCCESS) {
         return ret;
     }
+    *ssLen = ctx->para->ss;
     ret = SCLOUDPLUS_MdFunc(CRYPT_MD_SHAKE256, k, SCLOUDPLUS_SEED_K_LEN, C, ctx->para->ctxSize, sharedSecret, ssLen);
     if (ret != PQCP_SUCCESS) {
         return ret;
